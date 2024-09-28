@@ -4,7 +4,7 @@ class Admin(db.Model):
     __tablename__="admin"
     admin_id=db.Column(db.String,primary_key=True)
     admin_password=db.Column(db.String,nullable=False)
-
+    
 class Professional(db.Model):
     __tablename__="professional"
     prof_id=db.Column(db.String,primary_key=True,nullable=False)

@@ -1,1 +1,1 @@
-console.log("from app.js");
+console.log("test from app.js");
