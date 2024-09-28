@@ -8,7 +8,7 @@ basedir=os.path.abspath(os.path.dirname(__file__))
 
 #creates app instance -object of flask
 app=Flask(__name__)
-db_path=os.path.join(basedir,"database_files/Infspons_db.db")
+db_path=os.path.join(basedir,"database_files/household_services.db")
 
 app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///"+db_path
 db.init_app(app=app) #object.method(parameter)
