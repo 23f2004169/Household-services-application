@@ -21,12 +21,39 @@
     <link rel="stylesheet" href="{{ url_for('static',filename = 'static/style.css') }}"> -->
 </head>
 
+<style>
+    body {padding-top: 70px;background-color: rgb(205, 176, 132);}
+    .header {text-align: center;border: 2px solid rgb(205, 176, 132);padding: 8px;background-color: #3b0a03;color: white;
+        margin-bottom: 18px;margin-top: -50px;}
+    .btn-container {text-align: center;margin-top: 50px;}
+    .btn-custom {border: 4px solid  #3b0a03;font-size: 30px;padding: 20px 40px;margin: 10px;
+        border-radius: 50px;transition: background-color 0.3, color 0.3s; background-color:rgb(241, 144, 8)  }
+    .btn-custom:hover {border: 2px solid  #3b0a03;background-color:rgb(255, 97, 5);outline:white;color: white;}
+    .description-box {background-color: #3b0a03;color:white;padding: 10px;margin: 20px auto;border-radius: 10px;
+            max-width: 700px;text-align: center;font-size: 1.2rem;margin-top: 100px; height: auto; }
+    .image-container { display: flex; justify-content: space-between; align-items: center; margin-top: -150px; }
+    .image-container img { max-width: 25%;height: auto;margin-top: -150px;}
+</style>
 <body>
-    <h1>HOME</h1>
-    <div id="app">
+
+    <h1 class="header"> HOUSEHOLD SERVICES APPLICATION</h1>
+    <div class="btn-container">
+        <a href="/"><button class="btn btn-secondary btn-custom">LOGIN </button></a>
+        <a href="/"><button class="btn btn-secondary btn-custom">REGISTER </button></a>
+    </div>
+
+    <div class="description-box">
+        <h4>Your all-in-one platform connecting homeowners with skilled service professionals, where an admin manages a seamless experience for all. </h4>
+            <h4>Whether you need repairs, cleaning, or maintenance, we've got every corner of your home covered!        </h4>
+    </div>
+    <div class="image-container">
+        <img id="image" src="/static/index1.jpeg" alt="image1" class="img" >
+       <img id="image" src="/static/index2.jpeg" alt="image2" class="img" >
+    </div>
+    <!-- <div id="app">
 
         <h1>This is working</h1>
-    </div>
+    </div> -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
     <script src="https://unpkg.com/vue-router@3.0.0/dist/vue-router.js"></script>
     <script
@@ -36,10 +63,11 @@
     <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-    crossorigin="anonymous"
-></script>
+    crossorigin="anonymous">
+    </script>
 </body>
 </html>
+
 
 
     
