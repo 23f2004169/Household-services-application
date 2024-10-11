@@ -1,3 +1,4 @@
+// all configurations for frontend
 import { createApp } from 'vue'
 import './style.css'
 import 'bootstrap/dist/css/bootstrap.min.css';

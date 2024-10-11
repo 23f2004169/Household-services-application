@@ -1,6 +1,6 @@
 from flask import current_app as app #alias for current running app
 from flask import render_template,url_for,redirect,request
-from backend.models import *
+from application.models import *
 from datetime import datetime,date
 import decimal
 #stats

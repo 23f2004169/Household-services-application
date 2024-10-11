@@ -1,6 +1,6 @@
 from flask import Flask
 import os
-from backend.database import *
+from application.database import *
 
 #current working directory
 cwd=os.getcwd()
@@ -16,7 +16,7 @@ db.init_app(app=app) #object.method(parameter)
 #pushing app context globally to flask class file app -direct access of app for other modules(db)
 app.app_context().push()
 
-from backend.controllers import *
+from application.controllers import *
 #from backend.api import *
 
 if __name__=='__main__':
