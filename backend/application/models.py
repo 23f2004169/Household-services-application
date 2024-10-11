@@ -1,4 +1,4 @@
-from application.database import db
+from backend.database import db
 
 class Admin(db.Model):
     __tablename__="admin"
