@@ -8,6 +8,11 @@ const router = createRouter({
             path: '/',
             name: 'home',
             component: LandPage
+        },
+        {
+            path: '/register', // New route for the register page
+            name: 'register',  // Give it a unique name
+            component: register // The component to render
         }
     ]
 })
