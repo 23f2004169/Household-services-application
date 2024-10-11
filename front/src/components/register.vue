@@ -25,7 +25,7 @@
       <h1 style="text-align:center">Register a New User Account</h1>
       <br>
       <br>
-      <form v-on:submit.prevent="registerUser()" style="text-align: center">
+      <form v-on:submit.prevent="register()" style="text-align: center">
   
         <div class="mb-3 mt-3">
             <label for="emailID" class="form-label">Enter Email ID:</label>

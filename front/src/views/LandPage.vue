@@ -1,4 +1,5 @@
 <template>   
+
 <body>
     <h1 class="header"> HOUSEHOLD SERVICES APPLICATION</h1>
     <div class="btn-container">
@@ -21,6 +22,7 @@
     </div> -->
     
 </template>
+
 <style>
     body {padding-top: 70px;background-color: rgb(205, 176, 132);}
     .header {text-align: center;border: 2px solid rgb(205, 176, 132);padding: 8px;background-color: #3b0a03;color: white;
@@ -33,4 +35,5 @@
             max-width: 700px;text-align: center;font-size: 1.2rem;margin-top: 100px; height: auto; }
     .image-container { display: flex; justify-content: space-between; align-items: center; margin-top: -150px; }
     .image-container img { max-width: 25%;height: auto;margin-top: -150px;}
+
 </style>

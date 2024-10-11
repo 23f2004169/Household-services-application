@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import LandPage from '../views/LandPage.vue';
+import LandPage from './views/LandPage.vue';
+import register from './components/register.vue';  // Import the register component
+
 
 const router = createRouter({
     history: createWebHistory(),
@@ -8,12 +10,12 @@ const router = createRouter({
             path: '/',
             name: 'home',
             component: LandPage
-        },
-        {
-            path: '/register', // New route for the register page
-            name: 'register',  // Give it a unique name
-            component: register // The component to render
         }
+        , {
+        path: '/register', 
+        name: 'register',  
+        component: register 
+         }
     ]
 })
 

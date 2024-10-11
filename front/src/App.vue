@@ -10,6 +10,7 @@ export default {
 
 <template>
   <div id="app">
+    <register />
     <router-view></router-view> 
   </div>
 </template>
