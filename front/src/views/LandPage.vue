@@ -1,10 +1,13 @@
+
+
 <template>   
 
 <body>
     <h1 class="header"> HOUSEHOLD SERVICES APPLICATION</h1>
     <div class="btn-container">
-        <a href="/"><button class="btn btn-secondary btn-custom">LOGIN </button></a>
-        <a href="/register"><button class="btn btn-secondary btn-custom">REGISTER </button></a>
+        <a href="/login"><button class="btn btn-secondary btn-custom">LOGIN </button></a>
+        <a href="/register"><button class="btn btn-secondary btn-custom" >REGISTER </button></a>
+        
     </div>
     <div class="description-box">
         <h4>Your all-in-one platform connecting homeowners with skilled service professionals, where an admin manages a seamless experience for all. </h4>
@@ -37,3 +40,14 @@
     .image-container img { max-width: 25%;height: auto;margin-top: -150px;}
 
 </style>
+
+
+<script>
+export default {
+    methods: {
+            register(){
+                this.$router.push({ path: '/register' });
+          }
+    }
+}
+</script>

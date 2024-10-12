@@ -15,7 +15,7 @@ def home():
 
 #------------------------------------------------------------------ADMIN-------------------------------------------------------------------------
 #login
-#home- sev(CRUD), prof(R),sevreqs(R) list click on then individual info
+#home- sev(CRUD), +  prof(R),sevreqs(R) list click on then individual info
 #search-sev,sevreq,cust,prof or text search(closed req)
 #summary graphs
 #prof(block/unblock,approve)  cust(block/unblock)
