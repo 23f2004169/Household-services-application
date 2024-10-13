@@ -1,17 +1,18 @@
-from sqlalchemy.ext.declarative import declarative_base
-from flask_sqlalchemy import SQLAlchemy
-engine=None
-Base=declarative_base()
-db=SQLAlchemy() #instance of sqlalchemy
+from application.database import db
 
 class Admin(db.Model):
     __tablename__="admin"
-    admin_id=db.Column(db.String,primary_key=True)
+    admin_id=db.Column(db.Integer, primary_key=True, autoincrement=True)
+    admin_email=db.Column(db.String(100), unique=True)
     admin_password=db.Column(db.String,nullable=False)
+    def to_json(self):
+        return{"admin_id":self.admin_id,"admin_email":self.admin_email,"admin_password":self.admin_password}
+
     
 class Professional(db.Model):
     __tablename__="professional"
-    prof_id=db.Column(db.String,primary_key=True,nullable=False) #AUTOINCREMENT 100
+    prof_id=db.Column(db.Integer, primary_key=True, autoincrement=True)
+    prof_email = db.Column(db.String(100), unique=True)
     prof_name=db.Column(db.String)
     prof_password=db.Column(db.String,nullable=False)
     description=db.Column(db.String)
@@ -31,7 +32,8 @@ class Professional(db.Model):
 
 class Customer(db.Model):
     __tablename__="customer"
-    cust_id=db.Column(db.String,primary_key=True,nullable=False) #AUTOINCREMENT 200
+    cust_id=db.Column(db.Integer, primary_key=True, autoincrement=True)
+    cust_email = db.Column(db.String(100), unique=True)
     cust_name=db.Column(db.String,nullable=False)
     cust_password=db.Column(db.String,nullable=False)
     address=db.Column(db.String,nullable=False)

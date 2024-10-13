@@ -9,6 +9,8 @@ matplotlib.use('Agg')  # Use a non-interactive backend
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -20,29 +22,31 @@ def home():
 #summary graphs
 #prof(block/unblock,approve)  cust(block/unblock)
 
+# admin_exist = Admin.query.filter_by(admin_email="irina@gmail.com").first()
+# if admin_exist is None:
+#     user= Admin(admin_email="irina@gmail.com", 
+#                 admin_password=generate_password_hash("irina24"), admin_id="irina")
+#     db.session.add(user)
+#     db.session.commit()
+
+# Create a route to authenticate your users and return JWTs. The
+# create_access_token() function is used to actually generate the JWT.
 @app.route("/admin_login",methods=["GET","POST"])
 def admin_login():
-    if request.method=="GET":
-        return render_template("admin_login.html")
-    if request.method=="POST":
-        admin_name=request.form.get("admin_name")
-        admin_password=request.form.get("admin_password")
-        try:
-            admin_from_db=Admin.query.get(admin_name)
-            if admin_from_db:
-                password_from_db=admin_from_db.admin_password
-                if password_from_db==admin_password:
-                    return redirect(url_for("admin_dashboard"))
-                
-                else:
-                    return render_template("admin_login.html",message="Password failed")
-            else:
-                return render_template("admin_login.html",message="Id failed")
-
-        except:
-            return "some error"
-    return render_template("admin_login.html")
-
+    data = request.get_json()
+    email = data.get("email", None)
+    password = data.get("password", None)
+    print(email, password)
+    admin_from_db=Admin.query.filter_by(admin_email=email).first()
+    if admin_from_db:
+        if check_password_hash(admin_from_db.admin_password, password):
+            access_token = create_access_token(identity=admin_from_db.admin_email)
+            response = jsonify(msg="login successful")
+            set_access_cookies(response, access_token)
+            return response
+        return jsonify(error="Authentication failed"), 401
+    
+    return jsonify(error="wrong credentials"), 404
 #HOME
 @app.route("/admin_dashboard",methods=["GET","POST"])
 def admin_dashboard():
