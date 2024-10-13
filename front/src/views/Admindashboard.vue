@@ -1,15 +1,56 @@
-<template>
+<script>
+import Menubar from '../components/Menubar.vue';
+  export default {
+    name:'Admindash',
+    data() {
+      return {
+        services: [],          // List of services
+        professionals: [],     // List of professionals
+        requests: [],          // List of service requests
+        showNewServiceForm: false, // Controls the visibility of the new service form modal
+        newService: {
+          name: '',
+          description: '',
+          basePrice: ''
+        }
+      };
+    },
+    components:{Menubar},
+    methods: {
+      addNewService() {
+        // Logic to add a new service
+        console.log("Adding new service", this.newService);
+        this.services.push({ ...this.newService, id: this.services.length + 1 });
+        this.showNewServiceForm = false;
+      },
+      editService(serviceId) {
+        // Logic to edit a service
+        this.serviceId
+        console.log("Editing service with ID:", serviceId);
+      },
+      deleteService(serviceId) {
+        // Logic to delete a service
+        console.log("Deleting service with ID:", serviceId);
+      },
+      approveProfessional(professionalId) {
+        // Logic to approve a professional
+        console.log("Approving professional with ID:", professionalId);
+      },
+      rejectProfessional(professionalId) {
+        // Logic to reject a professional
+        console.log("Rejecting professional with ID:", professionalId);
+      }
+    }
+  };
+  </script>
+  
+  <template>
     <div class="admin-dashboard">
       <header>
-        <h2>Welcome to Admin</h2>
-        <nav>
-          <router-link to="/">Home</router-link>
-          <router-link to="/search">Search</router-link>
-          <router-link to="/summary">Summary</router-link>
-          <router-link to="/logout">Logout</router-link>
-        </nav>
+        <Menubar/>
+        <h2>Welcome Admin</h2>
       </header>
-  
+
       <main>
         <!-- Services Table -->
         <section class="services-section">
@@ -109,51 +150,11 @@
           </div>
         </form>
       </div>
+      
     </div>
   </template>
   
-  <script>
-  export default {
-    data() {
-      return {
-        services: [],          // List of services
-        professionals: [],     // List of professionals
-        requests: [],          // List of service requests
-        showNewServiceForm: false, // Controls the visibility of the new service form modal
-        newService: {
-          name: '',
-          description: '',
-          basePrice: ''
-        }
-      };
-    },
-    methods: {
-      addNewService() {
-        // Logic to add a new service
-        console.log("Adding new service", this.newService);
-        this.services.push({ ...this.newService, id: this.services.length + 1 });
-        this.showNewServiceForm = false;
-      },
-      editService(serviceId) {
-        // Logic to edit a service
-        console.log("Editing service with ID:", serviceId);
-      },
-      deleteService(serviceId) {
-        // Logic to delete a service
-        console.log("Deleting service with ID:", serviceId);
-      },
-      approveProfessional(professionalId) {
-        // Logic to approve a professional
-        console.log("Approving professional with ID:", professionalId);
-      },
-      rejectProfessional(professionalId) {
-        // Logic to reject a professional
-        console.log("Rejecting professional with ID:", professionalId);
-      }
-    }
-  };
-  </script>
-  
+
   <style scoped>
   .admin-dashboard {
     padding: 20px;

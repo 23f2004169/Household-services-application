@@ -43,11 +43,15 @@
 
 
 <script>
+
 export default {
-    methods: {
-            register(){
-                this.$router.push({ path: '/register' });
-          }
-    }
+    name: 'register'
 }
 </script>
+
+<!-- ,
+    methods: {
+            register(){
+                this.$router.push('/register');
+          }
+    } -->
