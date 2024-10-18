@@ -3,7 +3,6 @@
 
 export default {
   name:'mainapp' ,
-  components:{menubar}
 }
 </script>
 

@@ -5,7 +5,7 @@
             <a href="/admin_dashboard"><button class="color">Home</button></a>
             <a href="/admin_search"><button class="color">Search</button></a>
             <a href="/admin_summary"><button class="color">Summary</button></a>
-            <a href="/register"><button class="color">Logout</button></a>
+            <a href="/"><button class="color">Logout</button></a>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -31,7 +31,8 @@
                         </li>
                         
                         <li class="nav-item">
-                            <a href="/admin_login"><button class="btn btn-danger">Logout</button></a>
+                            <a href="/
+                            login"><button class="btn btn-danger">Logout</button></a>
                         </li>
                         
                     </ul>
@@ -48,8 +49,8 @@
     .btn-container {text-align: center;margin-top: 50px;}
     .btn-custom {border: 4px solid  #3b0a03;font-size: 30px;padding: 20px 40px;margin: 10px;
         border-radius: 50px;transition: background-color 0.3, color 0.3s; background-color:rgb(241, 144, 8)  }
-    .btn-custom:hover {border: 2px solid  #3b0a03;background-color:rgb(255, 97, 5);outline:white;color: white;}
-    .description-box {background-color: #3b0a03;color:white;padding: 10px;margin: 20px auto;border-radius: 10px;
+    .btn-custom:hover {border: 2px solid  #3b0a03;background-color:rgb(255, 97, 5)}
+    .description-box {background-color: #3b0a03;color:rgb(229, 180, 101);padding: 10px;margin: 20px auto;border-radius: 10px;
             max-width: 700px;text-align: center;font-size: 1.2rem;margin-top: 100px; height: auto; }
     .image-container { display: flex; justify-content: space-between; align-items: center; margin-top: -150px; }
     .image-container img { max-width: 25%;height: auto;margin-top: -150px;}
@@ -67,12 +68,11 @@ table {margin-top: 20px;}.form-container {margin-top: 30px;}.navbar-brand {font-
         margin-right: 20px; /* Adjust spacing between columns */}
 .card-body {
         text-align: center; /* Center align content */}
-.color{color:white}
 </style>
 
 <script>
 export default{
-   name:'Menubar'
+   name:'MenuBar'
 
 }
 </script>

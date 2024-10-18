@@ -1,32 +1,22 @@
+<template>  
+ <body>
+    <div class="btn-container">
 
-
-<template>   
-
-<body>
     <h1 class="header"> HOUSEHOLD SERVICES APPLICATION</h1>
     <div class="btn-container">
         <a href="/login"><button class="btn btn-secondary btn-custom">LOGIN </button></a>
-        <a href="/register"><button class="btn btn-secondary btn-custom" >REGISTER </button></a>
+        <a href="/register_cust"><button class="btn btn-secondary btn-custom" >REGISTER </button></a>
         
     </div>
     <div class="description-box">
         <h4>Your all-in-one platform connecting homeowners with skilled service professionals, where an admin manages a seamless experience for all. </h4>
             <h4>Whether you need repairs, cleaning, or maintenance, we've got every corner of your home covered!        </h4>
     </div>
+    </div>
 </body>
-
-    <!-- <div class="image-container">
-        <img id="image" src="/static/index1.jpeg" alt="image1" class="img" >
-       <img id="image" src="/static/index2.jpeg" alt="image2" class="img" >
-    </div> -->
-    <!-- <div id="app">
-
-        <h1>This is working</h1>
-    </div> -->
-    
 </template>
 
-<style>
+ <style>
     body {padding-top: 70px;background-color: rgb(205, 176, 132);}
     .header {text-align: center;border: 2px solid rgb(205, 176, 132);padding: 8px;background-color: #3b0a03;color: white;
         margin-bottom: 18px;margin-top: -50px;}
@@ -39,19 +29,13 @@
     .image-container { display: flex; justify-content: space-between; align-items: center; margin-top: -150px; }
     .image-container img { max-width: 25%;height: auto;margin-top: -150px;}
 
-</style>
+</style> 
 
 
 <script>
 
 export default {
-    name: 'register'
+    name: 'HomeView',
 }
 </script>
 
-<!-- ,
-    methods: {
-            register(){
-                this.$router.push('/register');
-          }
-    } -->

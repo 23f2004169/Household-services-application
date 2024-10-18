@@ -3,13 +3,15 @@ from flask import render_template,url_for,redirect,request
 from application.models import *
 from datetime import datetime,date
 import decimal
-#stats
-import matplotlib
-matplotlib.use('Agg')  # Use a non-interactive backend
-import matplotlib.pyplot as plt
-import numpy as np
-
-
+from flask import Flask
+from flask import jsonify
+from flask import request
+from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required, set_access_cookies
+from datetime import timedelta
 
 @app.route("/")
 def home():
@@ -22,21 +24,21 @@ def home():
 #summary graphs
 #prof(block/unblock,approve)  cust(block/unblock)
 
-# admin_exist = Admin.query.filter_by(admin_email="irina@gmail.com").first()
-# if admin_exist is None:
-#     user= Admin(admin_email="irina@gmail.com", 
-#                 admin_password=generate_password_hash("irina24"), admin_id="irina")
-#     db.session.add(user)
-#     db.session.commit()
 
 # Create a route to authenticate your users and return JWTs. The
 # create_access_token() function is used to actually generate the JWT.
-@app.route("/admin_login",methods=["GET","POST"])
+@app.route("/api/admin_login",methods=['GET','POST'])
 def admin_login():
     data = request.get_json()
     email = data.get("email", None)
     password = data.get("password", None)
     print(email, password)
+    admin_exist = Admin.query.filter_by(admin_email="irina@gmail.com").first()
+    if not admin_exist:
+        user= Admin(admin_email="irina@gmail.com", 
+                admin_password=generate_password_hash("irina24"))
+        db.session.add(user)
+        db.session.commit()
     admin_from_db=Admin.query.filter_by(admin_email=email).first()
     if admin_from_db:
         if check_password_hash(admin_from_db.admin_password, password):
@@ -47,7 +49,233 @@ def admin_login():
         return jsonify(error="Authentication failed"), 401
     
     return jsonify(error="wrong credentials"), 404
-#HOME
+
+
+@app.route("/api/cust_reg", methods=['POST'])
+def cust_reg():
+    if request.method == "POST":
+        data = request.get_json()
+        cust_email = data.get("cust_email")
+        cust_password = data.get("cust_password")
+        address = data.get("address")
+        pincode = data.get("pincode")
+        # try:
+            # Check if customer email already exists
+        if not cust_password or cust_password.strip() == "":
+            return jsonify({"error":"Password cannot be empty"}), 400
+        
+        exist = Customer.query.filter_by(cust_email=cust_email).first()
+        if exist:
+            return jsonify({"error":"Customer username already exists"}), 400  # Bad Request
+        print(cust_password)
+        
+        # Create a new customer
+        print(generate_password_hash(cust_password), "sachin") # Hash the password
+        new_cust = Customer(
+            cust_email=cust_email,
+            cust_password=generate_password_hash(cust_password),
+            address=address,
+            pincode=pincode
+        )
+        db.session.add(new_cust)
+        db.session.commit()
+
+        # Return a success message along with the customer email
+        return jsonify({"msg":"Registration successful", "cust_email":"cust_email"}), 201  # Created
+
+        # except Exception as e:
+        # print(str(e))  # Log the error for debugging
+    return jsonify({"error":"An error occurred during registration"}), 500  # Internal Server Error
+
+
+@app.route('/api/prof_reg', methods=['GET','POST'])
+def prof_reg():
+    if request.method=="POST":
+        data = request.get_json()
+        prof_email =data.get("prof_email")
+        prof_password=data.get("prof_password")
+        service_type=data.get("service_type")
+        experience=data.get("experience")
+        address=data.get("address")
+        pincode=data.get("pincode")
+        description=data.get("description")
+        date_created=datetime.now().date()
+        if not prof_password or prof_password.strip() == "":
+            return jsonify({"error":"Password cannot be empty"}), 400
+        
+        exist = Professional.query.filter_by(prof_email=prof_email).first()
+        if exist:
+            print('hello2')
+            return jsonify({"error":"Professional username already exists"}), 400  # Bad Request
+        
+        # Create a new customer
+        print(generate_password_hash(prof_password)) # Hash the password
+        new_prof =Professional(
+            prof_email=prof_email,
+            prof_password=generate_password_hash(prof_password),
+            service_type=service_type,
+            experience=experience,
+            address=address,
+            pincode=pincode,
+            description=description,
+            date_created=date_created
+        )
+        db.session.add(new_prof)
+        db.session.commit()
+
+        # Return a success message along with the customer email
+        return jsonify({"msg":"Registration successful", "prof_email":"prof_email"}), 201  
+
+@app.route('/api/services', methods=['GET'])
+def get_services():
+    try:
+        # Query all services from the database
+        services = Service.query.all()
+
+        # Prepare a list of services in JSON format
+        services_list = [
+            {
+                'sev_id': service.sev_id,
+                'sev_name': service.sev_name,
+                'description': service.description,
+                'price': service.price,
+                'time_req': service.time_req,
+                'address': service.address,
+                'category': service.category
+            } for service in services
+        ]
+
+        # Return the list of services as a JSON response
+        return jsonify(services_list), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+#service management
+@app.route("/api/create_sev", methods=["POST"])
+def admin_create_sev():
+    if request.method == "POST":
+        # Get the data from the request body as JSON
+        data = request.get_json()
+        print(data)
+        if data:
+            # Check if the service with the same name already exists
+            existing_service = Service.query.filter_by(sev_name=data['sev_name']).first()
+            print(existing_service)
+            if not existing_service:
+                # Extract values from the JSON payload
+                sev_name = data.get("sev_name")
+                price = data.get("price")
+                time_req = data.get("time_req")
+                description = data.get("description")
+                category = data.get("category")
+                address=data.get("address")
+
+                # Create a new Service object
+                new_sev = Service(
+                    sev_name=sev_name,
+                    price=price,
+                    time_req=time_req,
+                    description=description,
+                    category=category,
+                    address=address
+                )
+
+                # Add the new service to the database
+                db.session.add(new_sev)
+                db.session.commit()
+                # Return a success message with the new service details
+                return jsonify({
+                    "message": "Service created successfully",
+                    "service": {
+                        "sev_id": new_sev.sev_id,
+                        "sev_name": new_sev.sev_name,
+                        "price": new_sev.price,
+                        "time_req": new_sev.time_req,
+                        "description": new_sev.description,
+                        "category": new_sev.category,
+                        "address":new_sev.address,
+                    }
+                }), 201 
+            
+
+            else:
+                return jsonify({"error": "Service with this name already exists"}), 409  
+        else:
+            return jsonify({"error": "Invalid data"}), 400 
+
+@app.route("/api/edit_sev/<int:sev_id>", methods=["GET", "POST"])
+def admin_update_sev(sev_id):
+    # Handle GET request to fetch the service details by ID
+    if request.method == "GET":
+        service = Service.query.filter_by(sev_id=sev_id).first()
+        if service:
+            service_data = {
+                "sev_name": service.sev_name,
+                "price": service.price,
+                "time_req": service.time_req,
+                "description": service.description,
+                "category": service.category,
+                "address": service.address
+            }
+            return jsonify(service_data), 200
+        else:
+            return jsonify({"error": "Service not found"}), 404
+    # Handle POST request to update the service details
+    if request.method == "POST":
+        try:
+            data = request.json
+            # Fetch the service to update by sev_id
+            sev_to_update = Service.query.get(sev_id)
+            if sev_to_update:
+                sev_to_update.sev_name = data.get("sev_name", sev_to_update.sev_name)
+                sev_to_update.price = data.get("price", sev_to_update.price)
+                sev_to_update.time_req = data.get("time_req", sev_to_update.time_req)
+                sev_to_update.description = data.get("description", sev_to_update.description)
+                sev_to_update.category = data.get("category", sev_to_update.category)
+                sev_to_update.address = data.get("address", sev_to_update.address)
+                
+                # Commit changes to the database
+                db.session.commit()
+
+                # Convert the updated service object to a dictionary for JSON serialization
+                updated_service_data = {
+                    "sev_name": sev_to_update.sev_name,
+                    "price": sev_to_update.price,
+                    "time_req": sev_to_update.time_req,
+                    "description": sev_to_update.description,
+                    "category": sev_to_update.category,
+                    "address": sev_to_update.address
+                }
+                
+                return jsonify({"message": "Service updated successfully", "service": updated_service_data}), 200
+            else:
+                return jsonify({"error": "Service not found"}), 404
+        except Exception as e:
+            db.session.rollback()  # Rollback in case of an error
+            return jsonify({"error": str(e)}), 500
+
+@app.route("/api/delete_sev/<int:sev_id>", methods=["DELETE"])
+def admin_delete_sev(sev_id):
+    try:
+        # Fetch the service to delete by sev_id
+        sev_to_delete = Service.query.get(sev_id)
+        if not sev_to_delete:
+            return jsonify({"error": "Service not found"}), 404
+        
+        # Delete the service
+        db.session.delete(sev_to_delete)
+        db.session.commit()
+
+        return jsonify({"message": "Service deleted successfully"}), 200
+    
+    except Exception as e:
+        db.session.rollback()  # Rollback in case of an error
+        return jsonify({"error": str(e)}), 500
+
+
+
+
+# -------------------------------------HOME----------------------------------------------------------------------
 @app.route("/admin_dashboard",methods=["GET","POST"])
 def admin_dashboard():
     global logged_admin
@@ -133,55 +361,11 @@ def admin_cust_details(cust_id):
     if request.method=="GET":
         return render_template("cust_details.html",cust=cust)
     
-#service management
-@app.route("/create_sev",methods=["GET", "POST"])
-def admin_create_sev():
-    if request.method=="GET":
-        return render_template("create_sev.html")
-    if request.method=="POST":
-        sev_name=request.form.get("sev_name")
-        price=request.form.get("price")
-        time_req=request.form.get("time_req")
-        description=request.form.get("description")
-        category=request.form.get("category")
-        new_sev=Service(sev_name=sev_name,price=price,time_req=time_req,description=description,category=category)
-        db.session.add(new_sev)
-        db.session.commit()
-        return redirect(url_for("admin_dashboard"))
-       
-@app.route("/delete_sev", methods=["GET", "POST"])
-def admin_delete_sev():
-    if request.method=="GET":
-        services=Service.query.all()
-        return render_template("delete_venue.html", services=services)
-    if request.method=="POST":
-        sev_id=request.form.get("sev_id")
-        sev_to_delete=Service.query.get(sev_id)
-        db.session.delete(sev_to_delete)
-        db.session.commit()
-        return redirect(url_for("admin_dashboard"))
 
-@app.route("/update_sev", methods=["GET", "POST"])
-def admin_update_sev():
-    if request.method=="GET":
-        services=Service.query.all()
-        return render_template("update_sev.html",services=services)
-    if request.method=="POST":
-        sev_id=request.form.get("sev_id")
-        sev_name=request.form.get("sev_name")
-        price=request.form.get("price")
-        time_req=request.form.get("time_req")
-        description=request.form.get("description")
-        category=request.form.get("category")
-        # update new sev in db
-        sev_to_update=Service.query.get(sev_id)
-        sev_to_update.sev_name=sev_name
-        sev_to_update.price=price
-        sev_to_update.time_req=time_req
-        sev_to_update.description=description
-        sev_to_update.category=category
-        db.session.commit()
-        return redirect(url_for("admin_dashboard"))
+       
+
+
+
     
 #search
 #implement drop down feature, all in one search, add multiple filters -all 4 by name or search text(closed requests)
@@ -218,32 +402,7 @@ def admin_summary():
    #close the service request once completed*
 #summary graphs 
 
-@app.route('/prof_reg', methods=['GET','POST'])
-def prof_reg():
-    if request.method=="GET":
-        return render_template("prof_reg.html")
-    if request.method=="POST":
-        prof_id =request.form.get("prof_id")
-        prof_name=request.form.get("prof_name")
-        prof_password=request.form.get("prof_password")
-        service_type=request.form.get("service_type")
-        experience=request.form.get("experience")
-        address=request.form.get("address")
-        pincode=request.form.get("pincode")
-        description=request.form.get("description")
-        date_created=datetime.now().date()
-        try:
-            exist=Professional.query.filter_by(prof_id=prof_id).first()
-            if exist:
-                return render_template("prof_reg.html",message="Professional username already exists")
-            else:
-                new_prof=Professional(prof_id=prof_id,prof_name=prof_name,prof_password=prof_password, service_type=service_type,experience=experience, address= address, pincode= pincode,description=description,date_created=date_created)
-                db.session.add(new_prof)
-                db.session.commit()
-                return redirect(url_for("prof_dashboard",prof_id=prof_id))
-        except:
-            return "some error"
-    return render_template("prof_reg.html")
+
     
 @app.route("/prof_login",methods=["GET","POST"])
 def prof_login():
@@ -398,29 +557,7 @@ def prof_summary():
 #search - Services based on their location, name, pin code etc. OR text- category
 #summary graphs 
 
-@app.route('/cust_reg', methods=['GET','POST'])
-def cust_reg():
-    if request.method=="GET":
-        return render_template("cust_reg.html")
-    if request.method=="POST":
-        cust_id =request.form.get("cust_id")
-        cust_name=request.form.get("cust_name")
-        cust_password=request.form.get("cust_password")
-        address=request.form.get("address")
-        pincode=request.form.get("pincode")
-        try:
-            exist=Customer.query.filter_by(cust_id=cust_id).first()
-            if exist:
-                return render_template("cust_reg.html",message="Customer username already exists")
-            else:
-                new_cust=Customer(cust_id=cust_id,cust_name=cust_name,cust_password=cust_password,address= address, pincode= pincode)
-                db.session.add(new_cust)
-                db.session.commit()
-                return redirect(url_for("cust_dashboard",cust_id=cust_id))
-        except:
-            return "some error"
-    return render_template("cust_reg.html")
-    
+
 @app.route("/cust_login",methods=["GET","POST"])
 def cust_login():
     if request.method=="GET":
