@@ -1,11 +1,11 @@
 <template>
-<nav class="navbar bg-body-tertiary fixed-top">
-        <div class="container-fluid">
-            <a class="navbar-brand" >ADMIN DASHBOARD</a>
-            <a href="/admin_dashboard"><button class="color">Home</button></a>
-            <a href="/admin_search"><button class="color">Search</button></a>
-            <a href="/admin_summary"><button class="color">Summary</button></a>
-            <a href="/"><button class="color">Logout</button></a>
+    <nav class="navbar bg-body-tertiary fixed-top" style="background-color: #3b0a03;">
+        <div class="container-fluid" style="background-color: #3b0a03;">
+            <a class="navbar-brand " style="color:white">ADMIN DASHBOARD</a>
+            <a href="/admin_dashboard"><button style="background-color:rgb(205, 176, 132);">Home</button></a>
+            <a href="/admin_search"><button style="background-color: #3b0a03;">Search</button></a>
+            <a href="/admin_summary"><button style="background-color: #3b0a03;">Summary</button></a>
+            <a href="/"><button style="background-color: #3b0a03;">Logout</button></a>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -42,9 +42,9 @@
     </nav>
 </template>
 
-<style>
- body {padding-top: 70px;background-color: rgb(205, 176, 132);}
-    .header {text-align: center;border: 2px solid rgb(205, 176, 132);padding: 8px;background-color: #3b0a03;color: white;
+<style scoped>
+ body {padding-top: 70px;background-color: #3b0a03 !important; }
+    .header {text-align: center;border: 2px solid rgb(205, 176, 132);padding: 8px;background-color:rgb(205, 176, 132) ;color: white;
         margin-bottom: 18px;margin-top: -50px;}
     .btn-container {text-align: center;margin-top: 50px;}
     .btn-custom {border: 4px solid  #3b0a03;font-size: 30px;padding: 20px 40px;margin: 10px;
@@ -56,7 +56,7 @@
     .image-container img { max-width: 25%;height: auto;margin-top: -150px;}
 
 h1, h2 {margin-top: 50px;}
-table {margin-top: 20px;}.form-container {margin-top: 30px;}.navbar-brand {font-weight: bold;}.navbar, .offcanvas-header, .offcanvas-body {background-color: #f0f2ec;}
+table {margin-top: 20px;}.form-container {margin-top: 30px;}.navbar-brand {font-weight: bold;}.navbar {background-color:#3b0a03;} .offcanvas-header, .offcanvas-body {background-color:#3b0a03;}
 .navbar-brand, .nav-link, .offcanvas-title {color: #020b17;}
 .small-image { width: 60%; 
     height: 50%;}

@@ -8,9 +8,10 @@
       <!-- Services Table -->
       <section class="mb-5">
         <h3>Services</h3>
-        <button @click.prevent="showNewServiceForm = true" class="btn btn-primary mb-3">
+        <button @click.prevent="showNewServiceForm = true"  class="red">
           + New Service
         </button>
+        <div>
         <table class="table table-striped table-hover">
           <thead class="thead-dark">
             <tr>
@@ -42,6 +43,7 @@
             </tr>
           </tbody>
         </table>
+      </div>
       </section>
 
       <!-- Professionals Table -->
@@ -430,4 +432,5 @@ td {
 button {
   margin-right: 10px;
 }
+.red{background-color: #3b0a03}
 </style>
