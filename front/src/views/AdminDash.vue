@@ -1,4 +1,5 @@
 <template>
+  <body>
   <div class="container mt-0">
     <header class="d-flex justify-content-between align-items-center mb-4">
       <MenuBar />
@@ -22,6 +23,7 @@
               <th>Time Required</th>
               <th>Description</th>
               <th>Address</th>
+              <th>Pincode</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -34,6 +36,7 @@
               <td>{{ service.time_req }}</td>
               <td>{{ service.description }}</td>
               <td>{{ service.address }}</td>
+              <td>{{ service.pincode }}</td>
               <td>
                 <div class="d-flex">
                 <button @click.prevent="openEditServiceForm(service)" class="btn btn-warning btn-sm mr-2">Edit</button>
@@ -53,21 +56,29 @@
           <thead class="thead-dark">
             <tr>
               <th>ID</th>
-              <th>Name</th>
+              <th>Description</th>
               <th>Experience (Yrs)</th>
               <th>Service Name</th>
+              <th>Approval</th>
+              <th>Blocked</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(professional, index) in professionals" :key="index">
-              <td>{{ professional.id }}</td>
-              <td>{{ professional.name }}</td>
+              <td>{{ professional.prof_email }}</td>
+              <td>{{ professional.description }}</td>
               <td>{{ professional.experience }}</td>
-              <td>{{ professional.serviceName }}</td>
-              <td>
-                <button @click="approveProfessional(professional.id)" class="btn btn-success btn-sm">Approve</button>
-                <button @click="rejectProfessional(professional.id)" class="btn btn-danger btn-sm">Reject</button>
+              <td>{{ professional.service_type }}</td>
+              <td>{{ professional.approval}}</td>
+              <td>{{ professional.blocked}}</td>
+
+
+              <td class="d-flex">
+                <button @click="approveProfessional(professional.prof_email)" class="btn btn-success btn-sm">Approve</button>
+                <button @click="rejectProfessional(professional.prof_email)" class="btn btn-danger btn-sm">Reject</button>
+                <button @click="blockProfessional(professional.prof_email)" class="btn btn-dark btn-sm">Block/Unblock</button>
+
               </td>
             </tr>
           </tbody>
@@ -82,16 +93,22 @@
             <tr>
               <th>ID</th>
               <th>Assigned Professional</th>
+              <th>Customer</th>
               <th>Requested Date</th>
+              <th>Completion Date</th>
+              <th>Service ID</th>
               <th>Status (R/A/C)</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(request, index) in requests" :key="index">
-              <td>{{ request.id }}</td>
-              <td>{{ request.professional }}</td>
-              <td>{{ request.requestedDate }}</td>
-              <td>{{ request.status }}</td>
+            <tr v-for="( service_request, index) in service_requests" :key="index">
+              <td>{{ service_request.sevreq_id }}</td>
+              <td>{{ service_request.prof_email }}</td>
+              <td>{{ service_request.cust_email }}</td>
+              <td>{{ service_request.date_of_request }}</td>
+              <td>{{ service_request.date_of_completion }}</td>
+              <td>{{ service_request.sev_id }}</td>
+              <td>{{ service_request.sev_status }}</td>
             </tr>
           </tbody>
         </table>
@@ -125,8 +142,14 @@
                         </div>
 
                         <div class="mb-3">
-                          <label class="form-label">Category:</label>
-                          <input v-model="editedService.category" type="text" class="form-control" required />
+                           <label for="category" class="form-label">Category:</label>
+                           <select v-model="editedService.category" type="text"  name="category" id="category" class="form-control" required >
+                           <option value="" disabled>Select a category</option>
+                           <option value="Home Maintenance Services">Home Maintenance Services</option>
+                           <option value="Cleaning and Organization Services">Cleaning and Organization Services</option>
+                           <option value="Child_Elderly Care Services">Child_Elderly Care Services</option>
+                           <option value="Lifestyle and Convenience Services">Lifestyle and Convenience Services</option>
+                           </select> 
                         </div>
 
                         <div class="mb-3">
@@ -138,7 +161,10 @@
                           <label class="form-label">Address:</label>
                           <input v-model="editedService.address" type="text" class="form-control" required />
                         </div>
-
+                        <div class="mb-3">  
+                          <label class="form-label">Pincode:</label>
+                          <input v-model="editedService.pincode" type="number" class="form-control" required />
+                        </div>
                         <div class="modal-footer">
                           <button type="submit" class="btn btn-primary">Save Changes</button>
                           <button @click.prevent="showEditServiceForm = false" class="btn btn-secondary">Cancel</button>
@@ -175,8 +201,14 @@
               </div>
 
               <div class="mb-3">
-                <label class="form-label">Category:</label>
-                <input v-model="newService.category" type="text" class="form-control" required />
+                <label for="category" class="form-label">Category:</label>
+                <select v-model="newService.category" type="text"  name="category" id="category" class="form-control" required >
+                <option value="" disabled>Select a category</option>
+                <option value="Home Maintenance Services">Home Maintenance Services</option>
+                <option value="Cleaning and Organization Services">Cleaning and Organization Services</option>
+                <option value="Child_Elderly Care Services">Child_Elderly Care Services</option>
+                <option value="Lifestyle and Convenience Services">Lifestyle and Convenience Services</option>
+                </select> 
               </div>
 
               <div class="mb-3">
@@ -188,7 +220,10 @@
                 <label class="form-label">Address:</label>
                 <input v-model="newService.address" type="text" class="form-control" required />
               </div>
-
+              <div class="mb-3">
+                <label class="form-label">Pincode:</label>  
+                <input v-model="newService.pincode" type="number" class="form-control" required />
+              </div>
               <div class="modal-footer">
                 <button type="submit" class="btn btn-primary">Add Service</button>
                 <button @click.prevent="showNewServiceForm = false" class="btn btn-secondary">Cancel</button>
@@ -198,20 +233,21 @@
         </div>
       </div>
     </div>
+  </body>
 </template>
 
 
 <script>
 import MenuBar from '../components/MenuBar.vue';
-import axios from 'axios'; // Make sure axios is imported
+import axios from 'axios'; 
 
 export default {
   name: 'AdminDash',
   data() {
     return {
-      services: [], // List of services
-      professionals: [], // List of professionals
-      requests: [], // List of service requests
+      services: [], 
+      professionals: [], 
+      service_requests: [],
       showNewServiceForm: false, // Controls the visibility of the new service form modal
       showEditServiceForm: false, // Controls the visibility of the edit service form modal
       newService: {
@@ -220,7 +256,8 @@ export default {
         price: '',
         time_req: '',
         address: '',
-        category: ''
+        category: '',
+        pincode: ''
       },
       editedService: { // Holds the service being edited
         sev_id: '',
@@ -229,13 +266,16 @@ export default {
         price: '',
         time_req: '',
         address: '',
-        category: ''
+        category: '',
+        pincode: ''
       }
     };
   },
   components: { MenuBar },
   created() {
-    this.fetchServices(); // Fetch the services when the component is created
+    this.fetchServices(); 
+    this.fetchProfessionals();
+    this.fetchServiceRequests();
   },
   methods: {
     async fetchServices() {
@@ -258,7 +298,8 @@ export default {
           "price": this.newService.price,
           "time_req": this.newService.time_req,
           "category": this.newService.category,
-          "address": this.newService.address
+          "address": this.newService.address,
+          "pincode": this.newService.pincode
         });
 
         // If the response is successful, add the new service to the list and close the modal
@@ -278,7 +319,8 @@ export default {
             price: '',
             time_req: '',
             address: '',
-            category: ''
+            category: '',
+            pincode: ''
           };
 
           // Close the modal
@@ -289,7 +331,6 @@ export default {
           alert("Failed to add service: " + response.data.error);
         }
       } catch (error) {
-        // Handle any errors during the request
         console.error('Error adding new service:', error.message);
         alert('An error occurred while adding the service.');
       }
@@ -311,7 +352,8 @@ export default {
           "price": this.editedService.price,
           "time_req": this.editedService.time_req,
           "category": this.editedService.category,
-          "address": this.editedService.address
+          "address": this.editedService.address,
+          "pincode": this.editedService.pincode
         });
 
         if (response.status === 200) { // Check if the update was successful
@@ -335,7 +377,8 @@ export default {
             price: '',
             time_req: '',
             address: '',
-            category: ''
+            category: '',
+            pincode: ''
           };
           location.reload();
         } else {
@@ -349,12 +392,9 @@ export default {
     async deleteService(sev_id) {
       if (confirm("Are you sure you want to delete this service?")) {
         try {
-          // Sending a DELETE request to your backend using axios
           const response = await axios.delete(`http://127.0.0.1:8080/api/delete_sev/${sev_id}`);
-
           if (response.status === 200) {
             console.log("Service deleted successfully:", response.data);
-
             // Remove the deleted service from the local array 'services'
             this.services = this.services.filter(service => service.sev_id !== sev_id);
             alert("Service deleted successfully");
@@ -367,37 +407,112 @@ export default {
         }
       }
     },
-    approveProfessional(prof_id) {
-      // Logic to approve a professional
-      console.log("Approving professional with ID:", professionalId);
+    async fetchProfessionals() {
+      try {
+        const response = await axios.get('http://127.0.0.1:8080/api/professionals');
+        if (response.status === 200) {
+          this.professionals = response.data; // Update the services array with the data from the backend
+        } else {
+          console.error("Failed to fetch professionals:", response.data.error);
+        }
+      } catch (error) {
+        console.error('Error fetching professionals:', error.message);
+      }
     },
-    rejectProfessional(prof_id) {
-      // Logic to reject a professional
-      console.log("Rejecting professional with ID:", professionalId);
-    }
+    async approveProfessional(prof_email) {
+    try {
+      if (!prof_email) {
+        console.error("Professional email is undefined");
+        return;
+      }         
+      const response = await axios.post(`http://127.0.0.1:8080/api/professional/approve/${prof_email}`);
+
+      if (response.status === 200) {  // Check if the update was successful
+        console.log("Professional approved successfully:", response.data);
+        location.reload();
+
+      } else {          
+        console.error("Failed to approve professional: " + response.data.error);
+      }
+    } catch (error) {
+      console.error('Error approving professional:', error.message);
+    } 
+    },
+    async rejectProfessional(prof_email) {
+      try {
+      if (!prof_email) {
+        console.error("Professional email is undefined");
+        return;
+      }         
+      const response = await axios.post(`http://127.0.0.1:8080/api/professional/reject/${prof_email}`);
+
+      if (response.status === 200) {  // Check if the update was successful
+        console.log("Professional rejected successfully:", response.data);
+        location.reload();
+
+      } else {          
+        console.error("Failed to reject professional: " + response.data.error);
+      }
+    } catch (error) {
+      console.error('Error rejecting professional:', error.message);
+    } 
+  },
+  async blockProfessional(prof_email) {
+      try {
+      if (!prof_email) {
+        console.error("Professional email is undefined");
+        return;
+      }         
+      const response = await axios.post(`http://127.0.0.1:8080/api/professional/block/${prof_email}`);
+
+      if (response.status === 200) {  // Check if the update was successful
+        console.log("Professional blocked successfully:", response.data);
+        location.reload();
+
+      } else {          
+        console.error("Failed to block professional: " + response.data.error);
+      }
+    } catch (error) {
+      console.error('Error blocking professional:', error.message);
+    } 
+  },
+  async fetchServiceRequests() {
+    try {
+      const response = await axios.get('http://127.0.0.1:8080/api/service_requests');
+      if (response.status === 200) {
+        this.service_requests = response.data; // Update the services array with the data from the backend
+      } else {
+        console.error("Failed to fetch service requests:", response.data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching service requests:', error.message);
+  }
   }
 }
-
+}
 </script>
 
 <style scoped>
 .admin-dashboard {
-  padding: 20px;
-}
+  background-color: rgb(205, 176, 132);
+     
+  }
 
 header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+
 }
 
 table {
-  width: 100%;
+  width: 90%; /* Reduces table width to fit within the container */
+  max-width: 1200px; /* Optional: sets a maximum width for larger screens */
   border-collapse: collapse;
-  margin-bottom: 20px;
+  margin: 20px auto; /* Centers the table and adds spacing above and below */
+  font-size: 1.1em;
 }
-
 table,
 th,
 td {

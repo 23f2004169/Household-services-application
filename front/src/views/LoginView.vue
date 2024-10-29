@@ -10,6 +10,13 @@
       <input v-model="email" type="text" name="email" id="email" class="form-control" required>
       <label for="password" class="form-label white">Enter password:</label>
       <input v-model="password" type="password" name="password" id="password" class="form-control" required>
+      <label for="role" class="form-label white">Select Role:</label>
+      <select v-model="role" name="role" id="role" class="form-control" required>
+      <option value="" disabled>Select a role</option>
+      <option value="admin">Admin</option>
+      <option value="cust">Customer</option>
+      <option value="prof">Professional</option>
+      </select>                
       <button type="submit" class="btn btn-primary">Submit</button>
     </form>  
   </div> 
@@ -35,20 +42,31 @@ export default {
     return {
       email: "",
       password: "",
+      role: "",
     };
   },
   methods: {
     async login() {
       try {
         // Make the login request
-        const response = await axios.post('http://127.0.0.1:8080/api/admin_login', {
+        const response = await axios.post(`http://127.0.0.1:8080/api/login`, {
           "email": this.email,
-          "password": this.password
+          "password": this.password,
+          "role": this.role,
         });
 
         if (response.status === 200) {
-          this.$router.push('/admin_dashboard');
+          if (this.role === 'admin') {
+            this.$router.push('/admin_dashboard');
+          } else if (this.role === 'cust') {
+            this.$router.push({ path: '/cust_dashboard', query: { email: this.email } });  
+
+          } else if (this.role === 'prof') {
+            this.$router.push('/prof_dashboard');
+          } else {
+            alert('Invalid role');
         } 
+      }
         else {
           alert(response.data.error);
         }

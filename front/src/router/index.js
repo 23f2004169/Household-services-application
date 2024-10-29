@@ -38,12 +38,19 @@ const router = createRouter({
       path: "/cust_dashboard",
       name: "CustDash",
       component:CustDash,
+      props: (route) => ({ email: route.query.email })
     },
     {
       path: "/prof_dashboard",
       name: "ProfDash",
       component:ProfDash,
     },
+    { path: '/services/:category',
+      name: 'CustServices',
+      component:()=> import("../views/CustServices.vue"),
+      props: (route) => ({ category: route.params.category, email: route.query.email })
+    },
+    
   ],
 });
 

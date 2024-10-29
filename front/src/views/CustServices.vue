@@ -1,0 +1,195 @@
+<template>
+    <div class="container">
+      <header>
+        <CustBar :email="email"/>
+      </header>
+      <h1>Services for {{ category }}</h1>
+      <div v-if="services && services.length > 0">
+        <div class="services">
+          <div class="service-card" v-for="service in services" :key="service.sev_id">
+            <img :src="service.image_url || '/static/default-service.png'" :alt="service.sev_name">
+            <h3>{{ service.sev_name }}</h3>
+            <p>{{ service.description }}</p>
+            <p>Price: Rs.{{ service.price }}</p>
+            <p>Time Required: {{ service.time_req }}</p>
+            <p>Address: {{ service.address }}</p>
+            <p>Category: {{ service.category }}</p>
+            <button @click.prevent="showNewServiceRequestForm = true"  class="red">
+              + New Service Request
+            </button>
+          </div>
+        </div>
+      </div>
+      <p v-else>Loading services...</p>
+    </div>
+
+
+    <!-- New Service Request Form Modal -->
+<div v-show="showNewServiceRequestForm" class="modal fade show" style="display: block;" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">New Service Request</h5>
+        <button @click.prevent="showNewServiceRequestForm = false" class="btn-close"></button>
+      </div>
+      <div class="modal-body">
+        <form @submit.prevent="addNewServiceRequest">
+          <div class="mb-3">
+            <label class="form-label">Customer Email:</label>
+            <input v-model="newServiceRequest.cust_email" type="email" class="form-control" required readonly />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Professional Email:</label>
+            <input v-model="newServiceRequest.prof_email" type="email" class="form-control" required />
+          </div>
+
+          <div class="mb-3">
+            <label for="service" class="form-label">Service:</label>
+            <select v-model="newServiceRequest.sev_id" name="service" id="service" class="form-control" required>
+              <option value="" disabled>Select a service</option>
+              <option v-for="service in services" :key="service.sev_id" :value="service.sev_id">
+                {{ service.sev_name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Date of Request:</label>
+            <input v-model="newServiceRequest.date_of_request" type="date" class="form-control" required />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Date of Completion:</label>
+            <input v-model="newServiceRequest.date_of_completion" type="date" class="form-control" required />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Remarks:</label>
+            <textarea v-model="newServiceRequest.remarks" class="form-control"></textarea>
+          </div>
+
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Request Service</button>
+            <button @click.prevent="showNewServiceRequestForm = false" class="btn btn-secondary">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+</template>
+ 
+<script>
+import CustBar from '../components/CustBar.vue';
+import axios from 'axios';
+
+export default {
+  components: { CustBar },
+  props: ['category', 'email'], 
+  data() {
+    return {
+      showNewServiceRequestForm: false,
+      newServiceRequest: {
+        cust_email: this.email,
+        prof_email: '',
+        sev_id: '',
+        date_of_request: '',
+        date_of_completion: '',
+      },
+      // Array to store services fetched from the API
+      services: [] , 
+      requests: []
+    };
+  },
+  async created() {
+    await this.fetchServices();
+  },
+  methods: {
+    async fetchServices() {
+    try {
+      const response = await axios.get(`http://127.0.0.1:8080/api/services`, {
+        params: {
+          category: this.category,
+          email: this.email 
+        }
+      });
+      this.services = response.data;
+    } catch (error) {
+      console.error("Error fetching services:", error);
+    }
+  },
+    async addNewServiceRequest() {
+      try {
+        const response = await axios.post(`http://127.0.0.1:8080/api/create_sevrequest/${this.email}`, { 
+          "cust_email": this.email,
+          "prof_email": this.newServiceRequest.prof_email,
+          "sev_id": this.newServiceRequest.sev_id,
+          "date_of_request": this.newServiceRequest.date_of_request,
+          "date_of_completion": this.newServiceRequest.date_of_completion,
+        });
+
+        if (response.status === 201) { // Changed from 200 to 201
+          console.log("Service request created successfully:", response.data);
+          await this.fetchServices(); // Optionally fetch services again if necessary
+          
+          this.requests.push({
+            ...this.newServiceRequest,
+            id: response.data.sevreq_id 
+          }); 
+
+          this.newServiceRequest = {
+            cust_email: '',
+            prof_email: '',
+            sev_id: '',
+            date_of_request: '',
+            date_of_completion: '',
+          };
+
+          this.showNewServiceRequestForm = false;
+          alert("Service request created successfully!");
+          location.reload();
+        } else {
+          alert("Failed to create service request: " + response.data.error);
+        }
+      } catch (error) {
+        console.error('Error creating service request:', error); 
+        alert('An error occurred while creating the service request.');
+      }
+    },
+  }
+};
+</script>
+  
+    
+  
+
+
+  <style>
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .services {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  .service-card {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 200px;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+  }
+  .service-card img {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 10px;
+  }
+  </style>
+  

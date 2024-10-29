@@ -1,32 +1,34 @@
 <template>
     <nav class="navbar bg-body-tertiary fixed-top" style="background-color: #3b0a03;">
         <div class="container-fluid" style="background-color: #3b0a03;">
-            <a class="navbar-brand " style="color:white">ADMIN DASHBOARD</a>
-            <a href="/admin_dashboard"><button style="background-color: #3b0a03;">Home</button></a>
-            <a href="/admin_search"><button style="background-color: #3b0a03;">Search</button></a>
-            <a href="/admin_summary"><button style="background-color: #3b0a03;">Summary</button></a>
-            <a href="/"><button style="background-color: #3b0a03;">Logout</button></a>
+            <a class="navbar-brand " style="color:white">CUSTOMER DASHBOARD</a>
+            <router-link :to="{ path: '/cust_dashboard', query: { email: email } }">
+               <button style="background-color:#3b0a03;">Home</button>
+            </router-link> 
+            <a href="/cust_search"><button style="background-color: #3b0a03;">Search</button></a>
+            <a href="/cust_summary"><button style="background-color: #3b0a03;">Summary</button></a>
+            <a href="/login"><button style="background-color: #3b0a03;">Logout</button></a>
 
-            <button style="background-color:white" class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon" style="color:white"></span>
+            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
             </button>
             <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarlabel">
                 <div class="offcanvas-header">
-                    <h5 class="offcanvas-title" id="offcanvasNavbarLabel" style="color:white">ALL DETAILS </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close" style="color:white"></button>
+                    <h5 class="offcanvas-title" id="offcanvasNavbarLabel">ALL DETAILS </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                 </div>
                 <div class="offcanvas-body">
                     <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
                         <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="/admin_dashboard" style="color:white">Home</a>
+                            <a class="nav-link active" aria-current="page" href="/admin_dashboard">Home</a>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color:white">ExtendedVIEW</a>
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">VIEW ALL</a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="/campaigns">Campaigns</a></li>
-                                <li><a class="dropdown-item" href="/sponsors">Sponsors</a></li>
-                                <li><a class="dropdown-item" href="/influencers">Influencers</a></li>
-                                <li><a class="dropdown-item" href="/adrequests">Ad requests</a></li>
+                                <li><a class="dropdown-item" href="/">Campaigns</a></li>
+                                <li><a class="dropdown-item" href="/">Sponsors</a></li>
+                                <li><a class="dropdown-item" href="/">Influencers</a></li>
+                                <li><a class="dropdown-item" href="/">Ad requests</a></li>
                             </ul>
                         </li>
                         
@@ -72,7 +74,10 @@ table {margin-top: 20px;}.form-container {margin-top: 30px;}.navbar-brand {font-
 
 <script>
 export default{
-   name:'MenuBar'
-
+   name:'CustBar',
+   props: ['email'],
+   mounted() {
+    console.log('CustBar received email:', this.email);
+  }
 }
 </script>

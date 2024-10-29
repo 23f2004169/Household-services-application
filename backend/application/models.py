@@ -22,7 +22,7 @@ class Professional(db.Model):
     address = db.Column(db.String)
     pincode = db.Column(db.String)
     blocked = db.Column(db.Integer, default=0)
-    approved = db.Column(db.Integer, default=0)
+    approval = db.Column(db.String, default='pending')
     rating = db.Column(db.Numeric(1, 1), default=0)
     sev_num_rating = db.Column(db.Integer, default=0)
     sev_total_rating = db.Column(db.Numeric, default=0)
@@ -50,7 +50,7 @@ class Service(db.Model):
     description = db.Column(db.String, nullable=False)
     category = db.Column(db.String, nullable=False)
     address = db.Column(db.String)
-
+    pincode = db.Column(db.String)
     # Establishing relationship with Sevrequest
     sev_req = db.relationship("Sevrequest", backref='service', cascade='all, delete-orphan')
 
@@ -60,7 +60,7 @@ class Sevrequest(db.Model):
     cust_email = db.Column(db.String, db.ForeignKey("customer.cust_email"), nullable=False)
     prof_email = db.Column(db.String, db.ForeignKey("professional.prof_email"), nullable=False)  # Corrected this line
     sev_id = db.Column(db.Integer, db.ForeignKey("service.sev_id"), nullable=False)
-    date_of_request = db.Column(db.String, nullable=False)
+    date_of_request = db.Column(db.String, nullable=False) 
     date_of_completion = db.Column(db.String, nullable=False)
     remarks = db.Column(db.String)
     sev_status = db.Column(db.String, nullable=False, default="requested")  # closed, requested, accepted(assigned), rejected
