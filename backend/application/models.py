@@ -23,10 +23,6 @@ class Professional(db.Model):
     pincode = db.Column(db.String)
     blocked = db.Column(db.Integer, default=0)
     approval = db.Column(db.String, default='pending')
-    rating = db.Column(db.Numeric(1, 1), default=0)
-    sev_num_rating = db.Column(db.Integer, default=0)
-    sev_total_rating = db.Column(db.Numeric, default=0)
-    
     # Establishing relationship with Sevrequest
     prof_req = db.relationship('Sevrequest', backref='professional', cascade='all, delete-orphan')
 
@@ -37,7 +33,6 @@ class Customer(db.Model):
     address = db.Column(db.String, nullable=False)
     pincode = db.Column(db.String, nullable=False)
     blocked = db.Column(db.Integer, default=0)
-    
     # Establishing relationship with Sevrequest
     cust_req = db.relationship('Sevrequest', backref='customer', cascade='all, delete-orphan')
 
@@ -51,16 +46,19 @@ class Service(db.Model):
     category = db.Column(db.String, nullable=False)
     address = db.Column(db.String)
     pincode = db.Column(db.String)
-    # Establishing relationship with Sevrequest
+    #Establishing relationship with Sevrequest
     sev_req = db.relationship("Sevrequest", backref='service', cascade='all, delete-orphan')
 
 class Sevrequest(db.Model):
     __tablename__ = "sevrequest"
     sevreq_id = db.Column(db.Integer, primary_key=True, nullable=False)
     cust_email = db.Column(db.String, db.ForeignKey("customer.cust_email"), nullable=False)
-    prof_email = db.Column(db.String, db.ForeignKey("professional.prof_email"), nullable=False)  # Corrected this line
+    prof_email = db.Column(db.String, db.ForeignKey("professional.prof_email"), nullable=False) 
     sev_id = db.Column(db.Integer, db.ForeignKey("service.sev_id"), nullable=False)
     date_of_request = db.Column(db.String, nullable=False) 
     date_of_completion = db.Column(db.String, nullable=False)
     remarks = db.Column(db.String)
     sev_status = db.Column(db.String, nullable=False, default="requested")  # closed, requested, accepted(assigned), rejected
+    rating = db.Column(db.Numeric(1, 1), default=0)
+    sev_num_rating = db.Column(db.Integer, default=0)
+    sev_total_rating = db.Column(db.Numeric, default=0)

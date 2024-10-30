@@ -62,7 +62,7 @@ export default {
             this.$router.push({ path: '/cust_dashboard', query: { email: this.email } });  
 
           } else if (this.role === 'prof') {
-            this.$router.push('/prof_dashboard');
+            this.$router.push({path:'/prof_dashboard', query: { email: this.email }});
           } else {
             alert('Invalid role');
         } 

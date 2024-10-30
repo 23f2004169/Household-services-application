@@ -9,7 +9,7 @@
       <!-- Services Table -->
       <section class="mb-5">
         <h3>Services</h3>
-        <button @click.prevent="showNewServiceForm = true"  class="red">
+        <button @click.prevent="showNewServiceForm = true"  class="red ">
           + New Service
         </button>
         <div>
@@ -98,6 +98,7 @@
               <th>Completion Date</th>
               <th>Service ID</th>
               <th>Status (R/A/C)</th>
+              <th>Rating</th>
             </tr>
           </thead>
           <tbody>
@@ -109,6 +110,7 @@
               <td>{{ service_request.date_of_completion }}</td>
               <td>{{ service_request.sev_id }}</td>
               <td>{{ service_request.sev_status }}</td>
+              <td>{{ service_request.rating }}</td>
             </tr>
           </tbody>
         </table>
@@ -143,7 +145,7 @@
 
                         <div class="mb-3">
                            <label for="category" class="form-label">Category:</label>
-                           <select v-model="editedService.category" type="text"  name="category" id="category" class="form-control" required >
+                           <select v-model="editedService.category"  name="category" id="category" class="form-control" required >
                            <option value="" disabled>Select a category</option>
                            <option value="Home Maintenance Services">Home Maintenance Services</option>
                            <option value="Cleaning and Organization Services">Cleaning and Organization Services</option>
@@ -154,7 +156,7 @@
 
                         <div class="mb-3">
                           <label class="form-label">Time Required:</label>
-                          <input v-model="editedService.time_req" type="number" class="form-control" required />
+                          <input v-model="editedService.time_req" type="text" class="form-control" required />
                         </div>
 
                         <div class="mb-3">
@@ -180,7 +182,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">New Service</h5>
+            <h5 class="modal title">New Service</h5>
             <button @click.prevent="showNewServiceForm = false" class="btn-close"></button>
           </div>
           <div class="modal-body">
@@ -202,7 +204,7 @@
 
               <div class="mb-3">
                 <label for="category" class="form-label">Category:</label>
-                <select v-model="newService.category" type="text"  name="category" id="category" class="form-control" required >
+                <select v-model="newService.category"  name="category" id="category" class="form-control" required >
                 <option value="" disabled>Select a category</option>
                 <option value="Home Maintenance Services">Home Maintenance Services</option>
                 <option value="Cleaning and Organization Services">Cleaning and Organization Services</option>
@@ -213,7 +215,7 @@
 
               <div class="mb-3">
                 <label class="form-label">Time Required:</label>
-                <input v-model="newService.time_req" type="number" class="form-control" required />
+                <input v-model="newService.time_req" type="text" class="form-control" required />
               </div>
 
               <div class="mb-3">
@@ -424,9 +426,8 @@ export default {
       if (!prof_email) {
         console.error("Professional email is undefined");
         return;
-      }         
+      }      
       const response = await axios.post(`http://127.0.0.1:8080/api/professional/approve/${prof_email}`);
-
       if (response.status === 200) {  // Check if the update was successful
         console.log("Professional approved successfully:", response.data);
         location.reload();
@@ -492,12 +493,7 @@ export default {
 }
 </script>
 
-<style scoped>
-.admin-dashboard {
-  background-color: rgb(205, 176, 132);
-     
-  }
-
+<style>
 header {
   display: flex;
   justify-content: space-between;
@@ -548,4 +544,5 @@ button {
   margin-right: 10px;
 }
 .red{background-color: #3b0a03}
+.white{color:white}
 </style>

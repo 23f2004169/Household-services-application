@@ -44,6 +44,8 @@ const router = createRouter({
       path: "/prof_dashboard",
       name: "ProfDash",
       component:ProfDash,
+      props: (route) => ({ email: route.query.email })
+
     },
     { path: '/services/:category',
       name: 'CustServices',

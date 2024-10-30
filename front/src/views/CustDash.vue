@@ -5,7 +5,7 @@
         <h2>Welcome Customer</h2>
         <p>Your email: {{ email }}</p>
         </header>
-        <h1>Cleaning Services</h1> 
+        <h1>Category of Services</h1> 
         <div class="rating">
             <span class="star">★</span> 4.9 (3.4M bookings near you)
         </div>      
@@ -45,6 +45,8 @@
               <th>Completion Date</th>
               <th>Service ID</th>
               <th>Status (R/A/C)</th>
+              <th>Rating</th>
+              <th>Remarks</th>
               <th></th>
               <th>Actions</th>
             </tr>
@@ -58,13 +60,15 @@
               <td>{{ service_request.date_of_completion }}</td>
               <td>{{ service_request.sev_id }}</td>
               <td>{{ service_request.sev_status }}</td>
+              <td>{{ service_request.rating }}</td>
+              <td>{{ service_request.remarks }}</td>
               <td>
                 <div class="d-flex">
                     <button v-if="service_request.sev_status === 'requested' || service_request.sev_status === 'accepted'"
                      @click.prevent="closeServiceRequest(service_request.sevreq_id)"class="btn btn-info btn-sm mr-5">Close</button>
         
                     <button v-else-if="service_request.sev_status === 'closed'"
-                     @click.prevent="rateServiceRequest(service_request.sevreq_id)" class="btn btn-violet btn-sm mr-5">Rate</button>
+                     @click.prevent="openRateServiceForm(service_request)" class="btn btn-violet btn-sm mr-5">Rate</button>
                 </div>
                 
               </td>
@@ -78,56 +82,8 @@
           </tbody>
         </table>
       </section>
-      <!-- Rate Service Modal -->
-<div class="modal fade" id="rateModal" tabindex="-1" role="dialog" aria-labelledby="rateModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="rateModalLabel">Service Remarks</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <h5>Request ID: {{ selectedServiceRequest.sevreq_id }}</h5>
-        <div class="form-group">
-          <label>Service Name</label>
-          <input type="text" class="form-control" v-model="selectedServiceRequest.service_name" readonly>
-        </div>
-        <div class="form-group">
-          <label>Description</label>
-          <input type="text" class="form-control" v-model="selectedServiceRequest.description" readonly>
-        </div>
-        <div class="form-group">
-          <label>Professional ID</label>
-          <input type="text" class="form-control" v-model="selectedServiceRequest.professional_id" readonly>
-        </div>
-        <div class="form-group">
-          <label>Professional Name</label>
-          <input type="text" class="form-control" v-model="selectedServiceRequest.professional_name" readonly>
-        </div>
-        <div class="form-group">
-          <label>Service Rating:</label>
-          <div>
-            <span v-for="star in 5" :key="star" @click="setRating(star)" 
-                  :class="{'text-warning': star <= rating, 'text-muted': star > rating}">
-              &#9733;
-            </span>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Remarks (if any):</label>
-          <textarea class="form-control" v-model="remarks"></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" @click="submitRating">Submit</button>
-      </div>
-    </div>
-  </div>
-</div>
-      <!-- Edit Service Form Modal -->
+
+      <!-- Edit Service Request Form Modal -->
       <div v-show="showEditServiceForm" class="modal fade show" style="display: block;" tabindex="-1">
                 <div class="modal-dialog">
                   <div class="modal-content">
@@ -151,7 +107,7 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Status:</label>
-                            <select v-model="editedService.sev_status" type="text" class="form-control" required >
+                            <select v-model="editedService.sev_status" class="form-control" required >
                            <option value="" disabled>Select a category</option>
                            <option value="requested">Requested</option>
                            <option value="accepted">Accepted</option>
@@ -179,6 +135,60 @@
         </div>
     </div>
     
+    <!-- RATE Service Request Form Modal -->
+    <div v-show="showRateServiceForm" class="modal fade show" style="display: block;" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Rate Service Request</h5>
+                <button @click.prevent="showRateServiceForm = false" class="btn-close"></button>
+            </div>
+            <div class="modal-body">
+                <form @submit.prevent="ratedService(rateService.sevreq_id)">
+                    <div class="mb-3">
+                        <label class="form-label">Service Request ID:</label>
+                        <input v-model="rateService.sevreq_id" type="text" class="form-control" required readonly />
+                    </div>
+                    <!-- <div class="mb-3">
+                        <label class="form-label">Rating:</label>
+                        <input v-model.number="rateService.rating" type="number" class="form-control" min="1" max="5" placeholder="Rate between 1 and 5" required />
+                    </div> -->
+                    <div class="mb-3">
+                     <label class="form-label">Rating:</label>
+                     <div class="star-rating">
+                         <input type="radio" id="star5" v-model="rateService.rating" :value="5" />
+                         <label for="star5" title="5 stars">★</label>
+                         
+                         <input type="radio" id="star4" v-model="rateService.rating" :value="4" />
+                         <label for="star4" title="4 stars">★</label>
+                         
+                         <input type="radio" id="star3" v-model="rateService.rating" :value="3" />
+                         <label for="star3" title="3 stars">★</label>
+                         
+                         <input type="radio" id="star2" v-model="rateService.rating" :value="2" />
+                         <label for="star2" title="2 stars">★</label>
+                         
+                         <input type="radio" id="star1" v-model="rateService.rating" :value="1" />
+                         <label for="star1" title="1 star">★</label>
+                     </div>
+                    </div>
+
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Remarks (optional):</label>
+                        <textarea v-model="rateService.remarks" class="form-control"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Submit Rating</button>
+                        <button @click.prevent="showRateServiceForm = false" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
     </div>
 </template>
 
@@ -199,11 +209,19 @@ export default {
         date_of_request: '',
         date_of_completion: '',
         sev_status:'',
-        remarks: '', 
-      } ,     
-      selectedServiceRequest: {},
-      rating: 0,
-      remarks: ""                       
+        remarks: '', } ,     
+      showRateServiceForm: false,
+      rateService: {
+        sevreq_id: '',
+        prof_email: '',
+        cust_email: '',
+        sev_total_rating: '',
+        sev_num_rating: '',
+        sev_status: '',
+        remarks: '',
+        rating: '',
+        sev_id: ''
+      },                      
     };
     },
   created() {
@@ -211,7 +229,7 @@ export default {
     mounted() {
     console.log('CustDashboard received email:', this.email); },
     methods: {
-        async fetchServiceRequests() {
+    async fetchServiceRequests() {
         try {
            const response = await axios.get('http://127.0.0.1:8080/api/service_requests');
            if (response.status === 200) {
@@ -222,7 +240,7 @@ export default {
         } catch (error) {
            console.error('Error fetching service requests:', error.message);
         }
-    },
+    },  
     openEditServiceForm(service) {
       this.showEditServiceForm = true; // Show the edit form
       this.editedService = { ...service }; // Populate the form with selected service data
@@ -307,40 +325,60 @@ export default {
     } catch (error) {
       console.error('Error closing service request:', error.message);
     } 
-  },
-  async rateServiceRequest(sevreq_id) {
-    this.selectedServiceRequest = service_request;
-    this.rating = 0;
-    this.remarks = "";
-    $('#rateModal').modal('show'); // This line uses jQuery to show the modal
-  },
-  setRating(star) {
-    this.rating = star;
-  },
-  submitRating() {
-    // Submit the rating and remarks for the selected service request
-    console.log("Service ID:", this.selectedServiceRequest.sevreq_id);
-    console.log("Rating:", this.rating);
-    console.log("Remarks:", this.remarks);
-    
-    // Add your code to save the rating and remarks here
-
-    // Close the modal after submission
-    $('#rateModal').modal('hide');
-  }
+    },
+    async openRateServiceForm(service) {
+      this.showRateServiceForm= true; 
+      this.rateService = { ...service }; 
+    },
+    async ratedService(sevreq_id) {
+      try {
+        const response = await axios.post(`http://127.0.0.1:8080/api/rate_sevreq/${sevreq_id}`,{
+                    "sevreq_id": this.rateService.sevreq_id,
+                    "prof_email": this.rateService.prof_email,
+                    "cust_email": this.rateService.cust_email,
+                    "rating": this.rateService.rating,
+                    "sev_status": this.rateService.sev_status,
+                    "sev_total_rating": this.rateService.sev_total_rating,
+                    "sev_num_rating": this.rateService.sev_num_rating,
+                    "remarks": this.rateService.remarks,
+                    "sev_id": this.rateService.sev_id});
+        if (response.status === 200) {
+          console.log("Service request rated successfully:", response.data);
+           await this.fetchServiceRequests();
+          this.showRateServiceForm = false;
+          this.rateService={
+            sevreq_id: '',
+            sev_id: '',
+            prof_email: '',
+            cust_email: '',
+            sev_total_rating: '', 
+            sev_num_rating: '',
+            sev_status: '',
+            remarks: '',
+            rating: '',
+          };
+          location.reload();
+        } else {
+          console.error("Failed to rate service request: " + response.data.error);
+        }
+      } catch (error) {
+        console.error("Error rating service request:", error.message);
+      }
+   }
   }
 }
 </script>
 
-  
-  <style>
+  <!-- IMPORTANT #3b0a03 rgb(205, 176, 132); -->
+<style>
   body {
       font-family: Arial, sans-serif;
-      background-color: rgb(205, 176, 132);
+      background-color:rgb(205, 176, 132);
       margin: 0;
       padding: 20px;
       text-align: center;
   }
+  
   .container {
       max-width: 1200px;
       margin: 0 auto;
@@ -348,13 +386,6 @@ export default {
   h1 {
       font-size: 36px;
       margin-bottom: 10px;
-  }
-  .rating {
-      font-size: 18px;
-      color: #666;
-  }
-  .rating .star {
-      color: #f4c150;
   }
   .services {
       display: flex;
@@ -397,5 +428,33 @@ export default {
 .btn-violet:hover {
   background-color: #7a1bcf; /* Darker shade on hover */
 }
+.yellow{color:yellow}
+.star-rating {direction: rtl;
+                  display: inline-flex;
+                color:white}
+
+.star-rating input[type="radio"] {
+    display: none;}
+.star-rating label {
+    font-size: 2rem;
+    color: #d5c810;
+    cursor: pointer;
+    position: relative;
+    padding: 0 1rem; /* Add padding to create space between stars */
+
+}
+.star-rating label::before {
+    content: "\2605"; /* Unicode star character */
+    position: absolute;
+}
+.star-rating input[type="radio"]:checked ~ label {
+    color: #f5b301;
+}
+.star-rating label:hover,
+.star-rating label:hover ~ label,
+.star-rating input[type="radio"]:checked ~ label:hover,
+.star-rating input[type="radio"]:checked ~ label:hover ~ label,
+.star-rating input[type="radio"]:checked ~ label:hover ~ input[type="radio"]:checked ~ label {
+    color: #f5b301;}
 
 </style>

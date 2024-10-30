@@ -20,8 +20,5 @@
   }
   </style>
 
-<script>
-export default{
-   name:'ProfileCard'}
-</script>
+
   

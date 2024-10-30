@@ -52,6 +52,7 @@ def login():
         return jsonify(error="Authentication failed"), 401  
     if role=="prof":
         prof_from_db=Professional.query.filter_by(prof_email=email).first() 
+        print('received',prof_from_db)
         if prof_from_db:
             if check_password_hash(prof_from_db.prof_password, password):            
                 access_token = create_access_token(identity=prof_from_db.prof_email)
@@ -145,6 +146,7 @@ def prof_reg():
         # Return a success message along with the customer email
         return jsonify({"msg":"Registration successful", "prof_email":"prof_email"}), 201  
 
+#===================================ADMIN======================================================================================   
 @app.route('/api/services', methods=['GET','POST'])
 def get_services():
     try:
@@ -185,10 +187,7 @@ def get_professionals():
                 'address': professional.address,
                 'pincode': professional.pincode,
                 'blocked': professional.blocked,
-                'approval': professional.approval,
-                'rating': float(professional.rating) if professional.rating is not None else 0,
-                'sev_num_rating': professional.sev_num_rating,
-                'sev_total_rating': float(professional.sev_total_rating) if professional.sev_total_rating is not None else 0,
+                'approval': professional.approval
             } for professional in professionals
         ]
         # Return the list of professionals as a JSON response
@@ -210,10 +209,12 @@ def get_service_requests():
                 'date_of_request': service_request.date_of_request,
                 'date_of_completion': service_request.date_of_completion,
                 'remarks': service_request.remarks,
-                'sev_status': service_request.sev_status
+                'sev_status': service_request.sev_status,
+                'rating': service_request.rating,
+                'sev_num_rating': service_request.sev_num_rating,
+                'sev_total_rating': service_request.sev_total_rating
             } for service_request in service_requests
         ]
-        # Return the list of service requests as a JSON response
         return jsonify(service_requests_list), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -234,7 +235,6 @@ def get_customers():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-#===================================SERVICE CUD======================================================================================   
 @app.route("/api/create_sev", methods=["POST"])
 def admin_create_sev():
     if request.method == "POST":
@@ -353,7 +353,6 @@ def admin_delete_sev(sev_id):
         db.session.rollback()  # Rollback in case of an error
         return jsonify({"error": str(e)}), 500
 
-#=============================PROFESSIONAL APPROVAL=================================================================================
 @app.route("/api/professional/approve/<prof_email>", methods=["POST"])
 def admin_approve_prof(prof_email):
     professionals = Professional.query.get(prof_email)
@@ -379,7 +378,7 @@ def admin_block_prof(prof_email):
     db.session.commit()
     return jsonify({"message": "Professional approval status updated successfully"}), 200
 
-#=========================================SERVICE REQUEST MANAGEMENT=================================================================================
+#=========================================CUSTOMER=================================================================================
 
 @app.route('/api/create_sevrequest/<cust_email>', methods=['POST'])
 def create_service_request(cust_email):
@@ -489,25 +488,134 @@ def close_service_request(sevreq_id):
     db.session.commit()
     return jsonify({"message": "Professional approval status updated successfully"}), 200
 
-#rate sevreq after closing req
-@app.route("/cust_rate_sev/<cust_id>/<sevreq_id>",methods=["GET"])
-def cust_rate_sev(cust_id,sevreq_id):
-    sevreq=Sevrequest.query.get(sevreq_id)
-    sev_id=sevreq.sev_id
-    sev=Service.query.get(sev_id)
-    if request.method=="GET":
-        return render_template("rate.html",cust_id=cust_id,sevreq_id=sevreq_id)
-    if request.method=="POST":
-        if sevreq.sev_status=='closed':
-            sev.sev_total_rating+=decimal.Decimal(request.form.get("rating"))
-            sev.sev_num_rating+=1
-            sev.rating=((sev.sev_total_rating)/sev.sev_num_rating)
-            db.session.commit()
-        else:
-            return render_template("cust_dashboard.html",message="Close the Service request to rate")
 
-        return redirect(url_for("cust_dashboard",cust_id=cust_id,sevreq_id=sevreq_id))
+@app.route("/api/rate_sevreq/<sevreq_id>", methods=["POST"])
+def cust_rate_sev(sevreq_id):
+    sevreq = Sevrequest.query.get(sevreq_id)
+    if not sevreq:
+        return jsonify({"error": "Service request not found"}), 404
+    if sevreq.sev_status == 'closed':
+        print(sevreq)
+        data = request.get_json()
+        get_rating = data.get("rating",None)
+        remarks=data.get("remarks",None)
+        print("form rating",get_rating)
+        sevreq.sev_total_rating += get_rating
+        sevreq.sev_num_rating += 1
+        sevreq.rating = sevreq.sev_total_rating / sevreq.sev_num_rating
+        sevreq.remarks = remarks
+        db.session.commit()
+        try:
+            rate_sevreq_list= {
+                    "sevreq_id": sevreq.sevreq_id,
+                    "prof_email": sevreq.prof_email,
+                    "cust_email": sevreq.cust_email,
+                    "rating": sevreq.rating,
+                    "sev_status": sevreq.sev_status,
+                    "sev_total_rating": sevreq.sev_total_rating,
+                    "sev_num_rating": sevreq.sev_num_rating,
+                    "remarks": sevreq.remarks,
+                    "sev_id": sevreq.sev_id
+                    }  
+            return jsonify({"message": "Service updated successfully", "service_request": rate_sevreq_list}), 200
+            
+        except (decimal.InvalidOperation, TypeError):
+            return jsonify({"error": "Invalid rating value"}), 400
+    else:
+        return jsonify({
+            "error": "Service request must be closed to rate"
+        }), 400
 
+
+#=================================================PROFESSIONAL==========================================================
+@app.route("/api/prof_sevs_today/<prof_email>", methods=["GET"])
+def prof_sevs_today(prof_email):
+    try:
+        prof = Professional.query.get(prof_email)
+        sevreqs = Sevrequest.query.all()
+        current_date = datetime.now().date()
+        formatted_date = current_date.strftime("%d-%m-%Y")
+        service_requests_today = [i for i in sevreqs if i.date_of_request== formatted_date and i.prof_email == prof.prof_email]
+        requests_today= [
+          {
+              "sevreq_id":  requests_today.sevreq_id,
+              "date_of_request":requests_today.date_of_request,
+              "date_of_completion":requests_today.date_of_completion,
+              "sev_status":requests_today.sev_status,
+              "remarks":requests_today.remarks,
+              "prof_email":requests_today.prof_email,
+              "cust_email":requests_today.cust_email,
+              "sev_id":requests_today.sev_id
+          }for requests_today in service_requests_today
+          ]
+        print(requests_today)
+        return jsonify(requests_today), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500  
+  
+@app.route("/api/prof_closed_sevs/<prof_email>", methods=["GET"])
+def prof_closed_sevs(prof_email):
+    try:
+        prof = Professional.query.get(prof_email)
+        sevreqs = Sevrequest.query.all()
+        trial=[i for i in sevreqs if i.prof_email == prof.prof_email]
+        print("trial",trial)
+        closed_service_requests = [i for i in sevreqs if i.sev_status == "closed" and i.prof_email == prof.prof_email]
+        closed_requests= [
+          {
+              "sevreq_id":  closed_requests.sevreq_id,
+              "date_of_request":closed_requests.date_of_request,
+              "date_of_completion":closed_requests.date_of_completion,
+              "sev_status":closed_requests.sev_status,
+              "remarks":closed_requests.remarks,
+              "prof_email":closed_requests.prof_email,
+              "cust_email":closed_requests.cust_email,
+              "sev_id":closed_requests.sev_id,
+              "rating":closed_requests.rating
+          }for closed_requests in closed_service_requests
+          ]
+        print(closed_service_requests)
+        return jsonify(closed_requests), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500  
+  
+@app.route("/api/prof_accept_sev/<int:sevreq_id>", methods=["POST"])
+def prof_accept_sev(sevreq_id):
+    try:
+        sevreq = Sevrequest.query.get(sevreq_id)
+        sevreq.sev_status = "accepted"
+        db.session.commit()
+        return jsonify({"message": "Service request accepted"}), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/prof_reject_sev/<int:sevreq_id>", methods=["POST"])
+def prof_reject_sev(sevreq_id):
+    try:
+        sevreq = Sevrequest.query.get(sevreq_id)
+        sevreq.sev_status = "rejected"
+        db.session.commit()
+        return jsonify({"message": "Service request rejected"}), 200
+    
+    except Exception as e:  
+        return jsonify({"error": str(e)}), 500  
+    
+@app.route("/api/prof_close_sev/<int:sevreq_id>", methods=["POST"])
+def prof_close_sev(sevreq_id):
+    try:
+        sevreq = Sevrequest.query.get(sevreq_id)
+        sevreq.sev_status = "closed"
+        db.session.commit()
+        return jsonify({"message": "Service request closed"}), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500  
+    
+
+  
 #========================================================================================================================
 # -------------------------------------HOME----------------------------------------------------------------------
     
@@ -572,28 +680,6 @@ def admin_summary():
    #close the service request once completed*
 #summary graphs 
 
-@app.route("/prof_sevs_today/<prof_id>",methods=["GET"])
-def prof_sevs_today(prof_id):
-    prof=Professional.query.get(prof_id)
-    sevreqs=Sevrequest.query.all()
-    reqstoday=[]
-    for i in sevreqs:
-        current_date=datetime.now().date()
-        if i.date_of_request==current_date:
-            reqstoday.append(i)
-    return render_template('sevs_today.html',sevstoday=reqstoday,prof=prof)
-
-#close if completed
-@app.route("/prof_closed_sevs/<prof_id>",methods=["GET"])
-def prof_closed_sevs(prof_id):
-    prof=Professional.query.get(prof_id)
-    sevreqs=Sevrequest.query.all()
-    closedreqs=[]
-    for i in sevreqs:
-        if i.sev_status=='closed':
-            closedreqs.append(i)
-    return render_template('sevs_today.html',sevsclosed=closedreqs,prof=prof)
-
 
 #view profile details on dashboard
 @app.route("/prof_update/<prof_id>",methods=["GET", "POST"])
@@ -639,33 +725,6 @@ def prof_sevreq_details(sevreq_id,prof_id):
     if request.method=="GET":
         return render_template("prof_req_details.html",sevreq=sevreq,prof=prof)
     
-#dealing with service requests
-@app.route('/accept_sevreq/<sevreq_id>/<prof_id>',methods=['GET','POST'])
-def prof_reqaccept(sevreq_id,prof_id):
-    newlist=[]
-    prof=Professional.query.get(prof_id)
-    req=Sevrequest.query.get(sevreq_id)
-    req.sev_status="accepted"
-    db.session.commit()
-    return render_template("prof_req_details.html",prof=prof,sevreq=newlist)
-
-@app.route('/reject_sevreq/<sevreq_id>/<prof_id>',methods=['GET','POST'])
-def prof_reqreject(sevreq_id,prof_id):
-    newlist=[]
-    prof=Professional.query.get(prof_id)
-    req=Sevrequest.query.get(sevreq_id)
-    req.sev_status="rejected"
-    db.session.commit()
-    return render_template("prof_req_details.html",prof=prof,sevreq=newlist)
-
-@app.route('/close_sevreq/<sevreq_id>/<prof_id>',methods=['GET','POST'])
-def prof_reqclose(sevreq_id,prof_id):
-    newlist=[]
-    prof=Professional.query.get(prof_id)
-    req=Sevrequest.query.get(sevreq_id)
-    req.sev_status="closed"
-    db.session.commit()
-    return render_template("prof_req_details.html",prof=prof,sevreq=newlist)
 
 #statistics
 @app.route("/prof_summary", methods=["GET"])
