@@ -198,7 +198,11 @@ def get_professionals():
 @app.route("/api/service_requests", methods=["GET"])
 def get_service_requests():
     try:
-        service_requests = Sevrequest.query.all()
+        cust= request.args.get('email')
+        if cust:    
+            service_requests = Sevrequest.query.filter_by(cust_email=cust).all()
+        else:
+            service_requests = Sevrequest.query.all()
         # Prepare a list of service requests in JSON format
         service_requests_list = [
             {
@@ -378,6 +382,24 @@ def admin_block_prof(prof_email):
     db.session.commit()
     return jsonify({"message": "Professional approval status updated successfully"}), 200
 
+
+@app.route("/api/admin_summary", methods=["GET"])
+def api_admin_summary():
+    profs = Professional.query.all()
+    custs = Customer.query.all()
+    reqs = Sevrequest.query.all()
+    sevs = Service.query.all()
+    services_json = [sev.to_json() for sev in sevs]
+    profs_json = [prof.to_json() for prof in profs]
+    custs_json = [cust.to_json() for cust in custs]
+    reqs_json = [req.to_json() for req in reqs]
+    return jsonify({
+        "services": services_json,
+        "professionals": profs_json,
+        "customers": custs_json,
+        "requests": reqs_json
+    })
+
 #=========================================CUSTOMER=================================================================================
 
 @app.route('/api/create_sevrequest/<cust_email>', methods=['POST'])
@@ -495,14 +517,10 @@ def cust_rate_sev(sevreq_id):
     if not sevreq:
         return jsonify({"error": "Service request not found"}), 404
     if sevreq.sev_status == 'closed':
-        print(sevreq)
         data = request.get_json()
         get_rating = data.get("rating",None)
         remarks=data.get("remarks",None)
-        print("form rating",get_rating)
-        sevreq.sev_total_rating += get_rating
-        sevreq.sev_num_rating += 1
-        sevreq.rating = sevreq.sev_total_rating / sevreq.sev_num_rating
+        sevreq.rating = get_rating
         sevreq.remarks = remarks
         db.session.commit()
         try:
@@ -512,8 +530,6 @@ def cust_rate_sev(sevreq_id):
                     "cust_email": sevreq.cust_email,
                     "rating": sevreq.rating,
                     "sev_status": sevreq.sev_status,
-                    "sev_total_rating": sevreq.sev_total_rating,
-                    "sev_num_rating": sevreq.sev_num_rating,
                     "remarks": sevreq.remarks,
                     "sev_id": sevreq.sev_id
                     }  
@@ -526,12 +542,27 @@ def cust_rate_sev(sevreq_id):
             "error": "Service request must be closed to rate"
         }), 400
 
-
+@app.route("/api/cust_summary/<cust_email>", methods=["GET"])
+def cust_summary(cust_email):
+    try:
+        requests = Sevrequest.query.filter_by(cust_email=cust_email).all()
+        if not requests:
+            return jsonify({"message": "No service requests found for this professional."}), 404
+        
+        requests_json = [request.to_json() for request in requests]
+        return jsonify({
+            "email": cust_email,
+            "requests": requests_json
+        })
+    except Exception as e:
+        print("Error in cust_summary:", e)
+        return jsonify({"error": "An error occurred while fetching data."}), 500
+    
 #=================================================PROFESSIONAL==========================================================
 @app.route("/api/prof_sevs_today/<prof_email>", methods=["GET"])
 def prof_sevs_today(prof_email):
     try:
-        prof = Professional.query.get(prof_email)
+        prof= Professional.query.get(prof_email)
         sevreqs = Sevrequest.query.all()
         current_date = datetime.now().date()
         formatted_date = current_date.strftime("%d-%m-%Y")
@@ -548,7 +579,6 @@ def prof_sevs_today(prof_email):
               "sev_id":requests_today.sev_id
           }for requests_today in service_requests_today
           ]
-        print(requests_today)
         return jsonify(requests_today), 200
     
     except Exception as e:
@@ -560,7 +590,6 @@ def prof_closed_sevs(prof_email):
         prof = Professional.query.get(prof_email)
         sevreqs = Sevrequest.query.all()
         trial=[i for i in sevreqs if i.prof_email == prof.prof_email]
-        print("trial",trial)
         closed_service_requests = [i for i in sevreqs if i.sev_status == "closed" and i.prof_email == prof.prof_email]
         closed_requests= [
           {
@@ -615,7 +644,89 @@ def prof_close_sev(sevreq_id):
         return jsonify({"error": str(e)}), 500  
     
 
-  
+@app.route("/api/prof_update/<prof_email>", methods=["GET", "POST"])
+def prof_update(prof_email):
+    if request.method == "GET":
+        prof = Professional.query.get(prof_email)
+        if not prof:
+            return jsonify({"error": "Professional not found"}), 404
+        else:
+            prof_data = { "prof_email": prof.prof_email,
+                           "prof_password": prof.prof_password,
+                           "service_type": prof.service_type,
+                           "experience": prof.experience,
+                           "address": prof.address,
+                           "pincode": prof.pincode,
+                           "description": prof.description}
+        return jsonify(prof_data), 200
+    if request.method == "POST":
+        data = request.get_json() 
+        prof_email= data.get("prof_email")
+        prof_password = data.get("prof_password")
+        service_type = data.get("service_type")
+        experience = data.get("experience")
+        address = data.get("address")
+        pincode = data.get("pincode")
+        description = data.get("description")
+
+        update_prof = Professional.query.get(prof_email)
+        if not update_prof:
+            return jsonify({"error": "Professional not found"}), 404
+
+        update_prof.prof_email = prof_email
+        update_prof.prof_password = prof_password
+        update_prof.service_type = service_type
+        update_prof.experience = experience
+        update_prof.address = address
+        update_prof.pincode = pincode
+        update_prof.description = description
+        db.session.commit()
+        updated_prof_data = { "prof_email": update_prof.prof_email,
+                              "prof_password": update_prof.prof_password,
+                              "service_type": update_prof.service_type,
+                              "experience": update_prof.experience,
+                              "address": update_prof.address,
+                              "pincode": update_prof.pincode,
+                              "description": update_prof.description}
+        return jsonify({"message": "Professional profile updated successfully", "prof_data": updated_prof_data}), 200
+
+@app.route("/api/professional/<prof_email>", methods=["GET"])
+def get_professional_info(prof_email):
+    prof = Professional.query.get(prof_email)
+    print(prof)
+    if not prof:
+        return jsonify({"error": "Professional not found"}), 404
+    prof_data = {
+        "prof_email": prof.prof_email,
+        "prof_password": prof.prof_password,
+        "service_type": prof.service_type,
+        "experience": prof.experience,
+        "address": prof.address,
+        "pincode": prof.pincode,
+        "description": prof.description
+    }
+    
+    # Return JSON response with status code 200
+    return jsonify(prof_data), 200
+
+@app.route("/api/prof_summary/<prof_email>", methods=["GET"])
+def prof_summary(prof_email):
+    try:
+        requests = Sevrequest.query.filter_by(prof_email=prof_email).all()
+        if not requests:
+            return jsonify({"message": "No service requests found for this professional."}), 404
+        
+        requests_json = [request.to_json() for request in requests]
+        return jsonify({
+            "email": prof_email,
+            "requests": requests_json
+        })
+    except Exception as e:
+        print("Error in prof_summary:", e)
+        return jsonify({"error": "An error occurred while fetching data."}), 500
+
+
+
 #========================================================================================================================
 # -------------------------------------HOME----------------------------------------------------------------------
     
@@ -656,19 +767,6 @@ def admin_search():
             result=Service.query.filter(Service.sev_name.ilike(f"%{sev_name}%")).all()
             return render_template("aresult.html",result=result)
 
-#statistics
-@app.route("/admin_summary", methods=["GET"])
-def admin_summary():
-    # return a list of all the json objects of chart data for each venue
-    profs=Professional.query.all() 
-    custs=Customer.query.all()
-    reqs=Sevrequest.query.all()
-    sevs=Service.query.all()
-    services_json=[sev.to_json() for sev in sevs]
-    profs_json=[prof.to_json() for prof in profs]
-    custs_json=[cust.to_json() for cust in custs]
-    reqs_json=[req.to_json() for req in reqs]
-    return render_template("summary.html", sevs=sevs,custs=custs,reqs=reqs,profs=profs,services_json=services_json,profs_json=profs_json,custs_json=custs_json,reqs_json=reqs_json)
 
 #--------------------------------------------------------------PROFESSIONAL-----------------------------------------------------------------------
 #register
@@ -681,30 +779,6 @@ def admin_summary():
 #summary graphs 
 
 
-#view profile details on dashboard
-@app.route("/prof_update/<prof_id>",methods=["GET", "POST"])
-def prof_update(prof_id):
-    if request.method=="GET":
-        prof=Professional.query.get(prof_id)
-        return render_template("update_prof.html",prof=prof)
-    if request.method=="POST":
-        prof_name=request.form.get("prof_name")
-        prof_password=request.form.get("prof_password")
-        service_type=request.form.get("service_type")
-        experience=request.form.get("experience")
-        address=request.form.get("address")
-        pincode=request.form.get("pincode")
-        description=request.form.get("description")
-        update_prof=Professional.query.get(prof_id)
-        update_prof.prof_name=prof_name     
-        update_prof.prof_password=prof_password
-        update_prof.service_type=service_type
-        update_prof.experience=experience
-        update_prof.address=address
-        update_prof.pincode=pincode
-        update_prof.description=description
-        db.session.commit()
-        return redirect(url_for("prof_dashboard",prof_id=prof_id))
     
 #SEARCH cust+sevrequest
 @app.route("/prof_search/<prof_id>",methods=["GET","POST"])
@@ -725,20 +799,6 @@ def prof_sevreq_details(sevreq_id,prof_id):
     if request.method=="GET":
         return render_template("prof_req_details.html",sevreq=sevreq,prof=prof)
     
-
-#statistics
-@app.route("/prof_summary", methods=["GET"])
-def prof_summary():
-    # return a list of all the json objects of chart data for each venue
-    profs=Professional.query.all() 
-    custs=Customer.query.all()
-    reqs=Sevrequest.query.all()
-    sevs=Service.query.all()
-    services_json=[sev.to_json() for sev in sevs]
-    profs_json=[prof.to_json() for prof in profs]
-    custs_json=[cust.to_json() for cust in custs]
-    reqs_json=[req.to_json() for req in reqs]
-    return render_template("prof_summary.html", sevs=sevs,custs=custs,reqs=reqs,profs=profs,services_json=services_json,profs_json=profs_json,custs_json=custs_json,reqs_json=reqs_json)
 
 #--------------------------------------------------------------CUSTOMER-----------------------------------------------------------------------
 #register
@@ -764,16 +824,16 @@ def cust_search(cust_id):
             result=Service.query.filter(Service.sev_name.ilike(f"%{sev_name}%")).all()
             return render_template("presult.html",result=result,cust=cust)
     
-#statistics
-@app.route("/cust_summary", methods=["GET"])
-def cust_summary():
-    # return a list of all the json objects of chart data for each venue
-    profs=Professional.query.all() 
-    custs=Customer.query.all()
-    reqs=Sevrequest.query.all()
-    sevs=Service.query.all()
-    services_json=[sev.to_json() for sev in sevs]
-    profs_json=[prof.to_json() for prof in profs]
-    custs_json=[cust.to_json() for cust in custs]
-    reqs_json=[req.to_json() for req in reqs]
-    return render_template("cust_summary.html", sevs=sevs,custs=custs,reqs=reqs,profs=profs,services_json=services_json,profs_json=profs_json,custs_json=custs_json,reqs_json=reqs_json)
+# #statistics
+# @app.route("/cust_summary", methods=["GET"])
+# def cust_summary():
+#     # return a list of all the json objects of chart data for each venue
+#     profs=Professional.query.all() 
+#     custs=Customer.query.all()
+#     reqs=Sevrequest.query.all()
+#     sevs=Service.query.all()
+#     services_json=[sev.to_json() for sev in sevs]
+#     profs_json=[prof.to_json() for prof in profs]
+#     custs_json=[cust.to_json() for cust in custs]
+#     reqs_json=[req.to_json() for req in reqs]
+#     return render_template("cust_summary.html", sevs=sevs,custs=custs,reqs=reqs,profs=profs,services_json=services_json,profs_json=profs_json,custs_json=custs_json,reqs_json=reqs_json)

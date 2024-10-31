@@ -1,9 +1,11 @@
 <template>
-  <br>
-  <div class="container p-5 my-5 bg-dark text-white">
+  <div class="container text-white" style="background-color: #282828">
     <h1 style="text-align:center">Register a New User Account</h1>
-    <br>
-    <br>
+
+    <div class="top-right ">
+       <a href="/"><button class="btn btn-danger  ">Go Home</button></a>
+    </div>
+
     <form @submit.prevent="register" style="text-align: center">  <!-- Changed login to register -->
 
       <div class="mb-3 mt-3">
@@ -29,16 +31,34 @@
       <input type="submit" class="btn btn-primary" />
 
     </form>
-    
-    <a href="/register_prof"><button class="btn btn-secondary btn-custom">REGISTER AS PROFESSIONAL?</button></a>
-
-    <br>
-    <br>
-
+    <div class="top-left">
+       <a href="/register_prof"><button class="btn btn-secondary btn-custom top-left">REGISTER AS PROFESSIONAL?</button></a>
+    </div>
   </div>
 </template>
 
-  
+<style>
+.top-left {
+    position: absolute;
+    top: 10px; /* Adjust as needed */
+    left: 10px; /* Adjust as needed */
+}
+.btn-custom {
+            padding: 15px 30px; /* Increase padding for a larger button */
+            font-size: 1.25rem; /* Increase font size */
+            background-color: #8e631e; /* Change background color to a more visible green */
+            color: white; /* Ensure text is white for contrast */
+            border: none; /* Remove border */
+            border-radius: 5px; /* Add border radius for rounded corners */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add shadow for depth */
+            transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+        }
+
+        .btn-custom:hover {
+            background-color: #218838; /* Darker green on hover */
+        }
+</style>
+
 <script>
 import axios from 'axios';
 

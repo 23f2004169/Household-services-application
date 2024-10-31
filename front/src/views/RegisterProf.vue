@@ -5,8 +5,10 @@
      v-on:submit.prevent="register()" -- when u click submit trying to prevent default behaviour of form ie rendering html template-->
     <br>
 
-    <div class="container p-5 my-5 bg-dark text-white">
-      
+    <div class="container text-white" style="background-color: #282828">
+      <div class="top-right">
+      <a href="/"><button class="btn btn-danger">Go Home</button></a>
+      </div>
       <h1 style="text-align:center">Register as New Professional</h1>
       <br>
       <br>

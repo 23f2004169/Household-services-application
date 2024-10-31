@@ -2,12 +2,15 @@
   <header>
     <ProfBar :email="email"/>
   </header>
-    <div>
-        <ProfileCard />
+  <div>
+    <button @click="toggleProfileCard" class="btn btn-primary">View your ProfileCard</button>
+    <div v-if="isProfileCardVisible">
+      <ProfileCard :email="email" />
     </div>
+  </div>
 
    <section class="service-section mt-4">
-    <h3>Service Requests TODAY</h3>
+    <h3 class="text-white">Service Requests TODAY</h3>
 
       <table class="table table-bordered">
         <thead>
@@ -43,7 +46,7 @@
     </section>
 
     <section class="service-section mt-4">
-    <h3>Closed Service Requests </h3>
+    <h3 class="text-white">Closed Service Requests </h3>
 
       <table class="table table-bordered">
         <thead>
@@ -86,6 +89,7 @@ export default {
     name: 'ProfDash',
     data() {
         return {
+          isProfileCardVisible: false ,
             service_requests_today: [],
             closed_service_requests: [],
           };
@@ -96,7 +100,9 @@ export default {
     this.fetchClosedServices();  },  
     mounted() {
     console.log('ProfDashboard received email:', this.email); },
-    methods: {
+    methods: {  toggleProfileCard() {
+      this.isProfileCardVisible = !this.isProfileCardVisible; 
+    },
       async fetchTodayServiceRequests() {
         try {
            const response = await axios.get(`http://127.0.0.1:8080/api/prof_sevs_today/${this.email}`);

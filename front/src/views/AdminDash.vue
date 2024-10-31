@@ -1,5 +1,5 @@
 <template>
-  <body>
+  <div class="homebody">
   <div class="container mt-0">
     <header class="d-flex justify-content-between align-items-center mb-4">
       <MenuBar />
@@ -8,9 +8,9 @@
     <main>
       <!-- Services Table -->
       <section class="mb-5">
-        <h3>Services</h3>
+        <h3 class="white">Services</h3>
         <button @click.prevent="showNewServiceForm = true"  class="red ">
-          + New Service
+          <b>+ New Service</b>
         </button>
         <div>
         <table class="table table-striped table-hover">
@@ -51,7 +51,7 @@
 
       <!-- Professionals Table -->
       <section class="mb-5">
-        <h3>Professionals</h3>
+        <h3 class="white">Professionals</h3>
         <table class="table table-striped table-hover">
           <thead class="thead-dark">
             <tr>
@@ -74,11 +74,12 @@
               <td>{{ professional.blocked}}</td>
 
 
-              <td class="d-flex">
+              <td >
+                <div class="d-flex">
                 <button @click="approveProfessional(professional.prof_email)" class="btn btn-success btn-sm">Approve</button>
                 <button @click="rejectProfessional(professional.prof_email)" class="btn btn-danger btn-sm">Reject</button>
                 <button @click="blockProfessional(professional.prof_email)" class="btn btn-dark btn-sm">Block/Unblock</button>
-
+              </div>
               </td>
             </tr>
           </tbody>
@@ -87,7 +88,7 @@
 
       <!-- Service Requests Table -->
       <section class="mb-5">
-        <h3>Service Requests</h3>
+        <h3 class="white">Service Requests</h3>
         <table class="table table-striped table-hover">
           <thead class="thead-dark">
             <tr>
@@ -235,7 +236,7 @@
         </div>
       </div>
     </div>
-  </body>
+</div>
 </template>
 
 
@@ -494,6 +495,13 @@ export default {
 </script>
 
 <style>
+ .adminbody {
+      font-family: Arial, sans-serif;
+      background-color:#282828;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+  }
 header {
   display: flex;
   justify-content: space-between;
@@ -543,6 +551,6 @@ td {
 button {
   margin-right: 10px;
 }
-.red{background-color: #3b0a03}
+.red{background-color: rgb(63, 35, 18) ; color: white}
 .white{color:white}
 </style>

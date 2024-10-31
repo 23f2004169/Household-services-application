@@ -52,8 +52,43 @@ const router = createRouter({
       component:()=> import("../views/CustServices.vue"),
       props: (route) => ({ category: route.params.category, email: route.query.email })
     },
-    
+    {
+      path:'/admin_summary',
+      name:'AdminSummary',
+      component:()=> import("../views/AdminSummary.vue"),
+    },
+    { 
+      path: '/cust_summary',
+      name:'CustSummary',
+      component:()=> import("../views/CustSummary.vue"),
+      props: (route) => ({ email: route.query.email })
+    },
+    {
+      path: '/prof_summary',
+      name:'ProfSummary',
+      component:()=> import("../views/ProfSummary.vue"),
+      props: (route) => ({ email: route.query.email })
+    },
+    {
+      path:'/cust_search',
+      name:'CustSearch',
+      component:()=> import("../views/CustSearch.vue"), 
+      props: (route) => ({ email: route.query.email })
+    },
+    {
+      path:'/prof_search',
+      name:'ProfSearch',
+      component:()=> import("../views/ProfSearch.vue"),
+      props: (route) => ({ email: route.query.email })
+    },
+    {
+      path:'/admin_search',
+      name:'AdminSearch',
+      component:()=> import("../views/AdminSearch.vue"),
+    }
+
   ],
+
 });
 
 export default router;

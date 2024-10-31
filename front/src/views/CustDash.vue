@@ -1,13 +1,13 @@
 <template>
-    <div class="container">
+    <div class="container custbody">
         <header>
         <CustBar :email="email"/>
-        <h2>Welcome Customer</h2>
-        <p>Your email: {{ email }}</p>
+        <h2 class="white">Welcome Customer</h2>
+        <p class="white">Your email: {{ email }}</p>
         </header>
-        <h1>Category of Services</h1> 
-        <div class="rating">
-            <span class="star">★</span> 4.9 (3.4M bookings near you)
+        <h1 class="white">Category of Services</h1> 
+        <div class="rating white">
+            <span class="star white">★</span>-------
         </div>      
         <div class="services">
             <div class="service-card" @click="navigateToCategory('Child_Elderly Care Services')">
@@ -34,7 +34,7 @@
 
       <!-- Service Requests Table -->
       <section class="mb-5">
-        <h3>HISTORY: Service Requests</h3>
+        <h3 class="white">HISTORY: Service Requests</h3>
         <table class="table table-striped table-hover">
           <thead class="thead-dark">
             <tr>
@@ -215,8 +215,6 @@ export default {
         sevreq_id: '',
         prof_email: '',
         cust_email: '',
-        sev_total_rating: '',
-        sev_num_rating: '',
         sev_status: '',
         remarks: '',
         rating: '',
@@ -231,7 +229,7 @@ export default {
     methods: {
     async fetchServiceRequests() {
         try {
-           const response = await axios.get('http://127.0.0.1:8080/api/service_requests');
+           const response = await axios.get(`http://127.0.0.1:8080/api/service_requests/${this.email}`);
            if (response.status === 200) {
              this.service_requests = response.data; 
            } else {
@@ -338,8 +336,6 @@ export default {
                     "cust_email": this.rateService.cust_email,
                     "rating": this.rateService.rating,
                     "sev_status": this.rateService.sev_status,
-                    "sev_total_rating": this.rateService.sev_total_rating,
-                    "sev_num_rating": this.rateService.sev_num_rating,
                     "remarks": this.rateService.remarks,
                     "sev_id": this.rateService.sev_id});
         if (response.status === 200) {
@@ -351,8 +347,6 @@ export default {
             sev_id: '',
             prof_email: '',
             cust_email: '',
-            sev_total_rating: '', 
-            sev_num_rating: '',
             sev_status: '',
             remarks: '',
             rating: '',
@@ -370,10 +364,10 @@ export default {
 </script>
 
   <!-- IMPORTANT #3b0a03 rgb(205, 176, 132); -->
-<style>
-  body {
+<style> 
+  body{background-color:#282828;}
+  .custbody {
       font-family: Arial, sans-serif;
-      background-color:rgb(205, 176, 132);
       margin: 0;
       padding: 20px;
       text-align: center;
@@ -425,6 +419,7 @@ export default {
   color: white;
   border: none;
 }
+.white{color:white}
 .btn-violet:hover {
   background-color: #7a1bcf; /* Darker shade on hover */
 }

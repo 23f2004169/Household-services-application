@@ -1,9 +1,9 @@
 <template>
   <div class="container mt-5">
     <div class="top-right">
-      <a href="/"><button class="btn btn-danger">Go Homeeeee</button></a>
+      <a href="/"><button class="btn btn-danger">Go Home</button></a>
     </div>
-    <h1>Login page</h1>
+    <h1 style="color:white">Login page</h1>
     
     <form @submit.prevent="login">
       <label for="email" class="form-label white">Enter email:</label>
