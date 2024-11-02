@@ -17,38 +17,8 @@
             <router-link :to="{ path: '/login' }">
               <button style="background-color:  rgb(63, 35, 18);">Logout</button>
             </router-link>
-            <button style="background-color:white" class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon" style="color:white"></span>
-            </button>
-            <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarlabel">
-                <div class="offcanvas-header">
-                    <h5 class="offcanvas-title" id="offcanvasNavbarLabel" style="color:white">ALL DETAILS </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close" style="color:white"></button>
-                </div>
-                <div class="offcanvas-body">
-                    <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
-                        <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="/admin_dashboard" style="color:white">Home</a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color:white">ExtendedVIEW</a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="/campaigns">Campaigns</a></li>
-                                <li><a class="dropdown-item" href="/sponsors">Sponsors</a></li>
-                                <li><a class="dropdown-item" href="/influencers">Influencers</a></li>
-                                <li><a class="dropdown-item" href="/adrequests">Ad requests</a></li>
-                            </ul>
-                        </li>
-                        
-                        <li class="nav-item">
-                            <a href="/
-                            login"><button class="btn btn-danger">Logout</button></a>
-                        </li>
-                        
-                    </ul>
-                </div>
+           
             </div>
-        </div>
     </nav>
 </template>
 

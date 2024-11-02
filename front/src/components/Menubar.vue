@@ -20,19 +20,12 @@
                         <li class="nav-item">
                             <a class="nav-link active" aria-current="page" href="/admin_dashboard" style="color:white">Home</a>
                         </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color:white">ExtendedVIEW</a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="/campaigns">Campaigns</a></li>
-                                <li><a class="dropdown-item" href="/sponsors">Sponsors</a></li>
-                                <li><a class="dropdown-item" href="/influencers">Influencers</a></li>
-                                <li><a class="dropdown-item" href="/adrequests">Ad requests</a></li>
-                            </ul>
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="/extended_view" style="color:white">Extended VIEW</a>
                         </li>
                         
                         <li class="nav-item">
-                            <a href="/
-                            login"><button class="btn btn-danger">Logout</button></a>
+                            <a href="/login"><button class="btn btn-danger">Logout</button></a>
                         </li>
                         
                     </ul>

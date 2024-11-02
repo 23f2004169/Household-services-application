@@ -17,7 +17,7 @@
       <option value="cust">Customer</option>
       <option value="prof">Professional</option>
       </select>                
-      <button type="submit" class="btn btn-primary">Submit</button>
+      <button type="submit" style="background-color: rgb(63, 35, 18);">Submit</button>
     </form>  
   </div> 
 </template>
@@ -71,7 +71,11 @@ export default {
           alert(response.data.error);
         }
       } catch (error) {
-        alert('An error occurred: ' + error.message);
+        if (error.response && error.response.status === 403) {
+          alert(error.response.data.error); 
+        } else {
+          alert('An error occurred: ' + error.message);
+        }    
       }
     }
   }

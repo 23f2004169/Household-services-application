@@ -3,7 +3,7 @@
       <header>
         <CustBar :email="email"/>
       </header>
-      <h1>Services for {{ category }}</h1>
+      <h1 class="text-white">Services for {{ category }}</h1>
       <div v-if="services && services.length > 0">
         <div class="services">
           <div class="service-card" v-for="service in services" :key="service.sev_id">

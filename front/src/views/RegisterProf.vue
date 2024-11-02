@@ -27,10 +27,17 @@
             <label for="description" class="form-label">description:</label>
             <input type="description" class="form-control" placeholder="description" required=true v-model="description" />
         </div>
-        <div class="mb-3">    
-            <label for="service_type" class="form-label">service_type:</label>
-            <input type="service_type" class="form-control" placeholder="service_type" required=true v-model="service_type" />
-        </div>
+        <div class="mb-3">
+              <label class="form-label">Service Type:</label>
+              <select  v-model="service_type" class="form-control" placeholder="service_type"  required>
+                <option value="" disabled>Select a service type</option>
+                <option value="Home Maintenance Services">Home Maintenance Services</option>
+                <option value="Cleaning and Organization Services">Cleaning and Organization Services</option>
+                <option value="Child_Elderly Care Services">Child_Elderly Care Services</option>
+                <option value="Lifestyle and Convenience Services">Lifestyle and Convenience Services</option>
+              </select>
+            </div>
+        
         <div class="mb-3">    
             <label for="experience" class="form-label">experience:</label>
             <input type="experience" class="form-control" placeholder="experience" required=true v-model="experience" />

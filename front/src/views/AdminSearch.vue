@@ -4,17 +4,89 @@
         <MenuBar/>
       </header>
     </div>
-     <div style="margin-top: 5%; margin-left: 5%; margin-right: 5%;">
-        <h1 class="white">Search based on Influencer name</h1>
-        <form method="post" class="card p-5" style="margin-top: 5%; margin-left: 5%; margin-right: 5%;">
-            <label class="form-label" for="inf_name">Enter the Influencer name:</label>
-            <input class="form-control" type="text" name="inf_name" id="inf_name" required>
-            <button class="btn btn-primary" type="submit" style="width: 10%;">Search</button>
-        </form>
+  <div>
+    <SearchBar @updateResults="setResults" @searchPerformed="performSearch"/>
+    <div v-if="searchResults.length > 0" class="card-deck mt-4">
+      <div
+        v-for="result in searchResults"
+        :key="result.prof_email"
+        class="card mb-4"
+        style="width: 18rem;">
+        <div class="card-body">
+          <h5 class="card-title">{{ result.prof_email }}</h5>
+          <p class="card-text">Service:{{ result.service_type }}</p>
+          <p class="card-text">Experience:{{ result.experience }}</p>
+          <p class="card-text">Description:{{ result.description }}</p>
+          <div class="d-flex">
+                <button @click="blockProfessional(result.prof_email)" class="btn btn-dark btn-sm">Block/Unblock</button>
+                <button class="btn btn-dark btn-sm">View profile</button>
+          </div>
+        </div>
+      </div>
     </div>
+    <div v-else-if="searchPerformed" class="no-results-message mt-4">
+      <p class="text-white">No results found for your search.</p>
+    </div>
+  </div>
 </template>
+<!-- v-if="result.service_type" -->
 
-<style>
+<script>
+import SearchBar from "../components/SearchBar.vue";
+import axios from 'axios';
+import MenuBar from '../components/MenuBar.vue';
+
+export default {
+  name: "AdminSearch",
+  components: {
+    SearchBar,MenuBar
+  },
+  data() {
+    return {
+      searchResults: [],
+    };
+  },
+  methods: {
+    setResults(results) {
+      this.searchResults = results;
+      this.searchPerformed = true; 
+
+    },
+    performSearch() {
+      this.searchPerformed = true; // Set to true when search button is clicked
+    },
+    async blockProfessional(prof_email) {
+      try {
+      if (!prof_email) {
+        console.error("Professional email is undefined");
+        return;
+      }         
+      const response = await axios.post(`http://127.0.0.1:8080/api/professional/block/${prof_email}`);
+
+      if (response.status === 200) {  // Check if the update was successful
+        console.log("Professional blocked successfully:", response.data);
+        location.reload();
+
+      } else {          
+        console.error("Failed to block professional: " + response.data.error);
+      }
+    } catch (error) {
+      console.error('Error blocking professional:', error.message);
+    } 
+  },
+  },
+};
+</script>
+
+<style scoped>
+.card-deck {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.card {
+  margin: 10px;
+}
    body {padding-top: 70px;background-color:#282828;}
    .white{color:white}
     h1, h2 {margin-top: 20px;}
@@ -24,12 +96,3 @@
 </style>
 
 
-<script>
-  import axios from 'axios';
-  import MenuBar from '../components/MenuBar.vue';
-  
-  export default {
-    name: "AdminSearch",
-    components: { MenuBar },
-  };
-</script>

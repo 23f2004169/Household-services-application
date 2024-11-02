@@ -229,7 +229,7 @@ export default {
     methods: {
     async fetchServiceRequests() {
         try {
-           const response = await axios.get(`http://127.0.0.1:8080/api/service_requests/${this.email}`);
+           const response = await axios.get(`http://127.0.0.1:8080/api/cust_service_requests/${this.email}`);
            if (response.status === 200) {
              this.service_requests = response.data; 
            } else {

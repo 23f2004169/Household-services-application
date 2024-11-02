@@ -85,6 +85,10 @@ const router = createRouter({
       path:'/admin_search',
       name:'AdminSearch',
       component:()=> import("../views/AdminSearch.vue"),
+    },
+    {path:'/extended_view',
+      name:'ExtendedView',
+      component:()=> import("../views/ExtendedView.vue"),
     }
 
   ],

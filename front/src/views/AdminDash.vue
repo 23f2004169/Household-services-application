@@ -79,7 +79,7 @@
                 <button @click="approveProfessional(professional.prof_email)" class="btn btn-success btn-sm">Approve</button>
                 <button @click="rejectProfessional(professional.prof_email)" class="btn btn-danger btn-sm">Reject</button>
                 <button @click="blockProfessional(professional.prof_email)" class="btn btn-dark btn-sm">Block/Unblock</button>
-              </div>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -489,7 +489,7 @@ export default {
     } catch (error) {
       console.error('Error fetching service requests:', error.message);
   }
-  }
+  },
 }
 }
 </script>

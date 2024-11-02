@@ -2,13 +2,17 @@
   <header>
     <ProfBar :email="email"/>
   </header>
+
+  <h2 class="text-white">Welcome Professional</h2>
+  <p class="text-white">Your email: {{ email }}</p>  
+  <p class="text-white">Your rating: {{ this.averageRating }}</p>
+
   <div>
-    <button @click="toggleProfileCard" class="btn btn-primary">View your ProfileCard</button>
+    <button @click="toggleProfileCard" style="background-color: rgb(63, 35, 18);">View your ProfileCard</button>
     <div v-if="isProfileCardVisible">
       <ProfileCard :email="email" />
     </div>
   </div>
-
    <section class="service-section mt-4">
     <h3 class="text-white">Service Requests TODAY</h3>
 
@@ -89,19 +93,34 @@ export default {
     name: 'ProfDash',
     data() {
         return {
+          averageRating: null,
           isProfileCardVisible: false ,
             service_requests_today: [],
             closed_service_requests: [],
           };
         },
-    props: ['email'],
+    props: ['email', 'averageRating'],
     created() {
     this.fetchTodayServiceRequests();
-    this.fetchClosedServices();  },  
+    this.fetchClosedServices(); 
+    this.fetchRating(); 
+  },  
     mounted() {
     console.log('ProfDashboard received email:', this.email); },
     methods: {  toggleProfileCard() {
       this.isProfileCardVisible = !this.isProfileCardVisible; 
+    },
+    async fetchRating() {
+      try {
+        const response = await axios.get(`http://127.0.0.1:8080/api/prof_rating/${this.email}`);
+        if (response.status === 200) {
+          this.averageRating = response.data.average_rating;
+          console.log("Average rating:", this.averageRating);
+        }
+      } catch (error) {
+        console.error("Error fetching rating:", error.message);
+        this.averageRating = null;
+      }
     },
       async fetchTodayServiceRequests() {
         try {

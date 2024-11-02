@@ -100,13 +100,21 @@
                 title: {
                   display: true,
                   text: "Number of Requests",
+                  color: "white",
                 },
+                ticks: {
+                       color: "white", 
+              },
               },
               x: {
                 title: {
                   display: true,
                   text: "Status",
+                  color: "white",
                 },
+                ticks: {
+                       color: "white", 
+              },
               },
             },
           },
@@ -145,13 +153,21 @@
                 title: {
                   display: true,
                   text: "Number of Requests",
+                  color: "white",
                 },
+                ticks: {
+                       color: "white", 
+              },
               },
               x: {
                 title: {
                   display: true,
                   text: "Rating",
+                  color: "white",
                 },
+                ticks: {
+                       color: "white", 
+              },
               },
             },
           },

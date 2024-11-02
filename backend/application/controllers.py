@@ -54,6 +54,9 @@ def login():
         prof_from_db=Professional.query.filter_by(prof_email=email).first() 
         print('received',prof_from_db)
         if prof_from_db:
+            if prof_from_db.blocked:
+                print('blocked')
+                return jsonify(error="Your account has been blocked"), 403
             if check_password_hash(prof_from_db.prof_password, password):            
                 access_token = create_access_token(identity=prof_from_db.prof_email)
                 response = jsonify(msg="login successful",email=prof_from_db.prof_email)
@@ -64,6 +67,8 @@ def login():
         cust_from_db=Customer.query.filter_by(cust_email=email).first() 
         print('received',cust_from_db)
         if cust_from_db:
+            if cust_from_db.blocked:
+                return jsonify(error="Your account has been blocked"), 403
             if check_password_hash(cust_from_db.cust_password, password):            
                 access_token = create_access_token(identity=cust_from_db.cust_email)
                 response = jsonify(msg="login successful",email=cust_from_db.cust_email)
@@ -175,7 +180,11 @@ def get_services():
 @app.route("/api/professionals", methods=["GET"])
 def get_professionals():
     try:
-        professionals = Professional.query.all()
+        prof= request.args.get('email')
+        if prof:    
+            professionals= Professional.query.filter_by(prof_email=prof).all()
+        else:
+            professionals = Professional.query.all()
         # Prepare a list of professionals in JSON format
         professionals_list = [
             {
@@ -198,11 +207,7 @@ def get_professionals():
 @app.route("/api/service_requests", methods=["GET"])
 def get_service_requests():
     try:
-        cust= request.args.get('email')
-        if cust:    
-            service_requests = Sevrequest.query.filter_by(cust_email=cust).all()
-        else:
-            service_requests = Sevrequest.query.all()
+        service_requests = Sevrequest.query.all()
         # Prepare a list of service requests in JSON format
         service_requests_list = [
             {
@@ -214,18 +219,20 @@ def get_service_requests():
                 'date_of_completion': service_request.date_of_completion,
                 'remarks': service_request.remarks,
                 'sev_status': service_request.sev_status,
-                'rating': service_request.rating,
-                'sev_num_rating': service_request.sev_num_rating,
-                'sev_total_rating': service_request.sev_total_rating
+                'rating': service_request.rating
             } for service_request in service_requests
         ]
         return jsonify(service_requests_list), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-@app.route("/api/customer", methods=["GET"])
+@app.route("/api/customers", methods=["GET"])
 def get_customers():
     try:
-        customers = Customer.query.all()
+        cust= request.args.get('email')
+        if cust:    
+            customers = Customer.query.filter_by(cust_email=cust).all()
+        else:
+            customers = Customer.query.all()
         # Prepare a list of customers in JSON format
         customers_list = [
             {
@@ -381,7 +388,14 @@ def admin_block_prof(prof_email):
     professionals.blocked = not professionals.blocked
     db.session.commit()
     return jsonify({"message": "Professional approval status updated successfully"}), 200
-
+@app.route("/api/customer/block/<cust_email>", methods=["POST"]) 
+def admin_block_cust(cust_email):
+    customers = Customer.query.get(cust_email)
+    if customers is None:
+        return {"error": "Customer not found"}, 404 
+    customers.blocked = not customers.blocked
+    db.session.commit()
+    return jsonify({"message": "Customer approval status updated successfully"}), 200    
 
 @app.route("/api/admin_summary", methods=["GET"])
 def api_admin_summary():
@@ -399,6 +413,37 @@ def api_admin_summary():
         "customers": custs_json,
         "requests": reqs_json
     })
+    
+@app.route("/api/admin_search", methods=["POST"])
+def admin_search():
+    data = request.get_json() 
+    query= data.get("query", "").strip()
+    results= Professional.query.filter(Professional.prof_email.ilike(f"%{query}%")).all()
+    if results:
+        result_list = [{"prof_email": result.prof_email,
+                    "description": result.description,
+                    "service_type": result.service_type,
+                    "experience": result.experience,
+                    "address": result.address,
+                    "pincode": result.pincode,
+                    "blocked": result.blocked,
+                    "approval": result.approval,} for result in results]
+        return jsonify({"results": result_list}), 200
+    
+    results= Professional.query.filter(Professional.service_type.ilike(f"%{query}%")).all()
+    if results:
+        result_list = [{"prof_email": result.prof_email,
+                    "description": result.description,
+                    "service_type": result.service_type,
+                    "experience": result.experience,
+                    "address": result.address,
+                    "pincode": result.pincode,
+                    "blocked": result.blocked,
+                    "approval": result.approval,} for result in results]
+    
+        return jsonify({"results": result_list}), 200
+    return jsonify({"results": "no results found"}), 200
+
 
 #=========================================CUSTOMER=================================================================================
 
@@ -510,6 +555,29 @@ def close_service_request(sevreq_id):
     db.session.commit()
     return jsonify({"message": "Professional approval status updated successfully"}), 200
 
+@app.route("/api/cust_service_requests/<cust_email>", methods=["GET"])
+def cust_service_requests(cust_email):
+    try:
+        service_requests = Sevrequest.query.filter_by(cust_email=cust_email).all()
+        service_requests_list = [
+            {
+                'sevreq_id': service_request.sevreq_id,
+                'prof_email': service_request.prof_email,
+                'cust_email': service_request.cust_email,
+                'sev_id': service_request.sev_id,
+                'date_of_request': service_request.date_of_request,
+                'date_of_completion': service_request.date_of_completion,
+                'remarks': service_request.remarks,
+                'sev_status': service_request.sev_status,
+                'rating': service_request.rating,
+                'sev_num_rating': service_request.sev_num_rating,
+                'sev_total_rating': service_request.sev_total_rating
+            } for service_request in service_requests
+        ]
+        return jsonify(service_requests_list), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 @app.route("/api/rate_sevreq/<sevreq_id>", methods=["POST"])
 def cust_rate_sev(sevreq_id):
@@ -542,6 +610,55 @@ def cust_rate_sev(sevreq_id):
             "error": "Service request must be closed to rate"
         }), 400
 
+@app.route("/api/cust_search", methods=["POST"])
+def cust_search():
+    data = request.get_json()
+    query = data.get("query", "").strip()
+    sresults = Service.query.filter(Service.sev_name.ilike(f"%{query}%")).all()
+    if sresults:
+        result_list = [{"sev_id": result.sev_id,
+                    "sev_name": result.sev_name,
+                    "category": result.category,
+                    "description": result.description,
+                    "time_req": result.time_req,
+                    "price": result.price,
+                    "address": result.address,
+                    "pincode": result.pincode} for result in sresults]
+        return jsonify({"sresults": result_list}), 200
+    sresults = Service.query.filter(Service.category.ilike(f"%{query}%")).all()
+    if sresults:
+        result_list = [{"sev_id": result.sev_id,
+                    "sev_name": result.sev_name,
+                    "category": result.category,
+                    "description": result.description,
+                    "time_req": result.time_req,
+                    "price": result.price,
+                    "address": result.address,
+                    "pincode": result.pincode} for result in sresults]
+        return jsonify({"sresults": result_list}), 200
+    sresults= Service.query.filter(Service.address.ilike(f"%{query}%")).all()
+    if sresults:
+        result_list = [{"sev_id": result.sev_id,
+                    "sev_name": result.sev_name,
+                    "category": result.category,
+                    "description": result.description,
+                    "time_req": result.time_req,
+                    "price": result.price,
+                    "address": result.address,
+                    "pincode": result.pincode} for result in sresults]
+        return jsonify({"sresults": result_list}), 200
+    sresults= Service.query.filter(Service.pincode.ilike(f"%{query}%")).all()
+    if sresults:
+        result_list = [{"sev_id": result.sev_id,
+                    "sev_name": result.sev_name,
+                    "category": result.category,
+                    "description": result.description,
+                    "time_req": result.time_req,
+                    "price": result.price,
+                    "address": result.address,
+                    "pincode": result.pincode} for result in sresults]
+        return jsonify({"sresults": result_list}), 200
+    return jsonify({"sresults": "No results found"}), 200
 @app.route("/api/cust_summary/<cust_email>", methods=["GET"])
 def cust_summary(cust_email):
     try:
@@ -643,6 +760,24 @@ def prof_close_sev(sevreq_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500  
     
+@app.route("/api/prof_rating/<prof_email>", methods=["GET"])
+def prof_rating(prof_email):
+    rating = 0
+    prof = Professional.query.filter_by(prof_email=prof_email).first()
+    if not prof:
+        return jsonify(error="Professional not found"), 404
+    for x in prof.prof_req:
+        rating += x.rating
+
+        print(x.rating)
+    average_rating = round(rating / len(prof.prof_req), 2) if prof.prof_req else 0
+
+    print(average_rating)
+    return jsonify({
+        "email": prof_email,
+        "average_rating": average_rating
+    }), 200
+
 
 @app.route("/api/prof_update/<prof_email>", methods=["GET", "POST"])
 def prof_update(prof_email):
@@ -725,6 +860,36 @@ def prof_summary(prof_email):
         print("Error in prof_summary:", e)
         return jsonify({"error": "An error occurred while fetching data."}), 500
 
+@app.route("/api/prof_search/<prof_email>", methods=["POST"])
+def prof_search(prof_email):
+    data = request.get_json() 
+    query= data.get("query", "").strip()
+    results= Sevrequest.query.filter(Sevrequest.sev_status.ilike(f"%{query}%")).all()
+    # results = Sevrequest.query.filter(Sevrequest.sev_status.ilike(f"%{query}%"),Sevrequest.prof_email == prof_email).all()
+    if results :
+        result_list = [{"sevreq_id": result.sevreq_id,
+                        "cust_email": result.cust_email,
+                        "prof_email": result.prof_email,
+                        "sev_status": result.sev_status,
+                        "rating": result.rating,
+                        "remarks": result.remarks,
+                        "date_of_request": result.date_of_request,
+                        "date_of_completion": result.date_of_completion} for result in results]
+        print(result_list)
+        return jsonify({"results": result_list}), 200
+    results= Sevrequest.query.filter(Sevrequest.rating.ilike(f"%{query}%")).all()
+    if results :
+        result_list = [{"sevreq_id": result.sevreq_id,
+                        "cust_email": result.cust_email,
+                        "prof_email": result.prof_email,
+                        "sev_status": result.sev_status,
+                        "rating": result.rating,
+                        "remarks": result.remarks,
+                        "date_of_request": result.date_of_request,
+                        "date_of_completion": result.date_of_completion} for result in results]
+        return jsonify({"results": result_list}), 200
+    print("No results found",results)
+    return jsonify({"results": [], "message": "No results found"}), 200
 
 
 #========================================================================================================================
@@ -756,23 +921,15 @@ def admin_cust_details(cust_id):
         return render_template("cust_details.html",cust=cust)
     
     
-#search
+#search profs to block/unblock
 #implement drop down feature, all in one search, add multiple filters -all 4 by name or search text(closed requests)
-@app.route("/admin_search",methods=["GET","POST"])
-def admin_search():
-    if request.method=="GET":
-            return render_template("asearch.html")
-    if request.method=="POST":
-            sev_name=request.form.get("sev_name").strip()
-            result=Service.query.filter(Service.sev_name.ilike(f"%{sev_name}%")).all()
-            return render_template("aresult.html",result=result)
 
 
 #--------------------------------------------------------------PROFESSIONAL-----------------------------------------------------------------------
 #register
 #login
 #home- todays services, closed services , view+edit profile
-#search- Customers ,Requests by name,loc, pin , or by text- date
+#search- Requests by name,loc, pin , or by text- date
    #view all the service requests from all the customers
    #accept/reject a particular service request
    #close the service request once completed*
@@ -780,9 +937,9 @@ def admin_search():
 
 
     
-#SEARCH cust+sevrequest
-@app.route("/prof_search/<prof_id>",methods=["GET","POST"])
-def prof_search(prof_id):
+#SEARCH sevrequest
+@app.route("/prof_searchtry/<prof_id>",methods=["GET","POST"])
+def prof___try___search(prof_id):
     prof=Professional.query.get(prof_id)
     if request.method=="GET":
             return render_template("psearch.html",prof=prof)
@@ -812,28 +969,3 @@ def prof_sevreq_details(sevreq_id,prof_id):
 #search - Services based on their location, name, pin code etc. OR text- category
 #summary graphs 
 
-
-#SEARCH service
-@app.route("/cust_search/<cust_id>",methods=["GET","POST"])
-def cust_search(cust_id):
-    cust=Customer.query.get(cust_id)
-    if request.method=="GET":
-            return render_template("cust_search.html",cust=cust)
-    if request.method=="POST":
-            sev_name=request.form.get("sev_name").strip()
-            result=Service.query.filter(Service.sev_name.ilike(f"%{sev_name}%")).all()
-            return render_template("presult.html",result=result,cust=cust)
-    
-# #statistics
-# @app.route("/cust_summary", methods=["GET"])
-# def cust_summary():
-#     # return a list of all the json objects of chart data for each venue
-#     profs=Professional.query.all() 
-#     custs=Customer.query.all()
-#     reqs=Sevrequest.query.all()
-#     sevs=Service.query.all()
-#     services_json=[sev.to_json() for sev in sevs]
-#     profs_json=[prof.to_json() for prof in profs]
-#     custs_json=[cust.to_json() for cust in custs]
-#     reqs_json=[req.to_json() for req in reqs]
-#     return render_template("cust_summary.html", sevs=sevs,custs=custs,reqs=reqs,profs=profs,services_json=services_json,profs_json=profs_json,custs_json=custs_json,reqs_json=reqs_json)
