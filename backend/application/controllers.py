@@ -1,32 +1,41 @@
 from flask import current_app as app #alias for current running app
-from flask import render_template,url_for,redirect,request
+from flask import render_template,request,Flask,jsonify
 from application.models import *
-from datetime import datetime,date
-import decimal
-from flask import Flask
-from flask import jsonify
-from flask import request
 from datetime import datetime
+import decimal,logging
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended import jwt_required, set_access_cookies
-from datetime import timedelta
+from flask_jwt_extended import create_access_token,get_jwt_identity,jwt_required, set_access_cookies,get_jwt
 
 @app.route("/")
 def home():
     return render_template("index.html")
 
-#------------------------------------------------------------------ADMIN-------------------------------------------------------------------------
-#login
-#home- sev(CRUD), +  prof(R),sevreqs(R) list click on then individual info
-#search-sev,sevreq,cust,prof or text search(closed req)
-#summary graphs
-#prof(block/unblock,approve)  cust(block/unblock)
 
+@app.route("/protected", methods=["GET"])
+@jwt_required()
+def protected():
+    try:
+        print("try")
+        token = get_jwt()
+        print(token)
+        # Verify token format
+        if not token:
+            print("Token not found")
+            return jsonify({"error": "Missing token"}), 401   
+        # Get user identity
+        current_user = get_jwt_identity()
+        print(current_user)
+        if not current_user:
+            print("Invalid token format")
+            return jsonify({"error": "Invalid token format"}), 422 
+        return jsonify({"message": f"Hello, {current_user}!"}), 200
+      
+    except Exception as e:
+        print("Error in protected route:", str(e))
+        logging.error(f"Token validation error: {str(e)}")
+        return jsonify({"error": "Token validation failed"}), 500
+  
 
-# Create a route to authenticate your users and return JWTs. The
-# create_access_token() function is used to actually generate the JWT.
 @app.route("/api/login",methods=['GET','POST'])
 def login():
     data = request.get_json()
@@ -46,10 +55,8 @@ def login():
         if admin_from_db:
             if check_password_hash(admin_from_db.admin_password, password):
                 access_token = create_access_token(identity=admin_from_db.admin_email)
-                response = jsonify(msg="login successful")
-                set_access_cookies(response, access_token)
-                return response  
-        return jsonify(error="Authentication failed"), 401  
+                return {"message": "login successful","access_token":access_token,"role":"admin"}
+            return jsonify(error="Authentication failed"), 401  
     if role=="prof":
         prof_from_db=Professional.query.filter_by(prof_email=email).first() 
         print('received',prof_from_db)
@@ -59,9 +66,8 @@ def login():
                 return jsonify(error="Your account has been blocked"), 403
             if check_password_hash(prof_from_db.prof_password, password):            
                 access_token = create_access_token(identity=prof_from_db.prof_email)
-                response = jsonify(msg="login successful",email=prof_from_db.prof_email)
-                set_access_cookies(response, access_token)
-                return response                                 
+                return {"message": "login successful","access_token":access_token,"role":"prof"}
+                               
         return jsonify(error="Authentication failed"), 401
     if role=="cust":
         cust_from_db=Customer.query.filter_by(cust_email=email).first() 
@@ -71,9 +77,8 @@ def login():
                 return jsonify(error="Your account has been blocked"), 403
             if check_password_hash(cust_from_db.cust_password, password):            
                 access_token = create_access_token(identity=cust_from_db.cust_email)
-                response = jsonify(msg="login successful",email=cust_from_db.cust_email)
-                set_access_cookies(response, access_token)
-                return response                                 
+                return {"message": "login successful","access_token":access_token,"role":"cust"}
+                           
         return jsonify(error="Authentication failed"), 401
     return jsonify(error="wrong credentials"), 404
 
@@ -151,8 +156,9 @@ def prof_reg():
         # Return a success message along with the customer email
         return jsonify({"msg":"Registration successful", "prof_email":"prof_email"}), 201  
 
-#===================================ADMIN======================================================================================   
+#===================================ADMIN====================================================================================================
 @app.route('/api/services', methods=['GET','POST'])
+@jwt_required()
 def get_services():
     try:
         category = request.args.get('category')
@@ -160,9 +166,9 @@ def get_services():
             services = Service.query.filter_by(category=category).all()
         else:
             services = Service.query.all()
+
         services_list = [
-            {
-                'sev_id': service.sev_id,
+            {   'sev_id': service.sev_id,
                 'sev_name': service.sev_name,
                 'description': service.description,
                 'price': service.price,
@@ -176,8 +182,9 @@ def get_services():
         return jsonify(services_list), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    
+
 @app.route("/api/professionals", methods=["GET"])
+@jwt_required()
 def get_professionals():
     try:
         prof= request.args.get('email')
@@ -205,6 +212,7 @@ def get_professionals():
         return jsonify({'error': str(e)}), 500
 
 @app.route("/api/service_requests", methods=["GET"])
+@jwt_required()
 def get_service_requests():
     try:
         service_requests = Sevrequest.query.all()
@@ -226,6 +234,7 @@ def get_service_requests():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 @app.route("/api/customers", methods=["GET"])
+@jwt_required()
 def get_customers():
     try:
         cust= request.args.get('email')
@@ -247,6 +256,7 @@ def get_customers():
         return jsonify({'error': str(e)}), 500
 
 @app.route("/api/create_sev", methods=["POST"])
+@jwt_required()
 def admin_create_sev():
     if request.method == "POST":
         # Get the data from the request body as JSON
@@ -299,6 +309,7 @@ def admin_create_sev():
             return jsonify({"error": "Invalid data"}), 400 
 
 @app.route("/api/edit_sev/<int:sev_id>", methods=["GET", "POST"])
+@jwt_required()
 def admin_update_sev(sev_id):
     if request.method == "GET":
         service = Service.query.filter_by(sev_id=sev_id).first()
@@ -347,6 +358,7 @@ def admin_update_sev(sev_id):
             return jsonify({"error": str(e)}), 500
 
 @app.route("/api/delete_sev/<int:sev_id>", methods=["DELETE"])
+@jwt_required()
 def admin_delete_sev(sev_id):
     try:
         # Fetch the service to delete by sev_id
@@ -365,6 +377,7 @@ def admin_delete_sev(sev_id):
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/professional/approve/<prof_email>", methods=["POST"])
+@jwt_required()
 def admin_approve_prof(prof_email):
     professionals = Professional.query.get(prof_email)
     if professionals is None:
@@ -372,7 +385,9 @@ def admin_approve_prof(prof_email):
     professionals.approval ="approved"
     db.session.commit()
     return jsonify({"message": "Professional approval status updated successfully"}), 200
+
 @app.route("/api/professional/reject/<prof_email>", methods=["POST"])
+@jwt_required()
 def admin_reject_prof(prof_email):
     professionals = Professional.query.get(prof_email)
     if professionals is None:
@@ -380,7 +395,9 @@ def admin_reject_prof(prof_email):
     professionals.approval ="rejected"
     db.session.commit()
     return jsonify({"message": "Professional approval status updated successfully"}), 200
+
 @app.route("/api/professional/block/<prof_email>", methods=["POST"])
+@jwt_required()
 def admin_block_prof(prof_email):
     professionals = Professional.query.get(prof_email)
     if professionals is None:
@@ -388,7 +405,9 @@ def admin_block_prof(prof_email):
     professionals.blocked = not professionals.blocked
     db.session.commit()
     return jsonify({"message": "Professional approval status updated successfully"}), 200
+
 @app.route("/api/customer/block/<cust_email>", methods=["POST"]) 
+@jwt_required()
 def admin_block_cust(cust_email):
     customers = Customer.query.get(cust_email)
     if customers is None:
@@ -398,6 +417,7 @@ def admin_block_cust(cust_email):
     return jsonify({"message": "Customer approval status updated successfully"}), 200    
 
 @app.route("/api/admin_summary", methods=["GET"])
+@jwt_required()
 def api_admin_summary():
     profs = Professional.query.all()
     custs = Customer.query.all()
@@ -415,6 +435,7 @@ def api_admin_summary():
     })
     
 @app.route("/api/admin_search", methods=["POST"])
+@jwt_required()
 def admin_search():
     data = request.get_json() 
     query= data.get("query", "").strip()
@@ -445,9 +466,10 @@ def admin_search():
     return jsonify({"results": "no results found"}), 200
 
 
-#=========================================CUSTOMER=================================================================================
+#=========================================CUSTOMER============================================================================================
 
 @app.route('/api/create_sevrequest/<cust_email>', methods=['POST'])
+@jwt_required()
 def create_service_request(cust_email):
     try:
         data = request.get_json()
@@ -483,6 +505,7 @@ def create_service_request(cust_email):
         }), 400
     
 @app.route("/api/edit_sevreq/<int:sevreq_id>/<cust_email>", methods=["GET", "POST"])
+@jwt_required()
 def update_service_request(sevreq_id,cust_email):
     if request.method == "GET":
         service_request= Sevrequest.query.filter_by(sevreq_id=sevreq_id).first()
@@ -528,6 +551,7 @@ def update_service_request(sevreq_id,cust_email):
             return jsonify({"error": str(e)}), 500
         
 @app.route("/api/delete_sevreq/<int:sevreq_id>", methods=["DELETE"])
+@jwt_required()
 def delete_service_request(sevreq_id):
     try:
         sev_to_delete = Sevrequest.query.get(sevreq_id)
@@ -546,6 +570,7 @@ def delete_service_request(sevreq_id):
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/close_sevreq/<int:sevreq_id>", methods=["POST"])
+@jwt_required()
 def close_service_request(sevreq_id):
     sevreq = Sevrequest.query.get(sevreq_id)
     print(sevreq,sevreq_id)
@@ -556,6 +581,7 @@ def close_service_request(sevreq_id):
     return jsonify({"message": "Professional approval status updated successfully"}), 200
 
 @app.route("/api/cust_service_requests/<cust_email>", methods=["GET"])
+@jwt_required()
 def cust_service_requests(cust_email):
     try:
         service_requests = Sevrequest.query.filter_by(cust_email=cust_email).all()
@@ -580,6 +606,7 @@ def cust_service_requests(cust_email):
 
 
 @app.route("/api/rate_sevreq/<sevreq_id>", methods=["POST"])
+@jwt_required()
 def cust_rate_sev(sevreq_id):
     sevreq = Sevrequest.query.get(sevreq_id)
     if not sevreq:
@@ -611,6 +638,7 @@ def cust_rate_sev(sevreq_id):
         }), 400
 
 @app.route("/api/cust_search", methods=["POST"])
+@jwt_required()
 def cust_search():
     data = request.get_json()
     query = data.get("query", "").strip()
@@ -660,6 +688,7 @@ def cust_search():
         return jsonify({"sresults": result_list}), 200
     return jsonify({"sresults": "No results found"}), 200
 @app.route("/api/cust_summary/<cust_email>", methods=["GET"])
+@jwt_required()
 def cust_summary(cust_email):
     try:
         requests = Sevrequest.query.filter_by(cust_email=cust_email).all()
@@ -675,8 +704,9 @@ def cust_summary(cust_email):
         print("Error in cust_summary:", e)
         return jsonify({"error": "An error occurred while fetching data."}), 500
     
-#=================================================PROFESSIONAL==========================================================
+#=================================================PROFESSIONAL================================================================================
 @app.route("/api/prof_sevs_today/<prof_email>", methods=["GET"])
+@jwt_required()
 def prof_sevs_today(prof_email):
     try:
         prof= Professional.query.get(prof_email)
@@ -702,6 +732,7 @@ def prof_sevs_today(prof_email):
         return jsonify({"error": str(e)}), 500  
   
 @app.route("/api/prof_closed_sevs/<prof_email>", methods=["GET"])
+@jwt_required()
 def prof_closed_sevs(prof_email):
     try:
         prof = Professional.query.get(prof_email)
@@ -728,6 +759,7 @@ def prof_closed_sevs(prof_email):
         return jsonify({"error": str(e)}), 500  
   
 @app.route("/api/prof_accept_sev/<int:sevreq_id>", methods=["POST"])
+@jwt_required()
 def prof_accept_sev(sevreq_id):
     try:
         sevreq = Sevrequest.query.get(sevreq_id)
@@ -739,6 +771,7 @@ def prof_accept_sev(sevreq_id):
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/prof_reject_sev/<int:sevreq_id>", methods=["POST"])
+@jwt_required()
 def prof_reject_sev(sevreq_id):
     try:
         sevreq = Sevrequest.query.get(sevreq_id)
@@ -750,6 +783,7 @@ def prof_reject_sev(sevreq_id):
         return jsonify({"error": str(e)}), 500  
     
 @app.route("/api/prof_close_sev/<int:sevreq_id>", methods=["POST"])
+@jwt_required()
 def prof_close_sev(sevreq_id):
     try:
         sevreq = Sevrequest.query.get(sevreq_id)
@@ -761,6 +795,7 @@ def prof_close_sev(sevreq_id):
         return jsonify({"error": str(e)}), 500  
     
 @app.route("/api/prof_rating/<prof_email>", methods=["GET"])
+@jwt_required()
 def prof_rating(prof_email):
     rating = 0
     prof = Professional.query.filter_by(prof_email=prof_email).first()
@@ -780,6 +815,7 @@ def prof_rating(prof_email):
 
 
 @app.route("/api/prof_update/<prof_email>", methods=["GET", "POST"])
+@jwt_required()
 def prof_update(prof_email):
     if request.method == "GET":
         prof = Professional.query.get(prof_email)
@@ -826,6 +862,7 @@ def prof_update(prof_email):
         return jsonify({"message": "Professional profile updated successfully", "prof_data": updated_prof_data}), 200
 
 @app.route("/api/professional/<prof_email>", methods=["GET"])
+@jwt_required()
 def get_professional_info(prof_email):
     prof = Professional.query.get(prof_email)
     print(prof)
@@ -845,6 +882,7 @@ def get_professional_info(prof_email):
     return jsonify(prof_data), 200
 
 @app.route("/api/prof_summary/<prof_email>", methods=["GET"])
+@jwt_required()
 def prof_summary(prof_email):
     try:
         requests = Sevrequest.query.filter_by(prof_email=prof_email).all()
@@ -861,11 +899,13 @@ def prof_summary(prof_email):
         return jsonify({"error": "An error occurred while fetching data."}), 500
 
 @app.route("/api/prof_search/<prof_email>", methods=["POST"])
+@jwt_required()
 def prof_search(prof_email):
     data = request.get_json() 
     query= data.get("query", "").strip()
-    results= Sevrequest.query.filter(Sevrequest.sev_status.ilike(f"%{query}%")).all()
-    # results = Sevrequest.query.filter(Sevrequest.sev_status.ilike(f"%{query}%"),Sevrequest.prof_email == prof_email).all()
+    # results= Sevrequest.query.filter(Sevrequest.sev_status.ilike(f"%{query}%")).all()
+    print(query,prof_email)
+    results = Sevrequest.query.filter(Sevrequest.sev_status.ilike(f"%{query}%"), Sevrequest.prof_email == prof_email).all()
     if results :
         result_list = [{"sevreq_id": result.sevreq_id,
                         "cust_email": result.cust_email,
@@ -877,7 +917,7 @@ def prof_search(prof_email):
                         "date_of_completion": result.date_of_completion} for result in results]
         print(result_list)
         return jsonify({"results": result_list}), 200
-    results= Sevrequest.query.filter(Sevrequest.rating.ilike(f"%{query}%")).all()
+    results= Sevrequest.query.filter(Sevrequest.rating.ilike(f"%{query}%"), Sevrequest.prof_email == prof_email).all()
     if results :
         result_list = [{"sevreq_id": result.sevreq_id,
                         "cust_email": result.cust_email,
@@ -894,32 +934,22 @@ def prof_search(prof_email):
 
 #========================================================================================================================
 # -------------------------------------HOME----------------------------------------------------------------------
-    
+#------------------------------------------------------------------ADMIN-------------------------------------------------------------------------
+#login
+#home- sev(CRUD), +  prof(R),sevreqs(R) list click on then individual info
+#search-sev,sevreq,cust,prof or text search(closed req)
+#summary graphs
+#prof(block/unblock,approve)  cust(block/unblock)
+
+
+# Create a route to authenticate your users and return JWTs. The
+# create_access_token() function is used to actually generate the JWT.
 #individual details
 @app.route("/professional_info/<prof_id>",methods=["GET","POST"])
 def admin_prof_details(prof_id):
     prof=Professional.query.get(prof_id)
     if request.method=="GET":
         return render_template("prof_details.html",prof=prof)
-
-@app.route("/service_request_info/<sevreq_id>",methods=["GET","POST"])
-def admin_sevreq_details(sevreq_id):
-    req=Sevrequest.query.get(sevreq_id)
-    if request.method=="GET":
-        return render_template("sevreq_details.html",req=req)
-    
-@app.route("/service_info/<sevreq_id>",methods=["GET","POST"])
-def admin_sev_details(sev_id):
-    sev=Service.query.get(sev_id)
-    if request.method=="GET":
-        return render_template("sev_details.html",sev=sev)
-    
-@app.route("/customer_info/<cust_id>",methods=["GET","POST"])
-def admin_cust_details(cust_id):
-    cust=Customer.query.get(cust_id)
-    if request.method=="GET":
-        return render_template("cust_details.html",cust=cust)
-    
     
 #search profs to block/unblock
 #implement drop down feature, all in one search, add multiple filters -all 4 by name or search text(closed requests)
@@ -934,28 +964,6 @@ def admin_cust_details(cust_id):
    #accept/reject a particular service request
    #close the service request once completed*
 #summary graphs 
-
-
-    
-#SEARCH sevrequest
-@app.route("/prof_searchtry/<prof_id>",methods=["GET","POST"])
-def prof___try___search(prof_id):
-    prof=Professional.query.get(prof_id)
-    if request.method=="GET":
-            return render_template("psearch.html",prof=prof)
-    if request.method=="POST":
-            sevreq_name=request.form.get("sevreq_name").strip()
-            result=Sevrequest.query.filter(Sevrequest.sevreq_name.ilike(f"%{sevreq_name}%")).all()
-            return render_template("presult.html",result=result,prof=prof)
-    
-#from search results click on id of sevrequest for details
-@app.route("/sevreq_details/<int:sevreq_id>/<prof_id>",methods=["GET"])
-def prof_sevreq_details(sevreq_id,prof_id):
-    prof=Professional.query.get(prof_id)
-    sevreq=Sevrequest.query.get(sevreq_id)
-    if request.method=="GET":
-        return render_template("prof_req_details.html",sevreq=sevreq,prof=prof)
-    
 
 #--------------------------------------------------------------CUSTOMER-----------------------------------------------------------------------
 #register
