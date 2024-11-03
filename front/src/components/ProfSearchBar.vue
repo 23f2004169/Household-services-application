@@ -77,6 +77,12 @@
         results: [],
       };
     },
+    props: {
+      email: {  
+        type: String,
+        required: true,
+      },
+    },
     methods: {
       async submitSearch() {
         try {

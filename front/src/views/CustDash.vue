@@ -229,7 +229,16 @@ export default {
     methods: {
     async fetchServiceRequests() {
         try {
-           const response = await axios.get(`http://127.0.0.1:8080/api/cust_service_requests/${this.email}`);
+          let your_jwt_token = localStorage.getItem('jwt');
+          if (!your_jwt_token) {
+            throw new Error('JWT token is missing');
+          }
+           const response = await axios.get(`http://127.0.0.1:8080/api/cust_service_requests/${this.email}`,{
+      headers: {
+        'Authorization': `Bearer ${your_jwt_token}` 
+      },
+      withCredentials: true
+    });
            if (response.status === 200) {
              this.service_requests = response.data; 
            } else {
@@ -244,7 +253,11 @@ export default {
       this.editedService = { ...service }; // Populate the form with selected service data
     },
     async editService(sevreq_id) {
-      try {
+      try { 
+        let your_jwt_token = localStorage.getItem('jwt');
+        if (!your_jwt_token) {
+          throw new Error('JWT token is missing');
+        }
         const response = await axios.post(`http://127.0.0.1:8080/api/edit_sevreq/${sevreq_id}/${this.email}`, {
           "sevreq_id": this.editedService.sevreq_id,
           "prof_email": this.editedService.prof_email,
@@ -253,7 +266,12 @@ export default {
           "sev_status": this.editedService.sev_status,
           "remarks": this.editedService.remarks,
           "cust_email": this.email
-        });
+        },{
+      headers: {
+        'Authorization': `Bearer ${your_jwt_token}` 
+      },
+      withCredentials: true
+    });
         if (response.status === 200) {
           console.log("Service request updated successfully:", response.data);
           this.fetchServiceRequests();
@@ -288,7 +306,18 @@ export default {
     async deleteService(sevreq_id) {
       if (confirm("Are you sure you want to delete this service request?")) {
         try {
-          const response = await axios.delete(`http://127.0.0.1:8080/api/delete_sevreq/${sevreq_id}`);
+          let your_jwt_token = localStorage.getItem('jwt');
+          if (!your_jwt_token) {  
+            throw new Error('JWT token is missing');
+          }
+          const response = await axios.delete(`http://127.0.0.1:8080/api/delete_sevreq/${sevreq_id}`,
+          {
+      headers: {
+        'Authorization': `Bearer ${your_jwt_token}` 
+      },
+      withCredentials: true
+    }
+          );
           if (response.status === 200) {
             console.log("Service request deleted successfully:", response.data);
             this.service_requests = this.service_requests.filter(service_request => service_request.sevreq_id !== sevreq_id);
@@ -307,11 +336,17 @@ export default {
     },
     async closeServiceRequest(sevreq_id) {
       try {
+        let your_jwt_token = localStorage.getItem('jwt');
       if (!sevreq_id) {
         console.error("Service request ID is undefined");
         return;
       }         
-      const response = await axios.post(`http://127.0.0.1:8080/api/close_sevreq/${sevreq_id}`);
+      const response = await axios.post(`http://127.0.0.1:8080/api/close_sevreq/${sevreq_id}`,{},{
+      headers: {
+        'Authorization': `Bearer ${your_jwt_token}` 
+      },
+      withCredentials: true
+    });
 
       if (response.status === 200) {  // Check if the update was successful
         console.log("Service request closed successfully:", response.data);
@@ -330,6 +365,7 @@ export default {
     },
     async ratedService(sevreq_id) {
       try {
+        let your_jwt_token = localStorage.getItem('jwt');
         const response = await axios.post(`http://127.0.0.1:8080/api/rate_sevreq/${sevreq_id}`,{
                     "sevreq_id": this.rateService.sevreq_id,
                     "prof_email": this.rateService.prof_email,
@@ -337,7 +373,12 @@ export default {
                     "rating": this.rateService.rating,
                     "sev_status": this.rateService.sev_status,
                     "remarks": this.rateService.remarks,
-                    "sev_id": this.rateService.sev_id});
+                    "sev_id": this.rateService.sev_id},{
+      headers: {
+        'Authorization': `Bearer ${your_jwt_token}` 
+      },
+      withCredentials: true
+    });
         if (response.status === 200) {
           console.log("Service request rated successfully:", response.data);
            await this.fetchServiceRequests();

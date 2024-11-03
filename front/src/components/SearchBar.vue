@@ -80,6 +80,10 @@
     methods: {
       async submitSearch() {
         try {
+          let your_jwt_token = localStorage.getItem("jwt");
+          if (!your_jwt_token) {
+            throw new Error("JWT token is missing");
+          }
           const response = await axios.post("http://127.0.0.1:8080/api/admin_search", {
             query: this.searchQuery,
             prof_email: this.results.prof_email,
@@ -90,7 +94,12 @@
             pincode: this.results.pincode,
             blocked: this.results.blocked,
             approval: this.results.approval,
-          });
+          }, {
+           headers: {
+             'Authorization': `Bearer ${your_jwt_token}` 
+                 },
+               withCredentials: true
+            });
           
           if (response.status === 200) {
             const data = response.data.results;

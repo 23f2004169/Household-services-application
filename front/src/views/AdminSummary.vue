@@ -40,8 +40,18 @@
     
     methods: {
       async fetchData() {
-        try {
-          const response = await axios.get('http://127.0.0.1:8080/api/admin_summary');
+        try { 
+          let your_jwt_token = localStorage.getItem('jwt');
+          if (!your_jwt_token) {
+            console.error("No JWT token found.");
+            return;
+          }
+          const response = await axios.get('http://127.0.0.1:8080/api/admin_summary',{
+      headers: {
+        'Authorization': `Bearer ${your_jwt_token}` 
+      },
+      withCredentials: true
+    });
           const data = response.data.requests;
   
           if (data && Array.isArray(data)) {

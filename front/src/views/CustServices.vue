@@ -107,12 +107,20 @@ export default {
   methods: {
     async fetchServices() {
     try {
+      let your_jwt_token = localStorage.getItem('jwt');
+      if (!your_jwt_token) {
+        throw new Error('JWT token is missing');
+      }
       const response = await axios.get(`http://127.0.0.1:8080/api/services`, {
-        params: {
-          category: this.category,
-          email: this.email 
-        }
-      });
+      params: {
+        category: this.category,
+        email: this.email 
+      },
+      headers: {
+        'Authorization': `Bearer ${your_jwt_token}`
+      },
+      withCredentials: true
+    });
       this.services = response.data;
     } catch (error) {
       console.error("Error fetching services:", error);
@@ -120,12 +128,21 @@ export default {
   },
     async addNewServiceRequest() {
       try {
+        let your_jwt_token = localStorage.getItem('jwt');
+        if (!your_jwt_token) {
+          throw new Error('JWT token is missing');
+        }
         const response = await axios.post(`http://127.0.0.1:8080/api/create_sevrequest/${this.email}`, { 
           "cust_email": this.email,
           "prof_email": this.newServiceRequest.prof_email,
           "sev_id": this.newServiceRequest.sev_id,
           "date_of_request": this.newServiceRequest.date_of_request,
           "date_of_completion": this.newServiceRequest.date_of_completion,
+        }, {
+          headers: {
+            'Authorization': `Bearer ${your_jwt_token}` 
+          },
+          withCredentials: true
         });
 
         if (response.status === 201) { // Changed from 200 to 201

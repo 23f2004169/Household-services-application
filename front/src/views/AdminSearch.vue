@@ -5,7 +5,7 @@
       </header>
     </div>
   <div>
-    <SearchBar @updateResults="setResults" @searchPerformed="performSearch"/>
+    <SearchBar v-show="setResults" @updateResults="setResults" @searchPerformed="performSearch"/>
     <div v-if="searchResults.length > 0" class="card-deck mt-4">
       <div
         v-for="result in searchResults"
@@ -24,7 +24,7 @@
         </div>
       </div>
     </div>
-    <div v-else-if="searchPerformed" class="no-results-message mt-4">
+    <div v-else class="no-results-message mt-4">
       <p class="text-white">No results found for your search.</p>
     </div>
   </div>
@@ -39,29 +39,42 @@ import MenuBar from '../components/MenuBar.vue';
 export default {
   name: "AdminSearch",
   components: {
-    SearchBar,MenuBar
+    SearchBar,
+    MenuBar
   },
   data() {
     return {
       searchResults: [],
+      searchPerformed: false
     };
   },
   methods: {
     setResults(results) {
+      
       this.searchResults = results;
-      this.searchPerformed = true; 
+      this.searchPerformed = true;
+      alert(this.searchResults)
 
     },
     performSearch() {
       this.searchPerformed = true; // Set to true when search button is clicked
     },
     async blockProfessional(prof_email) {
-      try {
-      if (!prof_email) {
-        console.error("Professional email is undefined");
-        return;
-      }         
-      const response = await axios.post(`http://127.0.0.1:8080/api/professional/block/${prof_email}`);
+      try { 
+      let your_jwt_token = localStorage.getItem('jwt');
+      if (!your_jwt_token) {
+        throw new Error('JWT token is missing');
+      }
+      console.log("Professional email ", prof_email);
+      const response = await axios.post(`http://127.0.0.1:8080/api/professional/block/${prof_email}`,
+
+      { 
+        headers: {  
+          'Authorization': `Bearer ${your_jwt_token}` 
+        },
+        withCredentials: true
+      }
+      );
 
       if (response.status === 200) {  // Check if the update was successful
         console.log("Professional blocked successfully:", response.data);
@@ -70,11 +83,10 @@ export default {
       } else {          
         console.error("Failed to block professional: " + response.data.error);
       }
-    } catch (error) {
+    }catch (error) {
       console.error('Error blocking professional:', error.message);
     } 
-  },
-  },
+  },}
 };
 </script>
 

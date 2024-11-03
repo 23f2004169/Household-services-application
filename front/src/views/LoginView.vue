@@ -33,9 +33,9 @@ body {
   background-color: rgb(205, 176, 132);
 }
 </style>
-
 <script>
 import axios from 'axios';
+
 export default {
   name: 'LoginView',
   data() {
@@ -48,34 +48,36 @@ export default {
   methods: {
     async login() {
       try {
-        // Make the login request
         const response = await axios.post(`http://127.0.0.1:8080/api/login`, {
-          "email": this.email,
-          "password": this.password,
-          "role": this.role,
+          email: this.email,
+          password: this.password,
+          role: this.role
+        , 
+          withCredentials: true  
         });
 
         if (response.status === 200) {
+          localStorage.setItem('jwt', response.data.access_token);
+          localStorage.setItem('role', this.role);
+
           if (this.role === 'admin') {
             this.$router.push('/admin_dashboard');
           } else if (this.role === 'cust') {
-            this.$router.push({ path: '/cust_dashboard', query: { email: this.email } });  
-
+            this.$router.push({ path: '/cust_dashboard', query: { email: this.email } });
           } else if (this.role === 'prof') {
-            this.$router.push({path:'/prof_dashboard', query: { email: this.email }});
+            this.$router.push({ path: '/prof_dashboard', query: { email: this.email } });
           } else {
             alert('Invalid role');
-        } 
-      }
-        else {
+          }
+        } else {
           alert(response.data.error);
         }
       } catch (error) {
         if (error.response && error.response.status === 403) {
-          alert(error.response.data.error); 
+          alert(error.response.data.error);
         } else {
           alert('An error occurred: ' + error.message);
-        }    
+        }
       }
     }
   }
