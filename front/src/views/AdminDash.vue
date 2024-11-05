@@ -62,6 +62,7 @@
               <th>Service Name</th>
               <th>Approval</th>
               <th>Blocked</th>
+              <th>Profile doc</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -73,13 +74,12 @@
               <td>{{ professional.service_type }}</td>
               <td>{{ professional.approval }}</td>
               <td>{{ professional.blocked }}</td>
-
-
+              <td><button @click="viewDocument(professional.prof_email)" class="btn btn-primary btn-sm">View</button> </td>
               <td>
                 <div class="d-flex">
-                  <button @click="approveProfessional(professional.prof_email)"
+                  <button  v-if="professional.approval === 'rejected' || professional.approval==='pending'" @click="approveProfessional(professional.prof_email)"
                     class="btn btn-success btn-sm">Approve</button>
-                  <button @click="rejectProfessional(professional.prof_email)"
+                  <button v-else-if="professional.approval === 'approved'" @click="rejectProfessional(professional.prof_email)"
                     class="btn btn-danger btn-sm">Reject</button>
                   <button @click="blockProfessional(professional.prof_email)"
                     class="btn btn-dark btn-sm">Block/Unblock</button>
@@ -219,7 +219,7 @@
               </div>
 
               <div class="mb-3">
-                <label class="form-label">Time Required:</label>
+                <label class="form-label">Time Required in minutes:</label>
                 <input v-model="newService.time_req" type="text" class="form-control" required />
               </div>
 
@@ -577,6 +577,11 @@ openEditServiceForm(service) {
     console.error('Error fetching service requests:', error.message);
   }
 },
+viewDocument(prof_email) {
+      // Open document in new tab
+      const documentUrl = `http://127.0.0.1:8080/api/view-document/${prof_email}`;
+      window.open(documentUrl, '_blank');
+    }
 }
 }
 </script>

@@ -44,7 +44,18 @@
     methods: {
       async fetchProfessionalData() {
         try {
-          const response = await axios.get(`http://127.0.0.1:8080/api/prof_summary/${this.email}`);
+          let your_jwt_token = localStorage.getItem('jwt');
+          if (!your_jwt_token) {
+            throw new Error('JWT token is missing');
+          }
+          const response = await axios.get(`http://127.0.0.1:8080/api/prof_summary/${this.email}`,
+          {
+            headers: {
+              Authorization: `Bearer ${your_jwt_token}`,
+            },
+            withCredentials: true,
+          }
+          );
           const data = response.data.requests;
   
           if (data && Array.isArray(data)) {
@@ -121,8 +132,7 @@
           },
         });
       },
-  
-      renderRatingChart() {
+     renderRatingChart() {
         const ctx = document.getElementById("professionalServiceRequestRatingHistogram").getContext("2d");
         if (this.ratingChart) {
           this.ratingChart.destroy();
@@ -176,9 +186,11 @@
       },
     },
     
+   
     mounted() {
       this.fetchProfessionalData();
     },
+  
   };
   </script>
   

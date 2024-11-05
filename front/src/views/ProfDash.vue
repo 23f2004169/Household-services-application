@@ -5,7 +5,7 @@
 
   <h2 class="text-white">Welcome Professional</h2>
   <p class="text-white">Your email: {{ email }}</p>  
-  <p class="text-white">Your rating: {{ this.averageRating }}</p>
+  <p class="text-white">Your rating: {{ rating }}</p>
 
   <div>
     <button @click="toggleProfileCard" style="background-color: rgb(63, 35, 18);">View your ProfileCard</button>
@@ -93,13 +93,13 @@ export default {
     name: 'ProfDash',
     data() {
         return {
-          averageRating: null,
+          rating: null,
           isProfileCardVisible: false ,
             service_requests_today: [],
             closed_service_requests: [],
           };
         },
-    props: ['email', 'averageRating'],
+    props: ['email'],
     created() {
     this.fetchTodayServiceRequests();
     this.fetchClosedServices(); 
@@ -112,19 +112,42 @@ export default {
     },
     async fetchRating() {
       try {
-        const response = await axios.get(`http://127.0.0.1:8080/api/prof_rating/${this.email}`);
+        let your_jwt_token = localStorage.getItem('jwt');
+        if (!your_jwt_token) {
+          throw new Error('JWT token is missing');
+        }
+        const response = await axios.post(`http://127.0.0.1:8080/api/prof_rating/${this.email}`,{},
+          {
+            headers: {
+              'Authorization': `Bearer ${your_jwt_token}`
+            },
+            withCredentials: true
+          }
+        );
         if (response.status === 200) {
-          this.averageRating = response.data.average_rating;
-          console.log("Average rating:", this.averageRating);
+          this.rating= response.data; 
+          console.log("Professional rating updated successfully:", response.data);
+        } else {
+          console.error("Failed to update rating:", response.data.error);
         }
       } catch (error) {
         console.error("Error fetching rating:", error.message);
-        this.averageRating = null;
       }
     },
       async fetchTodayServiceRequests() {
         try {
-           const response = await axios.get(`http://127.0.0.1:8080/api/prof_sevs_today/${this.email}`);
+           let your_jwt_token = localStorage.getItem('jwt');
+           if (!your_jwt_token) {
+             throw new Error('JWT token is missing');
+           }
+           const response = await axios.get(`http://127.0.0.1:8080/api/prof_sevs_today/${this.email}`,
+             {
+               headers: {
+                 'Authorization': `Bearer ${your_jwt_token}`
+               },
+               withCredentials: true
+             }
+           );
            if (response.status === 200) {
              this.service_requests_today = response.data; 
            } else {
@@ -136,8 +159,19 @@ export default {
     },
     async fetchClosedServices() {
         try {
-           const response = await axios.get(`http://127.0.0.1:8080/api/prof_closed_sevs/${this.email}`);
-           console.log("Response:", response.data, "email:",this.email);
+           let your_jwt_token = localStorage.getItem('jwt');
+           if (!your_jwt_token) {
+             throw new Error('JWT token is missing');
+           }
+           const response = await axios.get(`http://127.0.0.1:8080/api/prof_closed_sevs/${this.email}`,
+             {
+               headers: {
+                 'Authorization': `Bearer ${your_jwt_token}`
+               },
+               withCredentials: true
+             }
+           );
+          //  console.log("Response:", response.data, "email:",this.email);
            if (response.status === 200) {
              this.closed_service_requests = response.data; 
            } else {
@@ -148,7 +182,18 @@ export default {
     },
     async acceptService(sevreq_id) {
       try {
-        const response = await axios.post(`http://127.0.0.1:8080/api/prof_accept_sev/${sevreq_id}`);
+        let your_jwt_token = localStorage.getItem('jwt');
+        if (!your_jwt_token) {
+          throw new Error('JWT token is missing');
+        }
+        const response = await axios.post(`http://127.0.0.1:8080/api/prof_accept_sev/${sevreq_id}`,{},
+          {
+            headers: {
+              'Authorization': `Bearer ${your_jwt_token}`
+            },
+            withCredentials: true
+          }
+        );
         if (response.status === 200) {
           console.log("Service request accepted successfully:", response.data);
           location.reload();
@@ -162,7 +207,18 @@ export default {
     },
     async rejectService(sevreq_id) {
       try {
-        const response = await axios.post(`http://127.0.0.1:8080/api/prof_reject_sev/${sevreq_id}`); 
+        let your_jwt_token = localStorage.getItem('jwt');
+        if (!your_jwt_token) {  
+          throw new Error('JWT token is missing');
+        }
+        const response = await axios.post(`http://127.0.0.1:8080/api/prof_reject_sev/${sevreq_id}`,{},
+          {
+            headers: {
+              'Authorization': `Bearer ${your_jwt_token}`
+            },
+            withCredentials: true
+          }
+        ); 
         if (response.status === 200) {
           console.log("Service request rejected successfully:", response.data);
           location.reload();
@@ -176,7 +232,17 @@ export default {
         },
     async closeService(sevreq_id) {
       try {
-        const response = await axios.post(`http://127.0.0.1:8080/api/prof_close_sev/${sevreq_id}`); 
+        let your_jwt_token = localStorage.getItem('jwt');
+        if (!your_jwt_token) {
+          throw new Error('JWT token is missing');
+        }
+        const response = await axios.post(`http://127.0.0.1:8080/api/prof_close_sev/${sevreq_id}`,{},
+          {
+            headers: {
+              'Authorization': `Bearer ${your_jwt_token}`
+            },
+            withCredentials: true
+        }); 
         if (response.status === 200) {
           console.log("Service request closed successfully:", response.data);
           location.reload();

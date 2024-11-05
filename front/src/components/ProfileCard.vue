@@ -1,12 +1,13 @@
 <template>
     <div class="profile-card">
-      <img src="https://placehold.co/100x100" alt="Profile Picture" class="profile-pic" />
+      <img src="http://127.0.0.1:8080/uploads/prof5.png" alt="Profile Picture" class="profile-pic" />
       <p class="service">Service: {{ prof_data.service_type }}</p>
       <p class="email">Email: {{ prof_data.prof_email }}</p>
       <p class="experience">Experience: {{ prof_data.experience }}</p>
       <p class="address">Address: {{ prof_data.address }}</p>
       <p class="pincode">Pincode: {{ prof_data.pincode }}</p>
-      <p>ADD PHONE NO AND DOCUMENT</p>
+      <p class="description">Description: {{ prof_data.description }}</p>
+      <p class="phone" >Phone: {{ prof_data.phone }}</p>
       <button @click.prevent="openUpdateProfessionalForm(prof_data)" class="btn btn-warning btn-sm mr-2">Edit Profile</button>
     </div>
 
@@ -26,10 +27,6 @@
               <input v-model="updateprof.prof_email" type="email" class="form-control" required />
             </div>
             
-            <div class="mb-3">
-              <label class="form-label">Password:</label>
-              <input v-model="updateprof.prof_password" type="password" class="form-control" required />
-            </div>
             
             <div class="mb-3">
               <label class="form-label">Service Type:</label>
@@ -62,6 +59,16 @@
               <textarea v-model="updateprof.description" class="form-control" required></textarea>
             </div>
             
+            <div class="mb-3">
+              <label class="form-label">Phone:</label>
+              <input v-model="updateprof.phone" type="text" class="form-control" required />
+            </div>
+
+            <div class="mb-3">
+            <label for="file" class="form-label"> Update Profile Document:</label>
+            <input type="file" class="form-control" @change="handleFileUpload" accept=".pdf" required/>
+            </div>
+
             <div class="modal-footer">
               <button type="submit" class="btn btn-primary">Save Changes</button>
               <button @click.prevent="showEditProfessionalForm = false" class="btn btn-secondary">Cancel</button>
@@ -87,13 +94,15 @@ export default {
       showEditProfessionalForm: false, 
       updateprof: { 
         prof_email: "",
-        prof_password: "",
         service_type: "",
         experience: "",
         address: "",
         pincode: "",
-        description: ""
+        description: "",
+        phone: ""
       },
+      backendUrl: process.env.VUE_APP_BACKEND_URL || 'http://127.0.0.1:8080'
+
       }
     },
   created() {
@@ -108,19 +117,25 @@ export default {
     },
 
     async updateProfessionalProfile(prof_email) {
-      if (!prof_email) {
-        console.error("Professional email is undefined");
-        return;
-      }
       try {
+        let your_jwt_token = localStorage.getItem('jwt');
+      if (!your_jwt_token) {
+        throw new Error('JWT token is missing');
+      }
+      console.log("Professional email ", prof_email);
       const response = await axios.post(`http://127.0.0.1:8080/api/prof_update/${this.email}`, {
           "prof_email": this.updateprof.prof_email,
-          "prof_password": this.updateprof.prof_password,
           "service_type": this.updateprof.service_type,
           "experience": this.updateprof.experience,
           "address": this.updateprof.address,
           "pincode": this.updateprof.pincode,
-          "description": this.updateprof.description
+          "description": this.updateprof.description,
+          "phone": this.updateprof.phone
+        }, {
+          headers: {
+            'Authorization': `Bearer ${your_jwt_token}`
+          },
+          withCredentials: true
         });
 
         if (response.status === 200) {
@@ -143,7 +158,8 @@ export default {
             experience: "",
             address: "",
             pincode: "",
-            description: ""
+            description: "",
+            phone: ""
           };
           location.reload();
         } else {
@@ -156,7 +172,16 @@ export default {
     },    
     async fetchProf() {
       try {
-        const response = await axios.get(`http://127.0.0.1:8080/api/professional/${this.email}`);
+        let your_jwt_token = localStorage.getItem('jwt');
+        if (!your_jwt_token) {
+          throw new Error('JWT token is missing');
+        }
+        const response = await axios.get(`http://127.0.0.1:8080/api/professional/${this.email}`, {
+          headers: {
+            'Authorization': `Bearer ${your_jwt_token}`
+          },
+          withCredentials: true
+        });
         console.log(this.email,response.data);
         if (response.status === 200) {
           this.prof_data = response.data; // Update the services array with the data from the backend

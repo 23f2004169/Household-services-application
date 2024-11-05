@@ -28,6 +28,11 @@
         <input type="text" class="form-control" placeholder="pincode" required v-model="pincode" />
       </div>
 
+      <div class="mb-3">
+        <label for="phone" class="form-label">Phone:</label>
+        <input type="phone" class="form-control" placeholder="Enter phone" required  v-model="phone"/>
+      </div>
+
       <input type="submit" class="btn btn-primary" />
 
     </form>
@@ -69,7 +74,8 @@ export default {
       emailID: "",
       pwd: "",
       address: "",
-      pincode: ""
+      pincode: "",
+      phone: ""
     };
   },
   methods: {
@@ -80,7 +86,8 @@ export default {
           "cust_email": this.emailID,   // Make sure the field names match the backend expectation
           "cust_password": this.pwd,
           "address": this.address,
-          "pincode": this.pincode
+          "pincode": this.pincode,
+          "phone": this.phone
         },
         {
           headers: {

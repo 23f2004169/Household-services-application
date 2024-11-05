@@ -7,63 +7,88 @@
         <div v-for="customer in customers" :key="customer.id" class="col-md-4 mb-4">
           <div class="card h-100">
             <div class="card-body">
-              <h5 class="card-title">{{ customer.cust_email }}</h5>
+              <h5 class="card-title">Email id:{{ customer.cust_email }}</h5>
               <p><strong>Address:</strong> {{ customer.address }}</p>
               <p><strong>Pincode:</strong> {{ customer.pincode }}</p>
+              <p><strong>Mobile no:</strong> {{ customer.phone }}</p>
+              <p><strong>Block status:</strong>{{customer.block }}</p>
               <div class="d-flex">
                 <button @click="blockCustomer(customer.cust_email)" class="btn btn-dark btn-sm">Block/Unblock</button>
+                <button @click="deleteCustomer(customer.cust_email)" class="btn btn-danger btn-sm">Delete User</button>
             </div>
             </div>
           </div>
         </div>
       </div> 
-
+      
+  
       <h2 class="my-4 text-white">Professionals</h2>
       <div class="row">
         <div v-for="professional in professionals" :key="professional.id" class="col-md-4 mb-4">
           <div class="card h-100">
             <div class="card-body">
-              <h5 class="card-title">{{ professional.prof_email}}</h5>
+              <h5 class="card-title">Email id:{{ professional.prof_email}}</h5>
+              
+                <!-- <img id="image"src="http://127.0.0.1:8080/api/view-image/{{ professional.prof_email }}"   alt="Profile Picture" class="profile-pic" @error="handleImageError" /> -->
+
+              <!-- <img id="image"src="/backend/uploads/newuser.jpg"  alt="Profile Picture" class="profile-pic" @error="handleImageError" /> -->
               <p><strong>Description:</strong> {{ professional.description }}</p>
               <p><strong>Experience:</strong> {{ professional.experience }} years</p>
+              <p><strong>Date of Registration:</strong> {{ professional.date_created}}</p>
               <p><strong>Service Type:</strong> {{ professional.service_type }}</p>
+              <p><strong>Mobile no:</strong> {{ professional.phone }}</p>
+              <p><strong>Address:</strong> {{ professional.address }}</p>
+              <p><strong>Pincode:</strong> {{ professional.pincode }}</p>
+              <p><strong>Rating:</strong> {{ professional.rating }}</p>
+              <p><strong>Approval Status:</strong> {{ professional.approval }}</p>
+              <p><strong>Block Status:</strong> {{ professional.block }}</p>
               <div class="d-flex">
                 <button @click="blockProfessional(professional.prof_email)" class="btn btn-dark btn-sm">Block/Unblock</button>
-            </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <h2 class="my-4 text-white">Services</h2>
-      <div class="row">
-        <div v-for="service in services" :key="service.id" class="col-md-4 mb-4">
-          <div class="card h-100">
-            <div class="card-body">
-              <h5 class="card-title">{{ service.sev_name }}</h5>
-              <p class="card-text">{{ service.description }}</p>
-              <p><strong>Price:</strong> {{ service.price }}</p>
-              <p><strong>Category:</strong> {{ service.category }}</p>
-              <p><strong>Duration:</strong> {{ service.time_req }} minutes</p>
+                <button @click="viewDocument(professional.prof_email)" class="btn btn-primary btn-sm">View</button> 
+                <button @click="deleteProfessional(professional.prof_email)" class="btn btn-danger btn-sm">Delete user</button>
+              </div>
             </div>
           </div>
         </div>
       </div>
   
+      <h2 class="my-4 text-white">Services</h2>
+      <div class="row">
+        <div v-for="service in services" :key="service.id" class="col-md-4 mb-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title">Name:{{ service.sev_name }}</h5>
+               <p><strong>Service id:</strong>{{service.sev_id}}</p>
+              <p class="card-text">{{ service.description }}</p>
+              <p><strong>Price:</strong> {{ service.price }}</p>
+              <p><strong>Category:</strong> {{ service.category }}</p>
+              <p><strong>Duration:</strong> {{ service.time_req }} minutes</p>
+              <p><strong>Address:</strong> {{ service.address }}</p>
+              <p><strong>Pincode:</strong> {{ service.pincode }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+ 
       <h2 class="my-4 text-white">Service Requests</h2>
       <div class="row">
         <div v-for="request in service_requests" :key="request.id" class="col-md-4 mb-4">
           <div class="card h-100">
             <div class="card-body">
-              <h5 class="card-title">Request ID: {{ request.sevreq_id }}</h5>
+              <h5 class="card-title">Request id: {{ request.sevreq_id }}</h5>
               <p><strong>Requested by:</strong> {{ request.cust_email }}</p>
               <p><strong>Status:</strong> {{ request.status }}</p>
               <p><strong>Service provider:</strong> {{ request.prof_email}}</p>
+              <p><strong>Remarks:</strong> {{ request.remarks }}</p>
+              <p><strong>Rating:</strong> {{ request.rating }}</p>
+              <p><strong>Service ID:</strong> {{ request.sev_id }}</p>
+              <p><strong>Date of Request:</strong> {{ request.date_of_request }}</p>
+              <p><strong>Date of Completion:</strong> {{ request.date_of_completion }}</p>
             </div>
           </div>
         </div>
       </div>
-
+   
     </div>
   </template>
   
@@ -82,6 +107,8 @@ export default {
       professionals: [] ,
       customers: [],
       service_requests: [],
+      backendUrl:'http://127.0.0.1:8080'
+
     }
   },
   created() {
@@ -93,7 +120,15 @@ export default {
   methods: {
     async fetchCustomers() {
       try {
-        const response = await axios.get('http://127.0.0.1:8080/api/customers');
+        let your_jwt_token = localStorage.getItem('jwt');
+        const response = await axios.get('http://127.0.0.1:8080/api/customers',
+        {
+          headers: {
+            'Authorization': `Bearer ${your_jwt_token}`
+          },
+          withCredentials: true
+        }
+        );
         if (response.status === 200) {
           this.customers = response.data; // Update the services array with the data from the backend
         } else {
@@ -105,7 +140,15 @@ export default {
     },
     async fetchProfessionals() {
       try {
-        const response = await axios.get('http://127.0.0.1:8080/api/professionals');
+        let your_jwt_token = localStorage.getItem('jwt');
+        const response = await axios.get('http://127.0.0.1:8080/api/professionals',
+        {
+          headers: {
+            'Authorization': `Bearer ${your_jwt_token}`
+          },
+          withCredentials: true
+        }
+        );
         if (response.status === 200) {
           this.professionals = response.data; // Update the services array with the data from the backend
         } else {
@@ -117,7 +160,15 @@ export default {
     },
     async fetchServices() {
       try {
-        const response = await axios.get('http://127.0.0.1:8080/api/services');
+        let your_jwt_token = localStorage.getItem('jwt');
+        const response = await axios.get('http://127.0.0.1:8080/api/services',
+        {
+          headers: {
+            'Authorization': `Bearer ${your_jwt_token}`
+          },
+          withCredentials: true
+        }
+        );
         if (response.status === 200) {
           this.services = response.data; // Update the services array with the data from the backend
         } else {
@@ -129,7 +180,15 @@ export default {
     },
   async fetchServiceRequests() {
     try {
-      const response = await axios.get('http://127.0.0.1:8080/api/service_requests');
+      let your_jwt_token = localStorage.getItem('jwt');
+      const response = await axios.get('http://127.0.0.1:8080/api/service_requests',
+      {
+        headers: {
+          'Authorization': `Bearer ${your_jwt_token}`
+        },
+        withCredentials: true
+      }
+      );
       if (response.status === 200) {
         this.service_requests = response.data; // Update the services array with the data from the backend
       } else {
@@ -141,11 +200,20 @@ export default {
   },
   async blockProfessional(prof_email) {
       try {
-      if (!prof_email) {
-        console.error("Professional email is undefined");
-        return;
-      }         
-      const response = await axios.post(`http://127.0.0.1:8080/api/professional/block/${prof_email}`);
+      let your_jwt_token = localStorage.getItem('jwt');
+      if (!your_jwt_token) {    
+        throw new Error('JWT token is missing');
+      }
+      console.log("Professional email ", prof_email);       
+      const response = await axios.post(`http://127.0.0.1:8080/api/professional/block/${prof_email}`,
+      {},
+      {
+        headers: {
+          'Authorization': `Bearer ${your_jwt_token}` 
+        },
+        withCredentials: true
+      }
+      );
 
       if (response.status === 200) {  // Check if the update was successful
         console.log("Professional blocked successfully:", response.data);
@@ -158,13 +226,43 @@ export default {
       console.error('Error blocking professional:', error.message);
     } 
   },
+  async deleteProfessional(prof_email) {
+    try {
+      const your_jwt_token = localStorage.getItem('jwt');
+      if (!your_jwt_token) {
+        throw new Error('JWT token is missing');
+      }
+      const response = await axios.delete(`http://127.0.0.1:8080/api/professional/delete/${prof_email}`, {
+        headers: {
+          'Authorization': `Bearer ${your_jwt_token}`
+        },
+        withCredentials: true
+      });
+
+      if (response.status === 200) {
+        console.log("Professional deleted successfully:", response.data);
+        this.professionals = this.professionals.filter(professional => professional.prof_email !== prof_email);
+      } else {
+        console.error("Failed to delete professional: " + response.data.error);
+      }
+    } catch (error) {
+      console.error('Error deleting professional:', error.message);
+    }
+  },
   async blockCustomer(cust_email) {
       try {
-      if (!cust_email) {
-        console.error("Customer email is undefined");
-        return;
-      }         
-      const response = await axios.post(`http://127.0.0.1:8080/api/customer/block/${cust_email}`);
+      let your_jwt_token = localStorage.getItem('jwt');
+      if (!your_jwt_token) {
+        throw new Error('JWT token is missing');
+      }  
+      console.log("Customer email ", cust_email);     
+      const response = await axios.post(`http://127.0.0.1:8080/api/customer/block/${cust_email}`, {},
+      {
+        headers: {
+          'Authorization': `Bearer ${your_jwt_token}` 
+        },
+        withCredentials: true
+      });
 
       if (response.status === 200) {  // Check if the update was successful             
         console.log("Customer blocked successfully:", response.data);
@@ -177,6 +275,38 @@ export default {
       console.error('Error blocking customer:', error.message);
     }
   },
+  async deleteCustomer(cust_email){
+    try {
+      const your_jwt_token = localStorage.getItem('jwt');
+      if (!your_jwt_token) {
+        throw new Error('JWT token is missing');
+      }
+      const response = await axios.delete(`http://127.0.0.1:8080/api/customer/delete/${cust_email}`, {
+        headers: {
+          'Authorization': `Bearer ${your_jwt_token}`
+        },
+        withCredentials: true
+      });
+
+      if (response.status === 200) {
+        console.log("Customer deleted successfully:", response.data);
+        this.customers = this.customers.filter(customer => customer.cust_email !== cust_email);
+      } else {
+        console.error("Failed to delete professional: " + response.data.error);
+      }
+    } catch (error) {
+      console.error('Error deleting professional:', error.message);
+    }
+  },
+  viewDocument(prof_email) {
+      // Open document in new tab
+      const documentUrl = `http://127.0.0.1:8080/api/view-document/${prof_email}`;
+      window.open(documentUrl, '_blank');
+    },
+    // handleImageError(e) {
+    //   console.error('Image failed to load');
+    //   e.target.src = `${this.backendUrl}/uploads/newuser.jpg`; 
+    // }
 },
 }
 

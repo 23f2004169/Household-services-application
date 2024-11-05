@@ -5,7 +5,7 @@
       </header>
     </div>
   <div>
-    <SearchBar v-show="setResults" @updateResults="setResults" @searchPerformed="performSearch"/>
+    <SearchBar @updateResults="setResults" @searchPerformed="performSearch"/>
     <div v-if="searchResults.length > 0" class="card-deck mt-4">
       <div
         v-for="result in searchResults"
@@ -24,7 +24,7 @@
         </div>
       </div>
     </div>
-    <div v-else class="no-results-message mt-4">
+    <div v-else-if="searchPerformed" class="no-results-message mt-4">
       <p class="text-white">No results found for your search.</p>
     </div>
   </div>
@@ -50,11 +50,8 @@ export default {
   },
   methods: {
     setResults(results) {
-      
       this.searchResults = results;
       this.searchPerformed = true;
-      alert(this.searchResults)
-
     },
     performSearch() {
       this.searchPerformed = true; // Set to true when search button is clicked

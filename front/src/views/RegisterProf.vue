@@ -51,14 +51,26 @@
             <label for="pincode" class="form-label">pincode:</label>
             <input type="pincode" class="form-control" placeholder="pincode" required=true v-model="pincode" />
         </div>
+
+        <div class="mb-3">
+            <label for="phone" class="form-label">Phone:</label>
+            <input type="phone" class="form-control" placeholder="phone" required=true v-model="phone" />
+        </div>
+        <div class="mb-3">
+            <label for="image" class="form-label">Upload Profile Picture:</label>
+            <input type="file" class="form-control" @change="handleImageUpload" accept="image/*" required />
+            <!-- <input type="image" class="form-control" placeholder="image" required=true v-model="image" /> -->
+        </div>
+
+        <div class="mb-3">
+            <label for="file" class="form-label"> Upload Profile Document:</label>
+            <input type="file" class="form-control" @change="handleFileUpload" accept=".pdf" required/>
+            <!-- <input type="file" class="form-control" placeholder="file" required=true  accept=".pdf"> -->
+        </div>
       
         <input type="submit"  class="btn btn-primary"/>
   
       </form>
-      <br>
-      <br>
-  
-    
   
     </div>
 </template>
@@ -74,30 +86,40 @@ export default {
         service_type: "",
         description:"",
         experience: "",
-        // file: null,
+        file:null,
         address: "",
-        pincode: ""
+        pincode: "",
+        phone: "",
+        image: null,
+        imageFile: null,
+        documentFile: null
     };
   },
   methods: {
     async register_prof(){
-    try {const response = await axios.post('http://127.0.0.1:8080/api/prof_reg', 
-        {
-        "prof_email": this.emailID,
-        "prof_password": this.pwd,
-        "service_type": this.service_type,
-        "description":this.description,
-        "experience":this.experience,
-        "address": this.address,
-        "pincode": this.pincode
-        },
+    try {
+      const formData = new FormData();
+
+        formData.append('prof_email', this.emailID);
+        formData.append('prof_password', this.pwd);
+        formData.append('service_type', this.service_type);
+        formData.append('description', this.description);
+        formData.append('experience', this.experience);
+        formData.append('address', this.address);
+        formData.append('pincode', this.pincode);
+        formData.append('phone', this.phone);
+        formData.append('image', this.imageFile);
+        formData.append('file', this.documentFile);
+
+      const response = await axios.post('http://127.0.0.1:8080/api/prof_reg', formData ,
         {
           headers: {
-            'Content-Type': 'application/json'  
+            'Content-Type': 'multipart/form-data'
+
           }
         });
 
-        console.log(this.emailID, this.pwd, this.address, this.pincode);
+        console.log(this.emailID, this.pwd, this.address, this.pincode,this.documentFile, this.imageFile);
 
         if (response.status === 201) {
           this.$router.push('/login');
@@ -107,9 +129,15 @@ export default {
       } catch (error) {
         alert('An error occurred: ' + error.message);
       }
+    },
+    handleImageUpload(event) {
+      this.imageFile = event.target.files[0];
+    },
+    handleFileUpload(event) {
+      this.documentFile = event.target.files[0];
     }
   }
-};
+  };
 </script>
 
 
