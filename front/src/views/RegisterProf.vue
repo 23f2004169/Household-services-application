@@ -1,10 +1,4 @@
-<template>
-    <!-- <div>
-      <center><img src="../assets/logo.png" height="120" width="120" /></center>
-    </div> 
-     v-on:submit.prevent="register()" -- when u click submit trying to prevent default behaviour of form ie rendering html template-->
-    <br>
-
+<!-- <template>
     <div class="container text-white" style="background-color: #282828">
       <div class="top-right">
       <a href="/"><button class="btn btn-danger">Go Home</button></a>
@@ -59,13 +53,11 @@
         <div class="mb-3">
             <label for="image" class="form-label">Upload Profile Picture:</label>
             <input type="file" class="form-control" @change="handleImageUpload" accept="image/*" required />
-            <!-- <input type="image" class="form-control" placeholder="image" required=true v-model="image" /> -->
         </div>
 
         <div class="mb-3">
             <label for="file" class="form-label"> Upload Profile Document:</label>
             <input type="file" class="form-control" @change="handleFileUpload" accept=".pdf" required/>
-            <!-- <input type="file" class="form-control" placeholder="file" required=true  accept=".pdf"> -->
         </div>
       
         <input type="submit"  class="btn btn-primary"/>
@@ -73,7 +65,92 @@
       </form>
   
     </div>
+</template> -->
+
+<template>
+  <div class="container d-flex justify-content-center align-items-center vh-100">
+    <div class="card text-white shadow-lg" style="background-color: #282828; max-width: 600px;">
+      <div class="card-header text-center" style="background-color: rgb(63, 35, 18);">
+        <h2 class="mb-0">Register as Professional</h2>
+      </div>
+      <div class="card-body">
+        <div class="text-end mb-3">
+          <a href="/" class="btn btn-danger">Go Home</a>
+        </div>
+        <form @submit.prevent="register_prof">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="emailID" class="form-label">Email ID:</label>
+              <input type="email" class="form-control form-control-sm" placeholder="Email" required v-model="emailID" />
+            </div>
+            <div class="col-md-6">
+              <label for="password" class="form-label">Password:</label>
+              <input type="password" class="form-control form-control-sm" placeholder="Password" required v-model="pwd" />
+            </div>
+          </div>
+
+          <div class="row g-3 mt-2">
+            <div class="col-12">
+              <label for="description" class="form-label">Description:</label>
+              <textarea class="form-control form-control-sm" rows="1" placeholder="Expertise description" required v-model="description"></textarea>
+            </div>
+          </div>
+
+          <div class="row g-3 mt-2">
+            <div class="col-12">
+              <label class="form-label">Service Type:</label>
+              <select v-model="service_type" class="form-select form-select-sm" required>
+                <option value="" disabled>Select service type</option>
+                <option value="Home Maintenance Services">Home Maintenance</option>
+                <option value="Cleaning and Organization Services">Cleaning & Organization</option>
+                <option value="Child & Elderly Care Services">Child & Elderly Care</option>
+                <option value="Lifestyle and Convenience Services">Lifestyle & Convenience</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row g-3 mt-2">
+            <div class="col-md-6">
+              <label for="experience" class="form-label">Experience:</label>
+              <input type="text" class="form-control form-control-sm" placeholder="Years" required v-model="experience" />
+            </div>
+            <div class="col-md-6">
+              <label for="phone" class="form-label">Phone:</label>
+              <input type="text" class="form-control form-control-sm" placeholder="Phone" required v-model="phone" />
+            </div>
+          </div>
+
+          <div class="row g-3 mt-2">
+            <div class="col-md-6">
+              <label for="address" class="form-label">Address:</label>
+              <input type="text" class="form-control form-control-sm" placeholder="Address" required v-model="address" />
+            </div>
+            <div class="col-md-6">
+              <label for="pincode" class="form-label">Pincode:</label>
+              <input type="text" class="form-control form-control-sm" placeholder="Pincode" required v-model="pincode" />
+            </div>
+          </div>
+
+          <div class="row g-3 mt-2">
+            <div class="col-md-6">
+              <label for="image" class="form-label">Profile Picture:</label>
+              <input type="file" class="form-control form-control-sm" @change="handleImageUpload" accept="image/*" required />
+            </div>
+            <div class="col-md-6">
+              <label for="file" class="form-label">Profile Document:</label>
+              <input type="file" class="form-control form-control-sm" @change="handleFileUpload" accept=".pdf" required />
+            </div>
+          </div>
+
+          <div class="d-grid gap-2 mt-3">
+            <button type="submit" class="btn btn-primary btn-sm">Submit</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </template>
+
   
 <script>
 import axios from 'axios';

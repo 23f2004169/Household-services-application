@@ -62,6 +62,9 @@
               <p><strong>Duration:</strong> {{ service.time_req }} minutes</p>
               <p><strong>Address:</strong> {{ service.address }}</p>
               <p><strong>Pincode:</strong> {{ service.pincode }}</p>
+              <div class="d-flex">
+                    <button @click.prevent="deleteService(service.sev_id)" class="btn btn-danger btn-sm">Delete</button>
+              </div>
             </div>
           </div>
         </div>
@@ -294,6 +297,33 @@ export default {
       console.error('Error deleting professional:', error.message);
     }
   },
+  async deleteService(sev_id) {
+  if (confirm("Are you sure you want to delete this service?")) {
+    try {
+      let your_jwt_token = localStorage.getItem('jwt');
+      if (!your_jwt_token) {
+        throw new Error('JWT token is missing');
+      }
+      const response = await axios.delete(`http://127.0.0.1:8080/api/delete_sev/${sev_id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${ your_jwt_token }`
+        },
+        withCredentials: true
+      }
+      );
+      if (response.status === 200) {
+        console.log("Service deleted successfully:", response.data);
+        this.services = this.services.filter(service => service.sev_id !== sev_id);
+      } else {
+        alert("Failed to delete service: " + response.data.error);
+      }
+    } catch (error) {
+      console.error("Error deleting service:", error.message);
+      alert("An error occurred while deleting the service.");
+    }
+  }
+},
   viewDocument(prof_email) {
       // Open document in new tab
       const documentUrl = `http://127.0.0.1:8080/api/view-document/${prof_email}`;

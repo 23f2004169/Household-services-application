@@ -1,10 +1,12 @@
 <template>
-  <div class="homebody">
+
+  <div class="adminbody">
     <div class="container mt-0">
       <header class="d-flex justify-content-between align-items-center mb-4">
         <MenuBar />
       </header>
     </div>
+
     <main>
       <!-- Services Table -->
       <section class="mb-5">
@@ -366,7 +368,6 @@ openEditServiceForm(service) {
   this.showEditServiceForm = true; // Show the edit form
   this.editedService = { ...service }; // Populate the form with selected service data
 },
-
     async editService(sev_id) {
   if (!sev_id) {
     console.error("Service ID is undefined");
@@ -442,9 +443,7 @@ openEditServiceForm(service) {
       );
       if (response.status === 200) {
         console.log("Service deleted successfully:", response.data);
-        // Remove the deleted service from the local array 'services'
         this.services = this.services.filter(service => service.sev_id !== sev_id);
-        alert("Service deleted successfully");
       } else {
         alert("Failed to delete service: " + response.data.error);
       }
@@ -605,12 +604,9 @@ header {
 
 table {
   width: 90%;
-  /* Reduces table width to fit within the container */
   max-width: 1200px;
-  /* Optional: sets a maximum width for larger screens */
   border-collapse: collapse;
   margin: 20px auto;
-  /* Centers the table and adds spacing above and below */
   font-size: 1.1em;
 }
 

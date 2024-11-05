@@ -1,12 +1,12 @@
 <template>
   <div class="container text-white" style="background-color: #282828">
-    <h1 style="text-align:center">Register a New User Account</h1>
+    <h1 style="text-align:center;">Register a New User Account</h1>
 
     <div class="top-right ">
        <a href="/"><button class="btn btn-danger  ">Go Home</button></a>
     </div>
 
-    <form @submit.prevent="register" style="text-align: center">  <!-- Changed login to register -->
+    <form @submit.prevent="register" style="text-align: center">  
 
       <div class="mb-3 mt-3">
         <label for="emailID" class="form-label">Enter Email ID:</label>
@@ -36,9 +36,9 @@
       <input type="submit" class="btn btn-primary" />
 
     </form>
-    <div class="top-left">
-       <a href="/register_prof"><button class="btn btn-secondary btn-custom top-left">REGISTER AS PROFESSIONAL?</button></a>
-    </div>
+      <div class="top-left">
+       <a href="/register_prof"><button class="btn btn-secondary btn-custom top-left" >REGISTER AS PROFESSIONAL?</button></a>
+      </div>
   </div>
 </template>
 
