@@ -95,6 +95,7 @@ const router = createRouter({
 
 });
 
+//router guard
 router.beforeEach((to, from, next) => {
   if (to.name !== 'LoginView' && !localStorage.getItem('jwt') && to.name !== 'HomeView' && to.name !== 'RegisterCust' && to.name !== 'RegisterProf') next({ name: 'LoginView' })
   // if the user is not authenticated, `next` is called twice

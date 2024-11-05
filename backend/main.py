@@ -15,6 +15,7 @@ from celery.schedules import crontab
 from celery import Celery
 from send_mail import init_mail
 from flask_mail import Message
+from flask_sse import sse
 from functools import wraps
 
 from cache import Cache
@@ -53,6 +54,9 @@ with app.app_context():
     db.create_all()
     if __name__=='__main__':
         app.run(host="0.0.0.0", port=8080)
+
+# ------- Flask sse( server sent events) for publishing events /alerts to users -------frontend-in vue mounted :subscribe the event #
+app.register_blueprint(sse, url_prefix='/stream')
 
 # ------- Celery app ------- #
 celery = Celery('Application')
