@@ -28,11 +28,9 @@
           <div class="card h-100">
             <div class="card-body">
               <h5 class="card-title">Email id:{{ professional.prof_email}}</h5>
-              
                 <!-- <img id="image"src="http://127.0.0.1:8080/api/view-image/{{ professional.prof_email }}"   alt="Profile Picture" class="profile-pic" @error="handleImageError" /> -->
-
-              <!-- <img id="image"src="/backend/uploads/newuser.jpg"  alt="Profile Picture" class="profile-pic" @error="handleImageError" /> -->
-              <p><strong>Description:</strong> {{ professional.description }}</p>
+                <img :src="'http://127.0.0.1:8080/api/view-image/' + professional.prof_email" alt="Profile Picture" class="pic" @error="handleImageError" />
+                <p><strong>Description:</strong> {{ professional.description }}</p>
               <p><strong>Experience:</strong> {{ professional.experience }} years</p>
               <p><strong>Date of Registration:</strong> {{ professional.date_created}}</p>
               <p><strong>Service Type:</strong> {{ professional.service_type }}</p>
@@ -303,10 +301,10 @@ export default {
       const documentUrl = `http://127.0.0.1:8080/api/view-document/${prof_email}`;
       window.open(documentUrl, '_blank');
     },
-    // handleImageError(e) {
-    //   console.error('Image failed to load');
-    //   e.target.src = `${this.backendUrl}/uploads/newuser.jpg`; 
-    // }
+    handleImageError(e) {
+      console.error('Image failed to load');
+      e.target.src = 'http://127.0.0.1:8080/api/view-image/uploads/newuser.jpg'; 
+    }
 },
 }
 
@@ -317,7 +315,12 @@ export default {
 .card {
   border-radius: 8px;
 }
-
+.pic {
+    border-radius: 100%;
+    margin-bottom: 12px;
+    width: 100px;
+    height: 100px;
+  }
 .card-title {
   font-size: 1.25rem;
 }
