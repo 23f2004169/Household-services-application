@@ -29,7 +29,7 @@
             <div class="card-body">
               <h5 class="card-title">Email id:{{ professional.prof_email}}</h5>
                 <!-- <img id="image"src="http://127.0.0.1:8080/api/view-image/{{ professional.prof_email }}"   alt="Profile Picture" class="profile-pic" @error="handleImageError" /> -->
-                <img :src="'http://127.0.0.1:8080/api/view-image/' + professional.prof_email" alt="Profile Picture" class="pic" @error="handleImageError" />
+                <img :src="'http://127.0.0.1:8080/api/view-image/' + professional.prof_email" alt="Profile Picture" class="pic" />
                 <p><strong>Description:</strong> {{ professional.description }}</p>
               <p><strong>Experience:</strong> {{ professional.experience }} years</p>
               <p><strong>Date of Registration:</strong> {{ professional.date_created}}</p>
@@ -300,10 +300,6 @@ export default {
       // Open document in new tab
       const documentUrl = `http://127.0.0.1:8080/api/view-document/${prof_email}`;
       window.open(documentUrl, '_blank');
-    },
-    handleImageError(e) {
-      console.error('Image failed to load');
-      e.target.src = 'http://127.0.0.1:8080/api/view-image/uploads/newuser.jpg'; 
     }
 },
 }
