@@ -23,8 +23,8 @@ from cache import Cache
 app=Flask(__name__)
 
 app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///Householdservices_db.db"
-
-CORS(app,supports_credentials=True)
+ 
+CORS(app, origins=['http://localhost:5173'], supports_credentials=True)
 
 # Setup the Flask-JWT-Extended extension
 app.config["JWT_SECRET_KEY"] = "3DFGHVKxdgfbchsvdjesvfjfdrbbbby3fuyb" 
