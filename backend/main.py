@@ -17,15 +17,14 @@ from send_mail import init_mail
 from flask_mail import Message
 from flask_sse import sse
 from functools import wraps
-
-from cache import Cache
+# from cache import Cache
 
 #creates app instance -object of flask
 app=Flask(__name__)
 
 app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///Householdservices_db.db"
  
-CORS(app, origins=['http://localhost:5173'], supports_credentials=True)
+CORS(app, supports_credentials=True)
 
 # Setup the Flask-JWT-Extended extension
 app.config["JWT_SECRET_KEY"] = "3DFGHVKxdgfbchsvdjesvfjfdrbbbby3fuyb" 
@@ -43,7 +42,7 @@ jwt = JWTManager(app)
 db.init_app(app=app) #object.method(parameter)
 
 
-cache = Cache(app)
+# cache = Cache(app)
 
 
 app.app_context().push()
@@ -55,7 +54,7 @@ with app.app_context():
     if __name__=='__main__':
         app.run(host="0.0.0.0", port=8080)
 
-# ------- Flask sse( server sent events) for publishing events /alerts to users -------frontend-in vue mounted :subscribe the event #
+# ------- Flask sse-------( server sent events) for publishing events /alerts to users --frontend-in vue mounted :subscribe the event #
 app.register_blueprint(sse, url_prefix='/stream')
 
 # ------- Celery app ------- #

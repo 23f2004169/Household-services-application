@@ -8,6 +8,10 @@ from flask_jwt_extended import create_access_token,get_jwt_identity,jwt_required
 from werkzeug.utils import secure_filename
 from flask import send_from_directory, Flask, jsonify, request
 from sqlalchemy import or_
+from flask_caching import Cache
+# cache = Cache()
+
+cache = Cache(config={'CACHE_TYPE': 'redis', 'CACHE_REDIS_URL': 'redis://localhost:6379/0'})
 
 @app.route("/")
 def home():
@@ -210,8 +214,9 @@ def view_image(prof_email):
   except Exception as e:
       return jsonify({"error": str(e)}), 500
   
-#===================================ADMIN====================================================================================================
-@app.route('/api/services', methods=['GET','POST'])
+#===================================ADMIN FETCH====================================================================================================
+@cache.cached(timeout=50, key_prefix="get_services")
+@app.route('/api/services', methods=['GET'])
 @jwt_required()
 def get_services():
     try:
@@ -237,6 +242,7 @@ def get_services():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@cache.cached(timeout=50, key_prefix="get_professionals")
 @app.route("/api/professionals", methods=["GET"])
 @jwt_required()
 def get_professionals():
@@ -267,6 +273,7 @@ def get_professionals():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@cache.cached(timeout=50, key_prefix="get_service_requests")
 @app.route("/api/service_requests", methods=["GET"])
 @jwt_required()
 def get_service_requests():
@@ -289,6 +296,8 @@ def get_service_requests():
         return jsonify(service_requests_list), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@cache.cached(timeout=50, key_prefix="get_customers")
 @app.route("/api/customers", methods=["GET"])
 @jwt_required()
 def get_customers():
@@ -313,6 +322,7 @@ def get_customers():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+#-------------------------------ADMIN  SERVICE CRUD --------------------------------
 @app.route("/api/create_sev", methods=["POST"])
 @jwt_required()
 def admin_create_sev():
@@ -434,6 +444,7 @@ def admin_delete_sev(sev_id):
         db.session.rollback()  # Rollback in case of an error
         return jsonify({"error": str(e)}), 500
 
+#------------------------------ADMIN MANAGE USERS----------------------------------------
 @app.route("/api/professional/approve/<prof_email>", methods=["POST"])
 @jwt_required()
 def admin_approve_prof(prof_email):
@@ -494,6 +505,7 @@ def admin_delete_cust(cust_email):
     db.session.commit()
     return jsonify({"message": "Customer deleted successfully"}), 200
 
+#------------------------------ADMIN SUMMARY SEARCH ----------------------------------------
 @app.route("/api/admin_summary", methods=["GET"])
 @jwt_required()
 def api_admin_summary():
@@ -544,7 +556,7 @@ def admin_search():
     # Return an empty result if no matches found
     return jsonify({"results": []}), 200
 
-#=========================================CUSTOMER============================================================================================
+#=========================================CUSTOMER REQUEST CRUD============================================================================================
 
 @app.route('/api/create_sevrequest/<cust_email>', methods=['POST'])
 @jwt_required()
@@ -658,6 +670,7 @@ def close_service_request(sevreq_id):
     db.session.commit()
     return jsonify({"message": "Professional approval status updated successfully"}), 200
 
+@cache.cached(timeout=50, key_prefix="cust_service_requests")
 @app.route("/api/cust_service_requests/<cust_email>", methods=["GET"])
 @jwt_required()
 def cust_service_requests(cust_email):
@@ -759,6 +772,7 @@ def cust_summary(cust_email):
         return jsonify({"error": "An error occurred while fetching data."}), 500
     
 #=================================================PROFESSIONAL================================================================================
+@cache.cached(timeout=50, key_prefix="prof_sevs_today")
 @app.route("/api/prof_sevs_today/<prof_email>", methods=["GET"])
 @jwt_required()
 def prof_sevs_today(prof_email):
@@ -785,6 +799,7 @@ def prof_sevs_today(prof_email):
     except Exception as e:
         return jsonify({"error": str(e)}), 500  
   
+@cache.cached(timeout=50, key_prefix="prof_closed_sevs")
 @app.route("/api/prof_closed_sevs/<prof_email>", methods=["GET"])
 @jwt_required()
 def prof_closed_sevs(prof_email):
@@ -915,6 +930,7 @@ def prof_update(prof_email):
                               "phone": update_prof.phone}
         return jsonify({"message": "Professional profile updated successfully", "prof_data": updated_prof_data}), 200
 
+@cache.cached(timeout=50, key_prefix="get_professional_info")
 @app.route("/api/professional/<prof_email>", methods=["GET"])
 @jwt_required()
 def get_professional_info(prof_email):
