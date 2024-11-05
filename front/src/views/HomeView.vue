@@ -9,7 +9,7 @@
 
       <!-- Header Section -->
       <header class="header">
-        <h1 class="app-title"><b>WELCOME TO HOMEWHIZ HOUSEHOLD SERVICES APPLICATION</b></h1>
+        <h1 class="app-title text-white"><b>WELCOME TO HOMEWHIZ HOUSEHOLD SERVICES APPLICATION</b></h1>
       </header>
 
       <!-- Logo and Information Section -->
@@ -25,11 +25,11 @@
         <div class="info-section">
           <div class="buttons">
             <a href="/login">
-              <button class="btn btn-primary"><b>LOGIN</b></button>
+              <button class="btn btn-primary text-white"><b>LOGIN</b></button>
             </a>
-            <p style="color:#fff"> New here?</p>
+            <!-- <p style="color:#fff"> New here?</p> -->
             <a href="/register_cust">
-              <button class="btn btn-primary"><b>REGISTER</b></button>
+              <button class="btn btn-primary text-white"><b>REGISTER</b></button>
             </a>
           </div>
         </div>
@@ -50,11 +50,11 @@
           <p style="color:#fff">Handyman</p>
         </div>
         <div class="service">
-          <img src="/static/iron.jpeg" alt="Plumbing Services" />
-          <p style="color:#fff">Plumbing</p>
+          <img src="/static/carwash.jpeg" alt="Plumbing Services" />
+          <p style="color:#fff">Carwash</p>
         </div>
         <div class="service">
-          <img src="/static/iron.jpeg" alt="Specialized Services" />
+          <img src="/static/specialized.jpeg" alt="Specialized Services" />
           <p style="color:#fff">Specialized</p>
         </div>
         <div class="service">
@@ -83,10 +83,10 @@
   background-color:#282828;
 }
 
-/* Header Section */
+/* Header Section  rgb(205, 176, 132)*/
 .header {
   flex-wrap: wrap;
-  background-color:rgb(205, 176, 132);
+  background-color:rgb(63, 35, 18);
   padding: 10px;
   text-align: center;
 }
@@ -128,7 +128,7 @@
 }
 
 .btn-primary {
-  background-color:rgb(205, 176, 132) ;
+  background-color:rgb(63, 35, 18);
   border: none;
   color: BLACK;
   padding: 38px 40px;

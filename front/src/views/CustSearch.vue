@@ -10,25 +10,27 @@
         <div v-for="result in profResults":key="result.prof_email" class="card mb-4" style="width: 18rem;">
           <div class="card-body">
             <h5 class="card-title">{{ result.prof_email }}</h5>
+            <img :src="'http://127.0.0.1:8080/api/view-image/' + result.prof_email" alt="Profile Picture" class="pic" />
             <p class="card-text">Service type:{{ result.service_type }}</p>
             <p class="card-text">Experience:{{ result.experience }}</p>
             <p class="card-text">Description:{{ result.description }}</p>
-            <div class="d-flex">
-                  <button class="btn btn-dark btn-sm">View profile</button>
             </div>
           </div>
         </div>
-      </div>
+      
       <div v-if="serviceResults.length > 0" class="card-deck mt-4">
         <div v-for="result in serviceResults" :key="result.sev_id" class="card mb-4" style="width: 18rem;">
           <div class="card-body">
             <h5 class="card-title">Service:{{ result.sev_name }}</h5>
-            <p class="card-text">Description:{{ result.description }}</p>
+            <img :src="getImageUrl(result.sev_id)" alt="Service image" class="pic">
+            <p class="card-text">{{ result.description }}</p>
             <p class="card-text">Base Price:{{ result.price }}</p>
             <p class="card-text">Service Category:{{ result.category }}</p>
             <div class="d-flex">
-                  <button class="btn btn-dark btn-sm">View service</button>
-            </div>
+              <button @click.prevent="showNewServiceRequestForm = true"  class="red">
+              + New Service Request
+            </button>            
+          </div>
           </div>
         </div>
       </div>
@@ -36,6 +38,60 @@
         <p class="text-white">No results found for your search.</p>
       </div>
     </div> 
+
+    <div v-show="showNewServiceRequestForm" class="modal fade show" style="display: block;" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">New Service Request</h5>
+        <button @click.prevent="showNewServiceRequestForm = false" class="btn-close"></button>
+      </div>
+      <div class="modal-body">
+        <form @submit.prevent="addNewServiceRequest">
+          <div class="mb-3">
+            <label class="form-label">Customer Email:</label>
+            <input v-model="newServiceRequest.cust_email" type="email" class="form-control" required readonly />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Professional Email:</label>
+            <input v-model="newServiceRequest.prof_email" type="email" class="form-control" required />
+          </div>
+
+          <div class="mb-3">
+            <label for="service" class="form-label">Service:</label>
+            <select v-model="newServiceRequest.sev_id" name="service" id="service" class="form-control" required>
+              <option value="" disabled>Select a service</option>
+              <option v-for="service in services" :key="service.sev_id" :value="service.sev_id">
+                {{ service.sev_name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Date of Request:</label>
+            <input v-model="newServiceRequest.date_of_request" type="date" class="form-control" required />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Date of Completion:</label>
+            <input v-model="newServiceRequest.date_of_completion" type="date" class="form-control" required />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Remarks:</label>
+            <textarea v-model="newServiceRequest.remarks" class="form-control"></textarea>
+          </div>
+
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Request Service</button>
+            <button @click.prevent="showNewServiceRequestForm = false" class="btn btn-secondary">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
   </template>
   
   
@@ -58,8 +114,21 @@
         searchResults: [],
         profResults: [], 
         serviceResults: [],
+        showNewServiceRequestForm: false,
+      newServiceRequest: {
+        cust_email: this.email,
+        prof_email: '',
+        sev_id: '',
+        date_of_request: '',
+        date_of_completion: '',
+      },
+      requests: [],
+      services: [],
       };
     },
+    async created() {
+    await this.fetchServices();
+  },
     methods: {
     setResults(results) {
       this.searchPerformed = false;
@@ -84,6 +153,74 @@
       
       this.searchPerformed = true;
     },
+    async addNewServiceRequest() {
+      try {
+        let your_jwt_token = localStorage.getItem('jwt');
+        if (!your_jwt_token) {
+          throw new Error('JWT token is missing');
+        }
+        console.log("Customer email ", this.email);
+        const response = await axios.post(`http://127.0.0.1:8080/api/create_sevrequest/${this.email}`, { 
+          "cust_email": this.email,
+          "prof_email": this.newServiceRequest.prof_email,
+          "sev_id": this.newServiceRequest.sev_id,
+          "date_of_request": this.newServiceRequest.date_of_request,
+          "date_of_completion": this.newServiceRequest.date_of_completion,
+        }, {
+          headers: {
+            'Authorization': `Bearer ${your_jwt_token}` 
+          },
+          withCredentials: true
+        });
+
+        if (response.status === 201) { 
+          console.log("Service request created successfully:", response.data);
+          await this.fetchServices(); 
+          
+          this.requests.push({
+            ...this.newServiceRequest,
+            id: response.data.sevreq_id 
+          }); 
+
+          this.newServiceRequest = {
+            cust_email: '',
+            prof_email: '',
+            sev_id: '',
+            date_of_request: '',
+            date_of_completion: '',
+          };
+
+          this.showNewServiceRequestForm = false;
+          alert("Service request created successfully!");
+          location.reload();
+        } else {
+          alert("Failed to create service request: " + response.data.error);
+        }
+      } catch (error) {
+        console.error('Error creating service request:', error); 
+      }
+    },
+    async fetchServices() {
+    try {
+      let your_jwt_token = localStorage.getItem('jwt');
+      if (!your_jwt_token) {
+        throw new Error('JWT token is missing');
+      }
+      const response = await axios.get(`http://127.0.0.1:8080/api/services`, {
+      params: {
+        category: this.category,
+        email: this.email 
+      },
+      headers: {
+        'Authorization': `Bearer ${your_jwt_token}`
+      },
+      withCredentials: true
+    });
+      this.services = response.data;
+    } catch (error) {
+      console.error("Error fetching services:", error);
+    }
+  },
     
     executeSearch() {
       this.searchPerformed = false;
@@ -94,6 +231,10 @@
         this.searchServices();
       }
     },
+    getImageUrl(id) {
+      return `/static/${id}.jpeg`;
+    },
+   
   },
   
   };
@@ -114,5 +255,11 @@
       table {margin-top: 20px;}.form-container {margin-top: 30px;}.navbar-brand {font-weight: bold;}.navbar, .offcanvas-header, .offcanvas-body {background-color: #f0f2ec;}
       .navbar-brand, .nav-link, .offcanvas-title {color: #020b17;}
       .nav-link.active {font-weight: bold;color: #e98e0f !important;}.btn-primary, .btn-outline-success {margin-top: 10px;}
+      .pic {
+    border-radius: 100%;
+    margin-bottom: 12px;
+    width: 100px;
+    height: 100px;
+  }
   </style>
   

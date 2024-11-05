@@ -52,7 +52,7 @@
             
             <div class="mb-3">
               <label class="form-label">Pincode:</label>
-              <input v-model="updateprof.pincode" type="number" class="form-control" required />
+              <input v-model="updateprof.pincode" type="text" class="form-control" required />
             </div>
             
             <div class="mb-3">
@@ -65,10 +65,6 @@
               <input v-model="updateprof.phone" type="text" class="form-control" required />
             </div>
 
-            <div class="mb-3">
-            <label for="file" class="form-label"> Update Profile Document:</label>
-            <input type="file" class="form-control" @change="handleFileUpload" accept=".pdf" required/>
-            </div>
 
             <div class="modal-footer">
               <button type="submit" class="btn btn-primary">Save Changes</button>

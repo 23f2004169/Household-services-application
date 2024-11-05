@@ -321,7 +321,6 @@ export default {
           if (response.status === 200) {
             console.log("Service request deleted successfully:", response.data);
             this.service_requests = this.service_requests.filter(service_request => service_request.sevreq_id !== sevreq_id);
-            alert("Service request deleted successfully");
           } else {
             alert("Failed to delete service request: " + response.data.error);
           }

@@ -1,27 +1,6 @@
 <template>
     <div class="container mt-5">
       <MenuBar />
-      
-      <h2 class="my-4 text-white">Customers</h2>
-      <div class="row">
-        <div v-for="customer in customers" :key="customer.id" class="col-md-4 mb-4">
-          <div class="card h-100">
-            <div class="card-body">
-              <h5 class="card-title">Email id:{{ customer.cust_email }}</h5>
-              <p><strong>Address:</strong> {{ customer.address }}</p>
-              <p><strong>Pincode:</strong> {{ customer.pincode }}</p>
-              <p><strong>Mobile no:</strong> {{ customer.phone }}</p>
-              <p><strong>Block status:</strong>{{customer.block }}</p>
-              <div class="d-flex">
-                <button @click="blockCustomer(customer.cust_email)" class="btn btn-dark btn-sm">Block/Unblock</button>
-                <button @click="deleteCustomer(customer.cust_email)" class="btn btn-danger btn-sm">Delete User</button>
-            </div>
-            </div>
-          </div>
-        </div>
-      </div> 
-      
-  
       <h2 class="my-4 text-white">Professionals</h2>
       <div class="row">
         <div v-for="professional in professionals" :key="professional.id" class="col-md-4 mb-4">
@@ -49,7 +28,26 @@
           </div>
         </div>
       </div>
-  
+      
+      <h2 class="my-4 text-white">Customers</h2>
+      <div class="row">
+        <div v-for="customer in customers" :key="customer.id" class="col-md-4 mb-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title">Email id:{{ customer.cust_email }}</h5>
+              <p><strong>Address:</strong> {{ customer.address }}</p>
+              <p><strong>Pincode:</strong> {{ customer.pincode }}</p>
+              <p><strong>Mobile no:</strong> {{ customer.phone }}</p>
+              <p><strong>Block status:</strong>{{customer.block }}</p>
+              <div class="d-flex">
+                <button @click="blockCustomer(customer.cust_email)" class="btn btn-dark btn-sm">Block/Unblock</button>
+                <button @click="deleteCustomer(customer.cust_email)" class="btn btn-danger btn-sm">Delete User</button>
+            </div>
+            </div>
+          </div>
+        </div>
+      </div> 
+
       <h2 class="my-4 text-white">Services</h2>
       <div class="row">
         <div v-for="service in services" :key="service.id" class="col-md-4 mb-4">
@@ -57,6 +55,7 @@
             <div class="card-body">
               <h5 class="card-title">Name:{{ service.sev_name }}</h5>
                <p><strong>Service id:</strong>{{service.sev_id}}</p>
+               <img :src="getImageUrl(service.sev_id)" alt="Service image" class="pic">
               <p class="card-text">{{ service.description }}</p>
               <p><strong>Price:</strong> {{ service.price }}</p>
               <p><strong>Category:</strong> {{ service.category }}</p>
@@ -105,7 +104,6 @@ export default {
       professionals: [] ,
       customers: [],
       service_requests: [],
-      backendUrl:'http://127.0.0.1:8080'
 
     }
   },
@@ -300,6 +298,9 @@ export default {
       // Open document in new tab
       const documentUrl = `http://127.0.0.1:8080/api/view-document/${prof_email}`;
       window.open(documentUrl, '_blank');
+    },
+    getImageUrl(id) {
+      return `/static/${id}.jpeg`;
     }
 },
 }

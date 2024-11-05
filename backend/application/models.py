@@ -39,7 +39,9 @@ class Professional(db.Model):
             "address": self.address,
             "pincode": self.pincode,
             "blocked": self.blocked,
-            "approval": self.approval
+            "approval": self.approval,
+            "phone": self.phone,
+            "rating": self.rating
         }
     
 class Customer(db.Model):
@@ -57,7 +59,8 @@ class Customer(db.Model):
             "cust_password": self.cust_password,
             "address": self.address,
             "pincode": self.pincode,
-            "blocked": self.blocked
+            "blocked": self.blocked,
+            "phone": self.phone
         }
 class Service(db.Model):
     __tablename__ = "service"
@@ -94,8 +97,6 @@ class Sevrequest(db.Model):
     remarks = db.Column(db.String)
     sev_status = db.Column(db.String, nullable=False, default="requested")  # closed, requested, accepted(assigned), rejected
     rating = db.Column(db.Numeric(1, 1), default=0)
-    sev_num_rating = db.Column(db.Integer, default=0)
-    sev_total_rating = db.Column(db.Numeric, default=0)
     def to_json(self):
         return {
             "sevreq_id": self.sevreq_id,

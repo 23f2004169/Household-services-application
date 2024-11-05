@@ -257,7 +257,9 @@ def get_professionals():
                 'address': professional.address,
                 'pincode': professional.pincode,
                 'blocked': professional.blocked,
-                'approval': professional.approval
+                'approval': professional.approval,
+                'phone': professional.phone,
+                'rating': professional.rating
             } for professional in professionals
         ]
         # Return the list of professionals as a JSON response
@@ -301,7 +303,9 @@ def get_customers():
             {
                 'cust_email': customer.cust_email,
                 'address': customer.address,
-                'pincode': customer.pincode
+                'pincode': customer.pincode,
+                'blocked': customer.blocked,
+                'phone': customer.phone
             } for customer in customers
         ]
         # Return the list of customers as a JSON response
@@ -670,8 +674,6 @@ def cust_service_requests(cust_email):
                 'remarks': service_request.remarks,
                 'sev_status': service_request.sev_status,
                 'rating': service_request.rating,
-                'sev_num_rating': service_request.sev_num_rating,
-                'sev_total_rating': service_request.sev_total_rating
             } for service_request in service_requests
         ]
         return jsonify(service_requests_list), 200
@@ -960,8 +962,6 @@ def prof_search(prof_email):
     data = request.get_json() 
     query = data.get("query", "").strip()
     print(query, prof_email)
-
-    # Combine filters for sev_status and rating with OR, and filter by prof_email
     results = Sevrequest.query.filter(
         Sevrequest.prof_email == prof_email,
         or_(
@@ -969,8 +969,6 @@ def prof_search(prof_email):
             Sevrequest.rating.ilike(f"%{query}%")
         )
     ).all()
-
-    # Process and return the results
     if results:
         result_list = [{
             "sevreq_id": result.sevreq_id,
@@ -984,8 +982,6 @@ def prof_search(prof_email):
         } for result in results]
         print(result_list)
         return jsonify({"results": result_list}), 200
-
-    # Return empty result if no matches found
     print("No results found", results)
     return jsonify({"results": [], "message": "No results found"}), 200
 

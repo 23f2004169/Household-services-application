@@ -7,16 +7,14 @@
       <div v-if="services && services.length > 0">
         <div class="services">
           <div class="service-card" v-for="service in services" :key="service.sev_id">
-            <img :src="service.image_url || '/static/default-service.png'" :alt="service.sev_name">
+            <img :src="getImageUrl(service.sev_id)" alt="Service image" class="pic">
             <h3>{{ service.sev_name }}</h3>
             <p>{{ service.description }}</p>
             <p>Price: Rs.{{ service.price }}</p>
             <p>Time Required: {{ service.time_req }}</p>
             <p>Address: {{ service.address }}</p>
             <p>Category: {{ service.category }}</p>
-            <button @click.prevent="showNewServiceRequestForm = true"  class="red">
-              + New Service Request
-            </button>
+            <button @click.prevent="showNewServiceRequestForm = true"  class="red"> + New Service Request </button>
           </div>
         </div>
       </div>
@@ -77,6 +75,7 @@
     </div>
   </div>
 </div>
+
 </template>
  
 <script>
@@ -173,6 +172,9 @@ export default {
         alert('An error occurred while creating the service request.');
       }
     },
+    getImageUrl(id) {
+      return `/static/${id}.jpeg`;
+    }
   }
 };
 </script>
@@ -207,6 +209,12 @@ export default {
     width: 100px;
     height: 100px;
     margin-bottom: 10px;
+  }
+  .pic {
+    border-radius: 100%;
+    margin-bottom: 12px;
+    width: 100px;
+    height: 100px;
   }
   </style>
   
