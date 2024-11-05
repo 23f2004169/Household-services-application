@@ -88,12 +88,12 @@
         this.statusChart = new Chart(ctx, {
           type: 'bar',
           data: {
-            labels: ["accepted", "requested", "rejected", "closed"],
+            labels: ["accepted", "rejected", "requested", "closed"],
             datasets: [
               {
                 label: "Service Request Status",
                 data: Object.values(this.statusCounts),
-                backgroundColor: ["#4caf50", "#2196f3", "#f44336", "#ff9800"],
+                backgroundColor: ["#4caf50",  "#f44336","#2196f3", "#ff9800"],
                 borderWidth: 1,
               },
             ],

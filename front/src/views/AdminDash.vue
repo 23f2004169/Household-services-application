@@ -568,6 +568,7 @@ openEditServiceForm(service) {
     );
     if (response.status === 200) {
       this.service_requests = response.data; // Update the services array with the data from the backend
+      console.log("Service requests fetched successfully:", response.data);
     } else {
       console.error("Failed to fetch service requests:", response.data.error);
     }

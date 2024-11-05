@@ -14,6 +14,8 @@
       <ProfileCard :email="email" />
     </div>
   </div>
+  <div v-if="service_requests_today.length > 0">
+    >
    <section class="service-section mt-4">
     <h3 class="text-white">Service Requests TODAY</h3>
 
@@ -49,7 +51,8 @@
         </tbody>
       </table>
     </section>
-
+  </div>
+<div v-if="closed_service_requests.length > 0">
     <section class="service-section mt-4">
     <h3 class="text-white">Closed Service Requests </h3>
 
@@ -81,7 +84,48 @@
           </tr>
         </tbody>
       </table>
-    </section>
+    </section>>
+  </div>
+  <div v-if="service_requests.length > 0">
+    <<section class="service-section mt-4">
+    <h3 class="text-white">Pending Service Requests </h3>
+
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Customer ID</th>
+            <th>Request Date</th>
+            <th>Completion Date</th>
+            <th>Status</th>
+            <th>Remarks</th>
+            <th>Service ID</th>
+            <th>Rating</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+      
+        <tbody>
+          <tr v-for="(service_request, index) in service_requests"  :key="index">
+            <td>{{ service_request.sevreq_id }}</td>
+            <td>{{ service_request.cust_email }}</td>
+            <td>{{ service_request.date_of_request }}</td>
+            <td>{{ service_request.date_of_completion }}</td>
+            <td>{{ service_request.sev_status }}</td>
+            <td>{{ service_request.remarks }}</td>
+            <td>{{ service_request.sev_id }}</td>
+            <td>{{ service_request.rating }}</td>
+            <td >
+              <button @click="acceptService(service_request.sevreq_id)" class="btn btn-success">Accept</button>
+              <button @click="rejectService(service_request.sevreq_id)" class="btn btn-danger">Reject</button>
+              <button @click="closeService(service_request.sevreq_id)" class="btn btn-warning">Close</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>>
+
+  </div>
 </template>
     
 <script>
@@ -98,6 +142,7 @@ export default {
           isProfileCardVisible: false ,
             service_requests_today: [],
             closed_service_requests: [],
+            service_requests: [],
           };
         },
     props: ['email'],
@@ -105,7 +150,9 @@ export default {
     this.fetchTodayServiceRequests();
     this.fetchClosedServices(); 
     this.fetchRating(); 
-    this.fetchProf()
+    this.fetchProf();
+    this.fetchServiceRequests();
+
   },  
     mounted() {
     console.log('ProfDashboard received email:', this.email); },
@@ -278,6 +325,28 @@ export default {
         console.error('Error fetching professionals:', error.message);
       }
     },
+    async fetchServiceRequests(){
+      try {
+        let your_jwt_token = localStorage.getItem('jwt');
+        if (!your_jwt_token) {
+          throw new Error('JWT token is missing');
+        }
+        const response = await axios.get(`http://127.0.0.1:8080/api/prof_pending_sevs/${this.email} `, {
+          headers: {
+            'Authorization': `Bearer ${your_jwt_token}`
+          },
+          withCredentials: true
+        });
+        if (response.status === 200) {
+          this.service_requests = response.data; // Update the services array with the data from the backend
+          console.log("Service requests fetched successfully:", response.data);
+        } else {
+          console.error("Failed to fetch service requests:", response.data.error);
+        }
+      } catch (error) {
+        console.error('Error fetching service requests:', error.message);
+      }
+    }
     }
     }
 </script>

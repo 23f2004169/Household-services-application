@@ -9,8 +9,8 @@ from werkzeug.utils import secure_filename
 from flask import send_from_directory, Flask, jsonify, request
 from sqlalchemy import or_
 from flask_caching import Cache
-# cache = Cache()
 
+# cache = Cache()
 cache = Cache(config={'CACHE_TYPE': 'redis', 'CACHE_REDIS_URL': 'redis://localhost:6379/0'})
 
 @app.route("/")
@@ -806,7 +806,6 @@ def prof_closed_sevs(prof_email):
     try:
         prof = Professional.query.get(prof_email)
         sevreqs = Sevrequest.query.all()
-        trial=[i for i in sevreqs if i.prof_email == prof.prof_email]
         closed_service_requests = [i for i in sevreqs if i.sev_status == "closed" and i.prof_email == prof.prof_email]
         closed_requests= [
           {
@@ -827,6 +826,33 @@ def prof_closed_sevs(prof_email):
     except Exception as e:
         return jsonify({"error": str(e)}), 500  
   
+@cache.cached(timeout=50, key_prefix="prof_pending_sevs")
+@app.route("/api/prof_pending_sevs/<prof_email>", methods=["GET"])
+@jwt_required()
+def prof_pending_sevs(prof_email):
+    try:
+        prof = Professional.query.get(prof_email)
+        sevreqs = Sevrequest.query.all()
+        service_requests = [i for i in sevreqs if i.sev_status == "requested" and i.prof_email == prof.prof_email]
+        pending_requests= [
+          {
+              "sevreq_id":  service_request.sevreq_id,
+              "date_of_request":service_request.date_of_request,
+              "date_of_completion":service_request.date_of_completion,
+              "sev_status":service_request.sev_status,
+              "remarks":service_request.remarks,
+              "prof_email":service_request.prof_email,
+              "cust_email":service_request.cust_email,
+              "sev_id":service_request.sev_id,
+              "rating":service_request.rating
+          }for service_request in service_requests
+          ]
+        print(pending_requests)
+        return jsonify(pending_requests), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500  
+
 @app.route("/api/prof_accept_sev/<int:sevreq_id>", methods=["POST"])
 @jwt_required()
 def prof_accept_sev(sevreq_id):
