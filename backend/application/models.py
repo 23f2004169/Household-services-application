@@ -20,8 +20,12 @@ class Professional(db.Model):
     date_created = db.Column(db.String, nullable=False)
     address = db.Column(db.String)
     pincode = db.Column(db.String)
+    image = db.Column(db.String)
+    file=db.Column(db.String)
+    phone=db.Column(db.String)
     blocked = db.Column(db.Integer, default=0)
     approval = db.Column(db.String, default='pending')
+    rating=db.Column(db.Numeric(1,1), default=0)
     # Establishing relationship with Sevrequest
     prof_req = db.relationship('Sevrequest', backref='professional', cascade='all, delete-orphan')
     def to_json(self):
@@ -45,7 +49,7 @@ class Customer(db.Model):
     address = db.Column(db.String, nullable=False)
     pincode = db.Column(db.String, nullable=False)
     blocked = db.Column(db.Integer, default=0)
-    # Establishing relationship with Sevrequest
+    phone=db.Column(db.String)
     cust_req = db.relationship('Sevrequest', backref='customer', cascade='all, delete-orphan')
     def to_json(self):
         return {

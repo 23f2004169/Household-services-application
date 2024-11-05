@@ -1,7 +1,8 @@
 <template>
+
     <div class="profile-card">
-      <img src="http://127.0.0.1:8080/uploads/prof5.png" alt="Profile Picture" class="profile-pic" />
       <p class="service">Service: {{ prof_data.service_type }}</p>
+      <img :src="'http://127.0.0.1:8080/api/view-image/' + prof_data.prof_email" alt="Profile Picture" class="profile-pic" />
       <p class="email">Email: {{ prof_data.prof_email }}</p>
       <p class="experience">Experience: {{ prof_data.experience }}</p>
       <p class="address">Address: {{ prof_data.address }}</p>
@@ -101,7 +102,6 @@ export default {
         description: "",
         phone: ""
       },
-      backendUrl: process.env.VUE_APP_BACKEND_URL || 'http://127.0.0.1:8080'
 
       }
     },
@@ -208,8 +208,10 @@ export default {
   }
   
   .profile-pic {
-    border-radius: 50%;
+    border-radius: 100%;
     margin-bottom: 12px;
+    width: 100px;
+    height: 100px;
   }
   
   .name {

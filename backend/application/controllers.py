@@ -2,9 +2,12 @@ from flask import current_app as app #alias for current running app
 from flask import render_template,request,Flask,jsonify
 from application.models import *
 from datetime import datetime
-import decimal,logging
+import os,decimal,logging
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token,get_jwt_identity,jwt_required, set_access_cookies,get_jwt
+from werkzeug.utils import secure_filename
+from flask import send_from_directory, Flask, jsonify, request
+from sqlalchemy import or_
 
 @app.route("/")
 def home():
@@ -90,6 +93,7 @@ def cust_reg():
         cust_password = data.get("cust_password")
         address = data.get("address")
         pincode = data.get("pincode")
+        phone=data.get("phone")
         # try:
             # Check if customer email already exists
         if not cust_password or cust_password.strip() == "":
@@ -106,56 +110,106 @@ def cust_reg():
             cust_email=cust_email,
             cust_password=generate_password_hash(cust_password),
             address=address,
-            pincode=pincode
+            pincode=pincode,
+            phone=phone
         )
         db.session.add(new_cust)
         db.session.commit()
-
-        # Return a success message along with the customer email
         return jsonify({"msg":"Registration successful", "cust_email":"cust_email"}), 201  # Created
-
-        # except Exception as e:
-        # print(str(e))  # Log the error for debugging
     return jsonify({"error":"An error occurred during registration"}), 500  # Internal Server Error
 
-@app.route('/api/prof_reg', methods=['GET','POST'])
+UPLOAD_FOLDER = 'uploads'
+ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['STATIC_FOLDER'] = "static"
+
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+def allowed_file(filename):
+  return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/api/prof_reg', methods=['GET', 'POST'])
 def prof_reg():
-    if request.method=="POST":
-        data = request.get_json()
-        prof_email =data.get("prof_email")
-        prof_password=data.get("prof_password")
-        service_type=data.get("service_type")
-        experience=data.get("experience")
-        address=data.get("address")
-        pincode=data.get("pincode")
-        description=data.get("description")
-        date_created=datetime.now().date()
-        if not prof_password or prof_password.strip() == "":
-            return jsonify({"error":"Password cannot be empty"}), 400
+    if request.method == "POST":
+        prof_email = request.form.get("prof_email")
+        prof_password = request.form.get("prof_password")
+        service_type = request.form.get("service_type")
+        experience = request.form.get("experience")
+        address = request.form.get("address")
+        pincode = request.form.get("pincode")
+        description = request.form.get("description")
+        phone = request.form.get("phone")
         
-        exist = Professional.query.filter_by(prof_email=prof_email).first()
-        if exist:
-            print('hello2')
-            return jsonify({"error":"Professional username already exists"}), 400  # Bad Request
+        image_file = request.files.get('image')
+        document_file = request.files.get('file')
         
-        # Create a new customer
-        print(generate_password_hash(prof_password)) # Hash the password
-        new_prof =Professional(
-            prof_email=prof_email,
-            prof_password=generate_password_hash(prof_password),
-            service_type=service_type,
-            experience=experience,
-            address=address,
-            pincode=pincode,
-            description=description,
-            date_created=date_created
+        image_filename = None
+        document_filename = None
+      
+    # if image_file and allowed_file(image_file.filename):
+    #       image_filename=prof_email.split("@")[0]+"."+image_file.filename.split(".")[-1]
+    #       image_filename=os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
+    #       image_file.save(image_filename)
+      
+    if image_file and allowed_file(image_file.filename):
+        image_filename=prof_email.split("@")[0]+"."+ image_file.filename.split(".")[-1]
+        image_file.save(os.path.join(app.config['UPLOAD_FOLDER'], image_filename) )
+          
+    if document_file and allowed_file(document_file.filename):
+        document_filename=prof_email.split("@")[0]+"."+ document_file.filename.split(".")[-1]
+        document_file.save(os.path.join(app.config['UPLOAD_FOLDER'], document_filename) ) 
+
+    if not prof_password or prof_password.strip() == "":
+        return jsonify({"error": "Password cannot be empty"}), 400
+      
+    exist = Professional.query.filter_by(prof_email=prof_email).first()
+    if exist:
+        return jsonify({"error": "Professional username already exists"}), 400
+
+    new_prof = Professional(
+        prof_email=prof_email,
+        prof_password=generate_password_hash(prof_password),
+        service_type=service_type,
+        experience=experience,
+        address=address,
+        pincode=pincode,
+        description=description,
+        date_created=datetime.now().date(),
+        phone=phone,
+        image=image_filename,  
+        file=document_filename  
+    )  
+    db.session.add(new_prof)
+    db.session.commit()
+    return jsonify({"msg": "Registration successful", "prof_email": prof_email}), 201
+  
+@app.route('/api/view-document/<prof_email>', methods=['GET'])
+def view_document(prof_email):
+    try:
+        professional = Professional.query.filter_by(prof_email=prof_email).first()
+        if not professional or not professional.file:
+            return jsonify({"error": "Document not found"}), 404    
+        filename = os.path.basename(professional.file)
+        return send_from_directory(app.config['UPLOAD_FOLDER'],filename,as_attachment=False  # This will display in browser instead of downloading
         )
-        db.session.add(new_prof)
-        db.session.commit()
-
-        # Return a success message along with the customer email
-        return jsonify({"msg":"Registration successful", "prof_email":"prof_email"}), 201  
-
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+  
+@app.route('/api/view-image/<prof_email>', methods=['GET'])
+def view_image(prof_email):
+  try:
+      professional = Professional.query.filter_by(prof_email=prof_email).first()
+      if not professional or not professional.image:
+          return jsonify({"error": "Image not found"}), 404
+          
+      filename = os.path.basename(professional.image)
+      return send_from_directory(
+          app.config['UPLOAD_FOLDER'],
+          filename,
+          as_attachment=False  # This will display in browser instead of downloading
+      )
+  except Exception as e:
+      return jsonify({"error": str(e)}), 500
+  
 #===================================ADMIN====================================================================================================
 @app.route('/api/services', methods=['GET','POST'])
 @jwt_required()
@@ -406,6 +460,16 @@ def admin_block_prof(prof_email):
     db.session.commit()
     return jsonify({"message": "Professional approval status updated successfully"}), 200
 
+@app.route("/api/professional/delete/<cust_email>", methods=["DELETE"])
+@jwt_required()
+def admin_delete_prof(cust_email):
+    professionals = Professional.query.get(cust_email)
+    if professionals is None:
+        return {"error": "Professional not found"}, 404
+    db.session.delete(professionals)
+    db.session.commit()
+    return jsonify({"message": "Professional deleted successfully"}), 200
+
 @app.route("/api/customer/block/<cust_email>", methods=["POST"]) 
 @jwt_required()
 def admin_block_cust(cust_email):
@@ -415,6 +479,16 @@ def admin_block_cust(cust_email):
     customers.blocked = not customers.blocked
     db.session.commit()
     return jsonify({"message": "Customer approval status updated successfully"}), 200    
+
+@app.route("/api/customer/delete/<cust_email>", methods=["DELETE"])
+@jwt_required()
+def admin_delete_cust(cust_email):
+    customers = Customer.query.get(cust_email)
+    if customers is None:
+        return {"error": "Customer not found"}, 404
+    db.session.delete(customers)
+    db.session.commit()
+    return jsonify({"message": "Customer deleted successfully"}), 200
 
 @app.route("/api/admin_summary", methods=["GET"])
 @jwt_required()
@@ -438,33 +512,33 @@ def api_admin_summary():
 @jwt_required()
 def admin_search():
     data = request.get_json() 
-    query= data.get("query", "").strip()
-    results= Professional.query.filter(Professional.prof_email.ilike(f"%{query}%")).all()
-    if results:
-        result_list = [{"prof_email": result.prof_email,
-                    "description": result.description,
-                    "service_type": result.service_type,
-                    "experience": result.experience,
-                    "address": result.address,
-                    "pincode": result.pincode,
-                    "blocked": result.blocked,
-                    "approval": result.approval,} for result in results]
-        return jsonify({"results": result_list}), 200
+    query = data.get("query", "").strip()
     
-    results= Professional.query.filter(Professional.service_type.ilike(f"%{query}%")).all()
-    if results:
-        result_list = [{"prof_email": result.prof_email,
-                    "description": result.description,
-                    "service_type": result.service_type,
-                    "experience": result.experience,
-                    "address": result.address,
-                    "pincode": result.pincode,
-                    "blocked": result.blocked,
-                    "approval": result.approval,} for result in results]
-    
-        return jsonify({"results": result_list}), 200
-    return jsonify({"results": "no results found"}), 200
+    # Use OR condition to search for prof_email or service_type
+    results = Professional.query.filter(
+        or_(
+            Professional.prof_email.ilike(f"%{query}%"),
+            Professional.service_type.ilike(f"%{query}%")
+        )
+    ).all()
 
+    # Process the results and create a list of dictionaries
+    if results:
+        result_list = [{
+            "prof_email": result.prof_email,
+            "description": result.description,
+            "service_type": result.service_type,
+            "experience": result.experience,
+            "address": result.address,
+            "pincode": result.pincode,
+            "blocked": result.blocked,
+            "approval": result.approval,
+        } for result in results]
+
+        return jsonify({"results": result_list}), 200
+    
+    # Return an empty result if no matches found
+    return jsonify({"results": []}), 200
 
 #=========================================CUSTOMER============================================================================================
 
@@ -604,7 +678,6 @@ def cust_service_requests(cust_email):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
 @app.route("/api/rate_sevreq/<sevreq_id>", methods=["POST"])
 @jwt_required()
 def cust_rate_sev(sevreq_id):
@@ -637,56 +710,35 @@ def cust_rate_sev(sevreq_id):
             "error": "Service request must be closed to rate"
         }), 400
 
+
 @app.route("/api/cust_search", methods=["POST"])
 @jwt_required()
 def cust_search():
     data = request.get_json()
     query = data.get("query", "").strip()
-    sresults = Service.query.filter(Service.sev_name.ilike(f"%{query}%")).all()
+
+    sresults = Service.query.filter(
+        or_(
+            Service.sev_name.ilike(f"%{query}%"),
+            Service.category.ilike(f"%{query}%"),
+            Service.address.ilike(f"%{query}%"),
+            Service.pincode.ilike(f"%{query}%")
+        )
+    ).all()
+
     if sresults:
         result_list = [{"sev_id": result.sev_id,
-                    "sev_name": result.sev_name,
-                    "category": result.category,
-                    "description": result.description,
-                    "time_req": result.time_req,
-                    "price": result.price,
-                    "address": result.address,
-                    "pincode": result.pincode} for result in sresults]
+                        "sev_name": result.sev_name,
+                        "category": result.category,
+                        "description": result.description,
+                        "time_req": result.time_req,
+                        "price": result.price,
+                        "address": result.address,
+                        "pincode": result.pincode} for result in sresults]
         return jsonify({"sresults": result_list}), 200
-    sresults = Service.query.filter(Service.category.ilike(f"%{query}%")).all()
-    if sresults:
-        result_list = [{"sev_id": result.sev_id,
-                    "sev_name": result.sev_name,
-                    "category": result.category,
-                    "description": result.description,
-                    "time_req": result.time_req,
-                    "price": result.price,
-                    "address": result.address,
-                    "pincode": result.pincode} for result in sresults]
-        return jsonify({"sresults": result_list}), 200
-    sresults= Service.query.filter(Service.address.ilike(f"%{query}%")).all()
-    if sresults:
-        result_list = [{"sev_id": result.sev_id,
-                    "sev_name": result.sev_name,
-                    "category": result.category,
-                    "description": result.description,
-                    "time_req": result.time_req,
-                    "price": result.price,
-                    "address": result.address,
-                    "pincode": result.pincode} for result in sresults]
-        return jsonify({"sresults": result_list}), 200
-    sresults= Service.query.filter(Service.pincode.ilike(f"%{query}%")).all()
-    if sresults:
-        result_list = [{"sev_id": result.sev_id,
-                    "sev_name": result.sev_name,
-                    "category": result.category,
-                    "description": result.description,
-                    "time_req": result.time_req,
-                    "price": result.price,
-                    "address": result.address,
-                    "pincode": result.pincode} for result in sresults]
-        return jsonify({"sresults": result_list}), 200
-    return jsonify({"sresults": "No results found"}), 200
+
+    return jsonify({"sresults": [], "message": "No sresults found"}), 200
+
 @app.route("/api/cust_summary/<cust_email>", methods=["GET"])
 @jwt_required()
 def cust_summary(cust_email):
@@ -794,25 +846,26 @@ def prof_close_sev(sevreq_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500  
     
-@app.route("/api/prof_rating/<prof_email>", methods=["GET"])
+@app.route("/api/prof_rating/<prof_email>", methods=["POST"])
 @jwt_required()
 def prof_rating(prof_email):
-    rating = 0
-    prof = Professional.query.filter_by(prof_email=prof_email).first()
-    if not prof:
-        return jsonify(error="Professional not found"), 404
-    for x in prof.prof_req:
-        rating += x.rating
-
-        print(x.rating)
-    average_rating = round(rating / len(prof.prof_req), 2) if prof.prof_req else 0
-
-    print(average_rating)
-    return jsonify({
-        "email": prof_email,
-        "average_rating": average_rating
-    }), 200
-
+    try:
+        rating = 0
+        prof = Professional.query.filter_by(prof_email=prof_email).first()
+        if not prof:
+            return jsonify(error="Professional not found"), 404
+        for x in prof.prof_req:
+            rating += x.rating
+    
+            print(x.rating)
+        average_rating = round(rating / len(prof.prof_req), 2) if prof.prof_req else 0
+        prof.rating=average_rating
+        db.session.commit()
+        print(average_rating,prof.rating)
+        return jsonify(prof.rating), 200
+    
+    except Exception as e:
+        return jsonify({"error":str(e)}),500
 
 @app.route("/api/prof_update/<prof_email>", methods=["GET", "POST"])
 @jwt_required()
@@ -823,42 +876,41 @@ def prof_update(prof_email):
             return jsonify({"error": "Professional not found"}), 404
         else:
             prof_data = { "prof_email": prof.prof_email,
-                           "prof_password": prof.prof_password,
                            "service_type": prof.service_type,
                            "experience": prof.experience,
                            "address": prof.address,
                            "pincode": prof.pincode,
-                           "description": prof.description}
+                           "description": prof.description,
+                           "rating": prof.rating}
         return jsonify(prof_data), 200
     if request.method == "POST":
         data = request.get_json() 
         prof_email= data.get("prof_email")
-        prof_password = data.get("prof_password")
         service_type = data.get("service_type")
         experience = data.get("experience")
         address = data.get("address")
         pincode = data.get("pincode")
         description = data.get("description")
-
+        phone = data.get("phone")
         update_prof = Professional.query.get(prof_email)
         if not update_prof:
             return jsonify({"error": "Professional not found"}), 404
 
         update_prof.prof_email = prof_email
-        update_prof.prof_password = prof_password
         update_prof.service_type = service_type
         update_prof.experience = experience
         update_prof.address = address
         update_prof.pincode = pincode
         update_prof.description = description
+        update_prof.phone = phone
         db.session.commit()
         updated_prof_data = { "prof_email": update_prof.prof_email,
-                              "prof_password": update_prof.prof_password,
                               "service_type": update_prof.service_type,
                               "experience": update_prof.experience,
                               "address": update_prof.address,
                               "pincode": update_prof.pincode,
-                              "description": update_prof.description}
+                              "description": update_prof.description,
+                              "phone": update_prof.phone}
         return jsonify({"message": "Professional profile updated successfully", "prof_data": updated_prof_data}), 200
 
 @app.route("/api/professional/<prof_email>", methods=["GET"])
@@ -875,7 +927,10 @@ def get_professional_info(prof_email):
         "experience": prof.experience,
         "address": prof.address,
         "pincode": prof.pincode,
-        "description": prof.description
+        "description": prof.description,
+        "phone": prof.phone,
+        "rating": prof.rating,
+        "image": prof.image
     }
     
     # Return JSON response with status code 200
@@ -897,38 +952,41 @@ def prof_summary(prof_email):
     except Exception as e:
         print("Error in prof_summary:", e)
         return jsonify({"error": "An error occurred while fetching data."}), 500
+from sqlalchemy import or_
 
 @app.route("/api/prof_search/<prof_email>", methods=["POST"])
 @jwt_required()
 def prof_search(prof_email):
     data = request.get_json() 
-    query= data.get("query", "").strip()
-    # results= Sevrequest.query.filter(Sevrequest.sev_status.ilike(f"%{query}%")).all()
-    print(query,prof_email)
-    results = Sevrequest.query.filter(Sevrequest.sev_status.ilike(f"%{query}%"), Sevrequest.prof_email == prof_email).all()
-    if results :
-        result_list = [{"sevreq_id": result.sevreq_id,
-                        "cust_email": result.cust_email,
-                        "prof_email": result.prof_email,
-                        "sev_status": result.sev_status,
-                        "rating": result.rating,
-                        "remarks": result.remarks,
-                        "date_of_request": result.date_of_request,
-                        "date_of_completion": result.date_of_completion} for result in results]
+    query = data.get("query", "").strip()
+    print(query, prof_email)
+
+    # Combine filters for sev_status and rating with OR, and filter by prof_email
+    results = Sevrequest.query.filter(
+        Sevrequest.prof_email == prof_email,
+        or_(
+            Sevrequest.sev_status.ilike(f"%{query}%"),
+            Sevrequest.rating.ilike(f"%{query}%")
+        )
+    ).all()
+
+    # Process and return the results
+    if results:
+        result_list = [{
+            "sevreq_id": result.sevreq_id,
+            "cust_email": result.cust_email,
+            "prof_email": result.prof_email,
+            "sev_status": result.sev_status,
+            "rating": result.rating,
+            "remarks": result.remarks,
+            "date_of_request": result.date_of_request,
+            "date_of_completion": result.date_of_completion,
+        } for result in results]
         print(result_list)
         return jsonify({"results": result_list}), 200
-    results= Sevrequest.query.filter(Sevrequest.rating.ilike(f"%{query}%"), Sevrequest.prof_email == prof_email).all()
-    if results :
-        result_list = [{"sevreq_id": result.sevreq_id,
-                        "cust_email": result.cust_email,
-                        "prof_email": result.prof_email,
-                        "sev_status": result.sev_status,
-                        "rating": result.rating,
-                        "remarks": result.remarks,
-                        "date_of_request": result.date_of_request,
-                        "date_of_completion": result.date_of_completion} for result in results]
-        return jsonify({"results": result_list}), 200
-    print("No results found",results)
+
+    # Return empty result if no matches found
+    print("No results found", results)
     return jsonify({"results": [], "message": "No results found"}), 200
 
 
@@ -944,13 +1002,7 @@ def prof_search(prof_email):
 
 # Create a route to authenticate your users and return JWTs. The
 # create_access_token() function is used to actually generate the JWT.
-#individual details
-@app.route("/professional_info/<prof_id>",methods=["GET","POST"])
-def admin_prof_details(prof_id):
-    prof=Professional.query.get(prof_id)
-    if request.method=="GET":
-        return render_template("prof_details.html",prof=prof)
-    
+#individual details 
 #search profs to block/unblock
 #implement drop down feature, all in one search, add multiple filters -all 4 by name or search text(closed requests)
 

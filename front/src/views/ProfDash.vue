@@ -6,6 +6,7 @@
   <h2 class="text-white">Welcome Professional</h2>
   <p class="text-white">Your email: {{ email }}</p>  
   <p class="text-white">Your rating: {{ rating }}</p>
+  <!-- <img :src="'http://127.0.0.1:8080/api/view-image/' + prof_data.prof_email" alt="Profile Picture" class="profile-pic" /> -->
 
   <div>
     <button @click="toggleProfileCard" style="background-color: rgb(63, 35, 18);">View your ProfileCard</button>
@@ -104,6 +105,7 @@ export default {
     this.fetchTodayServiceRequests();
     this.fetchClosedServices(); 
     this.fetchRating(); 
+    this.fetchProf()
   },  
     mounted() {
     console.log('ProfDashboard received email:', this.email); },
@@ -254,6 +256,28 @@ export default {
         console.error('Error closing service request:', error.message);
       }
         },
+        async fetchProf() {
+      try {
+        let your_jwt_token = localStorage.getItem('jwt');
+        if (!your_jwt_token) {
+          throw new Error('JWT token is missing');
+        }
+        const response = await axios.get(`http://127.0.0.1:8080/api/professional/${this.email}`, {
+          headers: {
+            'Authorization': `Bearer ${your_jwt_token}`
+          },
+          withCredentials: true
+        });
+        console.log(this.email,response.data);
+        if (response.status === 200) {
+          this.prof_data = response.data; // Update the services array with the data from the backend
+        } else {
+          console.error("Failed to fetch professionals:", response.data.error);
+        }
+      } catch (error) {
+        console.error('Error fetching professionals:', error.message);
+      }
+    },
     }
     }
 </script>
