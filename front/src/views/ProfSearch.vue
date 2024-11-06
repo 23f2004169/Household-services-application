@@ -5,9 +5,6 @@
         </header>
       </div>
     <div>
-      <h4 class="text-white">Search for service requests based on their status(closed,accepted,rejected,requested) and rating(1-5)</h4>
-    </div>
-    <div>
       <ProfSearchBar @updateResults="setResults" @searchPerformed="performSearch" :email="email"/>
       <div v-if="searchResults.length > 0" class="card-deck mt-4">
         <div

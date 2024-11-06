@@ -1,4 +1,5 @@
 <template>
+  <div><p class="text-white">Search for professional based on their service type,name,rating,address,pincode experience and description</p></div>
     <div class="container my-3">
       <div class="search-bar">
         <div class="input-group">
@@ -18,7 +19,60 @@
     </div>
 </template>
   
-  <style scoped>
+<script>
+  import axios from "axios";
+  export default {
+    name: "SearchBar",
+    data() {
+      return {
+        searchQuery: "",
+        results: [],
+      };
+    },
+    methods: {
+      async submitSearch() {
+        try {
+          let your_jwt_token = localStorage.getItem("jwt");
+          if (!your_jwt_token) {
+            throw new Error("JWT token is missing");
+          }
+          const response = await axios.post("http://127.0.0.1:8080/api/admin_search", {
+            query: this.searchQuery,
+            prof_email: this.results.prof_email,
+            description: this.results.description,
+            service_type: this.results.service_type,
+            experience: this.results.experience,
+            address: this.results.address,
+            pincode: this.results.pincode,
+            blocked: this.results.blocked,
+            approval: this.results.approval,
+            rating: this.results.rating,
+            phone: this.results.phone
+          }, {
+           headers: {
+             'Authorization': `Bearer ${your_jwt_token}` 
+                 },
+               withCredentials: true
+            });
+          
+          if (response.status === 200) {
+            const data = response.data.results;
+            this.$emit("updateResults", data); // Pass results to parent component
+            this.results = data; // Update local results if needed
+          } else {
+            alert("Failed to fetch services: " + response.data.error);
+          }
+        } catch (error) {
+          console.error("Error fetching services:", error.message);
+          alert("An error occurred while fetching services.");
+        }
+      },
+    },
+  };
+</script>
+  
+    
+<style scoped>
   .container {
     display: flex;
     justify-content: center;
@@ -64,56 +118,5 @@
   .search-button:hover {
     background-color:#282828;
   }
-  </style>
-  
-  
-  <script>
-  import axios from "axios";
-  export default {
-    name: "SearchBar",
-    data() {
-      return {
-        searchQuery: "",
-        results: [],
-      };
-    },
-    methods: {
-      async submitSearch() {
-        try {
-          let your_jwt_token = localStorage.getItem("jwt");
-          if (!your_jwt_token) {
-            throw new Error("JWT token is missing");
-          }
-          const response = await axios.post("http://127.0.0.1:8080/api/admin_search", {
-            query: this.searchQuery,
-            prof_email: this.results.prof_email,
-            description: this.results.description,
-            service_type: this.results.service_type,
-            experience: this.results.experience,
-            address: this.results.address,
-            pincode: this.results.pincode,
-            blocked: this.results.blocked,
-            approval: this.results.approval,
-          }, {
-           headers: {
-             'Authorization': `Bearer ${your_jwt_token}` 
-                 },
-               withCredentials: true
-            });
-          
-          if (response.status === 200) {
-            const data = response.data.results;
-            this.$emit("updateResults", data); // Pass results to parent component
-            this.results = data; // Update local results if needed
-          } else {
-            alert("Failed to fetch services: " + response.data.error);
-          }
-        } catch (error) {
-          console.error("Error fetching services:", error.message);
-          alert("An error occurred while fetching services.");
-        }
-      },
-    },
-  };
-  </script>
+</style>
   

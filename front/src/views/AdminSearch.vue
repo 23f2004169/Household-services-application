@@ -17,6 +17,8 @@
           <p class="card-text">Service:{{ result.service_type }}</p>
           <p class="card-text">Experience:{{ result.experience }}</p>
           <p class="card-text">Description:{{ result.description }}</p>
+          <p class="card-text">Rating:{{ result.rating }}</p>
+          <p class="card-text">Mobile no:{{ result.phone }}</p>
           <div class="d-flex">
                 <button @click="blockProfessional(result.prof_email)" class="btn btn-dark btn-sm">Block/Unblock</button>
                 <button class="btn btn-dark btn-sm">View profile</button>

@@ -1,4 +1,8 @@
 <template>
+  <div class="message mb-2 text-white">
+            <p v-if="searchType === 'service'">Search for services based on their name,category,address and pincode</p>
+            <p v-else>Search for professional based on their service type,name,rating,address,pincode experience and description</p>
+        </div>
   <div class="container my-3">
     <div class="search-bar">
       <div class="input-group">
@@ -10,7 +14,7 @@
         <input
           type="text"
           class="form-control search-input"
-          placeholder="Search for Professionals or Services"
+          placeholder="Search for Services or Professionals"
           v-model="searchQuery"
         />
         <div class="input-group-append">
@@ -20,6 +24,7 @@
         </div>
       </div>
     </div>
+    
   </div>
 </template>
 
@@ -30,7 +35,7 @@ export default {
   data() {
     return {
       searchQuery: "",
-      searchType: "professional",
+      searchType: "service",
       results: [],
       sresults: [],
     };
@@ -87,6 +92,8 @@ export default {
           pincode: this.results.pincode,
           blocked: this.results.blocked,
           approval: this.results.approval,
+          rating: this.results.rating,
+          phone: this.results.phone
         },
         {
           headers: {

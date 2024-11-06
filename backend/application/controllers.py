@@ -17,7 +17,6 @@ cache = Cache(config={'CACHE_TYPE': 'redis', 'CACHE_REDIS_URL': 'redis://localho
 def home():
     return render_template("index.html")
 
-
 @app.route("/protected", methods=["GET"])
 @jwt_required()
 def protected():
@@ -42,7 +41,6 @@ def protected():
         logging.error(f"Token validation error: {str(e)}")
         return jsonify({"error": "Token validation failed"}), 500
   
-
 @app.route("/api/login",methods=['GET','POST'])
 def login():
     data = request.get_json()
@@ -214,7 +212,7 @@ def view_image(prof_email):
   except Exception as e:
       return jsonify({"error": str(e)}), 500
   
-#===================================ADMIN FETCH====================================================================================================
+#===================================FETCH====================================================================================================
 @cache.cached(timeout=50, key_prefix="get_services")
 @app.route('/api/services', methods=['GET'])
 @jwt_required()
@@ -322,7 +320,7 @@ def get_customers():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-#-------------------------------ADMIN  SERVICE CRUD --------------------------------
+#===========================================ADMIN====================================================================================================
 @app.route("/api/create_sev", methods=["POST"])
 @jwt_required()
 def admin_create_sev():
@@ -444,7 +442,6 @@ def admin_delete_sev(sev_id):
         db.session.rollback()  # Rollback in case of an error
         return jsonify({"error": str(e)}), 500
 
-#------------------------------ADMIN MANAGE USERS----------------------------------------
 @app.route("/api/professional/approve/<prof_email>", methods=["POST"])
 @jwt_required()
 def admin_approve_prof(prof_email):
@@ -505,7 +502,6 @@ def admin_delete_cust(cust_email):
     db.session.commit()
     return jsonify({"message": "Customer deleted successfully"}), 200
 
-#------------------------------ADMIN SUMMARY SEARCH ----------------------------------------
 @app.route("/api/admin_summary", methods=["GET"])
 @jwt_required()
 def api_admin_summary():
@@ -529,16 +525,19 @@ def api_admin_summary():
 def admin_search():
     data = request.get_json() 
     query = data.get("query", "").strip()
-    
-    # Use OR condition to search for prof_email or service_type
     results = Professional.query.filter(
         or_(
             Professional.prof_email.ilike(f"%{query}%"),
-            Professional.service_type.ilike(f"%{query}%")
+            Professional.service_type.ilike(f"%{query}%"),
+            Professional.description.ilike(f"%{query}%"),
+            Professional.experience.ilike(f"%{query}%"),
+            Professional.address.ilike(f"%{query}%"),
+            Professional.pincode.ilike(f"%{query}%"),
+           Professional.rating.ilike(f"%{query}%"),
+
         )
     ).all()
 
-    # Process the results and create a list of dictionaries
     if results:
         result_list = [{
             "prof_email": result.prof_email,
@@ -547,6 +546,8 @@ def admin_search():
             "experience": result.experience,
             "address": result.address,
             "pincode": result.pincode,
+            "phone": result.phone,
+            "rating": result.rating,
             "blocked": result.blocked,
             "approval": result.approval,
         } for result in results]
@@ -556,7 +557,63 @@ def admin_search():
     # Return an empty result if no matches found
     return jsonify({"results": []}), 200
 
-#=========================================CUSTOMER REQUEST CRUD============================================================================================
+#=========================================CUSTOMER ============================================================================================
+
+@app.route('/api/update_customer/<cust_email>', methods=['GET','POST'])   
+def update_customer(cust_email):
+    if request.method == 'GET':
+        customer = Customer.query.filter_by(cust_email=cust_email).first()
+        if customer:
+            customer_data = {
+                "cust_email": customer.cust_email,
+                "phone": customer.phone,
+                "address": customer.address,
+                "pincode": customer.pincode
+            }
+            return jsonify(customer_data), 200
+        else:
+            return jsonify({"error": "Customer not found"}), 404
+    if request.method == 'POST':
+        try:
+            data = request.json
+            customer_to_update = Customer.query.get(cust_email)
+            if customer_to_update:
+                customer_to_update.cust_email = data.get("cust_email", customer_to_update.cust_email)
+                customer_to_update.phone = data.get("phone", customer_to_update.phone)
+                customer_to_update.address = data.get("address", customer_to_update.address)
+                customer_to_update.pincode = data.get("pincode", customer_to_update.pincode)
+                db.session.commit()
+                # Convert the updated customer object to a dictionary for JSON serialization
+                updated_customer_data = {
+                    "cust_email": customer_to_update.cust_email,
+                    "phone": customer_to_update.phone,
+                    "address": customer_to_update.address,
+                    "pincode": customer_to_update.pincode
+                }
+
+                return jsonify({"message": "Customer updated successfully", "customer": updated_customer_data}), 200
+            else:
+                return jsonify({"error": "Customer not found"}), 404
+        except Exception as e:
+            db.session.rollback()  # Rollback in case of an error
+            return jsonify({"error": str(e)}), 500
+
+@cache.cached(timeout=50, key_prefix="get_customer_info")
+@app.route("/api/customer/<cust_email>", methods=["GET"])
+@jwt_required()
+def get_customer_info(cust_email):
+    cust = Customer.query.get(cust_email)
+    if not cust:
+        return jsonify({"error": "Customer not found"}), 404
+    cust_data = {
+        "cust_email": cust.cust_email,
+        "address": cust.address,
+        "pincode": cust.pincode,
+        "phone": cust.phone
+    }
+    print(cust_data)
+    return jsonify(cust_data), 200
+
 
 @app.route('/api/create_sevrequest/<cust_email>', methods=['POST'])
 @jwt_required()
@@ -636,45 +693,6 @@ def update_service_request(sevreq_id,cust_email):
                 return jsonify({"message": "Service updated successfully", "service_request": updated_service_data}), 200
             else:
                 return jsonify({"error": "Service not found"}), 404
-        except Exception as e:
-            db.session.rollback()  # Rollback in case of an error
-            return jsonify({"error": str(e)}), 500
-
-@app.route('/api/update_customer/<cust_email>', methods=['GET','POST'])   
-def update_customer(cust_email):
-    if request.method == 'GET':
-        customer = Customer.query.filter_by(cust_email=cust_email).first()
-        if customer:
-            customer_data = {
-                "cust_email": customer.cust_email,
-                "phone": customer.phone,
-                "address": customer.address,
-                "pincode": customer.pincode
-            }
-            return jsonify(customer_data), 200
-        else:
-            return jsonify({"error": "Customer not found"}), 404
-    if request.method == 'POST':
-        try:
-            data = request.json
-            customer_to_update = Customer.query.get(cust_email)
-            if customer_to_update:
-                customer_to_update.cust_email = data.get("cust_email", customer_to_update.cust_email)
-                customer_to_update.phone = data.get("phone", customer_to_update.phone)
-                customer_to_update.address = data.get("address", customer_to_update.address)
-                customer_to_update.pincode = data.get("pincode", customer_to_update.pincode)
-                db.session.commit()
-                # Convert the updated customer object to a dictionary for JSON serialization
-                updated_customer_data = {
-                    "cust_email": customer_to_update.cust_email,
-                    "phone": customer_to_update.phone,
-                    "address": customer_to_update.address,
-                    "pincode": customer_to_update.pincode
-                }
-
-                return jsonify({"message": "Customer updated successfully", "customer": updated_customer_data}), 200
-            else:
-                return jsonify({"error": "Customer not found"}), 404
         except Exception as e:
             db.session.rollback()  # Rollback in case of an error
             return jsonify({"error": str(e)}), 500
@@ -811,6 +829,77 @@ def cust_summary(cust_email):
         return jsonify({"error": "An error occurred while fetching data."}), 500
     
 #=================================================PROFESSIONAL================================================================================
+
+@cache.cached(timeout=50, key_prefix="get_professional_info")
+@app.route("/api/professional/<prof_email>", methods=["GET"])
+@jwt_required()
+def get_professional_info(prof_email):
+    prof = Professional.query.get(prof_email)
+    print(prof)
+    if not prof:
+        return jsonify({"error": "Professional not found"}), 404
+    prof_data = {
+        "prof_email": prof.prof_email,
+        "prof_password": prof.prof_password,
+        "service_type": prof.service_type,
+        "experience": prof.experience,
+        "address": prof.address,
+        "pincode": prof.pincode,
+        "description": prof.description,
+        "phone": prof.phone,
+        "rating": prof.rating,
+        "image": prof.image
+    }
+    
+    # Return JSON response with status code 200
+    return jsonify(prof_data), 200
+
+@app.route("/api/prof_update/<prof_email>", methods=["GET", "POST"])
+@jwt_required()
+def prof_update(prof_email):
+    if request.method == "GET":
+        prof = Professional.query.get(prof_email)
+        if not prof:
+            return jsonify({"error": "Professional not found"}), 404
+        else:
+            prof_data = { "prof_email": prof.prof_email,
+                           "service_type": prof.service_type,
+                           "experience": prof.experience,
+                           "address": prof.address,
+                           "pincode": prof.pincode,
+                           "description": prof.description,
+                           "rating": prof.rating}
+        return jsonify(prof_data), 200
+    if request.method == "POST":
+        data = request.get_json() 
+        prof_email= data.get("prof_email")
+        service_type = data.get("service_type")
+        experience = data.get("experience")
+        address = data.get("address")
+        pincode = data.get("pincode")
+        description = data.get("description")
+        phone = data.get("phone")
+        update_prof = Professional.query.get(prof_email)
+        if not update_prof:
+            return jsonify({"error": "Professional not found"}), 404
+
+        update_prof.prof_email = prof_email
+        update_prof.service_type = service_type
+        update_prof.experience = experience
+        update_prof.address = address
+        update_prof.pincode = pincode
+        update_prof.description = description
+        update_prof.phone = phone
+        db.session.commit()
+        updated_prof_data = { "prof_email": update_prof.prof_email,
+                              "service_type": update_prof.service_type,
+                              "experience": update_prof.experience,
+                              "address": update_prof.address,
+                              "pincode": update_prof.pincode,
+                              "description": update_prof.description,
+                              "phone": update_prof.phone}
+        return jsonify({"message": "Professional profile updated successfully", "prof_data": updated_prof_data}), 200
+
 @cache.cached(timeout=50, key_prefix="prof_sevs_today")
 @app.route("/api/prof_sevs_today/<prof_email>", methods=["GET"])
 @jwt_required()
@@ -948,93 +1037,6 @@ def prof_rating(prof_email):
     
     except Exception as e:
         return jsonify({"error":str(e)}),500
-
-@app.route("/api/prof_update/<prof_email>", methods=["GET", "POST"])
-@jwt_required()
-def prof_update(prof_email):
-    if request.method == "GET":
-        prof = Professional.query.get(prof_email)
-        if not prof:
-            return jsonify({"error": "Professional not found"}), 404
-        else:
-            prof_data = { "prof_email": prof.prof_email,
-                           "service_type": prof.service_type,
-                           "experience": prof.experience,
-                           "address": prof.address,
-                           "pincode": prof.pincode,
-                           "description": prof.description,
-                           "rating": prof.rating}
-        return jsonify(prof_data), 200
-    if request.method == "POST":
-        data = request.get_json() 
-        prof_email= data.get("prof_email")
-        service_type = data.get("service_type")
-        experience = data.get("experience")
-        address = data.get("address")
-        pincode = data.get("pincode")
-        description = data.get("description")
-        phone = data.get("phone")
-        update_prof = Professional.query.get(prof_email)
-        if not update_prof:
-            return jsonify({"error": "Professional not found"}), 404
-
-        update_prof.prof_email = prof_email
-        update_prof.service_type = service_type
-        update_prof.experience = experience
-        update_prof.address = address
-        update_prof.pincode = pincode
-        update_prof.description = description
-        update_prof.phone = phone
-        db.session.commit()
-        updated_prof_data = { "prof_email": update_prof.prof_email,
-                              "service_type": update_prof.service_type,
-                              "experience": update_prof.experience,
-                              "address": update_prof.address,
-                              "pincode": update_prof.pincode,
-                              "description": update_prof.description,
-                              "phone": update_prof.phone}
-        return jsonify({"message": "Professional profile updated successfully", "prof_data": updated_prof_data}), 200
-
-@cache.cached(timeout=50, key_prefix="get_customer_info")
-@app.route("/api/customer/<cust_email>", methods=["GET"])
-@jwt_required()
-def get_customer_info(cust_email):
-    cust = Customer.query.get(cust_email)
-    if not cust:
-        return jsonify({"error": "Customer not found"}), 404
-    cust_data = {
-        "cust_email": cust.cust_email,
-        "address": cust.address,
-        "pincode": cust.pincode,
-        "phone": cust.phone
-    }
-    print(cust_data)
-    return jsonify(cust_data), 200
-
-
-@cache.cached(timeout=50, key_prefix="get_professional_info")
-@app.route("/api/professional/<prof_email>", methods=["GET"])
-@jwt_required()
-def get_professional_info(prof_email):
-    prof = Professional.query.get(prof_email)
-    print(prof)
-    if not prof:
-        return jsonify({"error": "Professional not found"}), 404
-    prof_data = {
-        "prof_email": prof.prof_email,
-        "prof_password": prof.prof_password,
-        "service_type": prof.service_type,
-        "experience": prof.experience,
-        "address": prof.address,
-        "pincode": prof.pincode,
-        "description": prof.description,
-        "phone": prof.phone,
-        "rating": prof.rating,
-        "image": prof.image
-    }
-    
-    # Return JSON response with status code 200
-    return jsonify(prof_data), 200
 
 @app.route("/api/prof_summary/<prof_email>", methods=["GET"])
 @jwt_required()

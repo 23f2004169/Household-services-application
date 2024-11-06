@@ -6,6 +6,7 @@
         <p class="white">Your email: {{ email }}</p>
         <button @click.prevent="openUpdateCustForm(customer)"  class="white" style="background-color: rgb(63, 35, 18);">Edit your profile</button>
         </header>
+
         <h1 class="white">Category of Services</h1> 
         <div class="rating white">
             <span class="star white">★</span>-------
@@ -234,8 +235,8 @@ import axios from 'axios';
 export default {
   props: ['email'],
   name: 'CustDash',
-  components: { CustBar },
-  data() {
+components: { CustBar },
+data() {
     return {
       cust_data: [],
       showEditCustForm: false,
@@ -266,13 +267,14 @@ export default {
       },                      
     };
     },
-  created() {
+created() {
     this.fetchServiceRequests();
-  this.fetchCust();
+    this.fetchCust();
 },    
-    mounted() {
-    console.log('CustDashboard received email:', this.email); },
-    methods: {
+mounted() {
+    console.log('CustDashboard received email:', this.email);
+},
+methods: {
     async fetchServiceRequests() {
         try {
           let your_jwt_token = localStorage.getItem('jwt');
@@ -322,7 +324,7 @@ export default {
                  console.error('Error fetching customer:', error.message);
         }
 },
-  async updateCustomerProfile() {
+    async updateCustomerProfile() {
       try {
         let your_jwt_token = localStorage.getItem('jwt');
         if (!your_jwt_token) {
@@ -515,7 +517,7 @@ export default {
 }
 </script>
 
-  <!-- IMPORTANT #3b0a03 rgb(205, 176, 132); -->
+  <!-- IMPORTANT background color #3b0a03 rgb(205, 176, 132); -->
 <style> 
   body{background-color:#282828;}
   .custbody {

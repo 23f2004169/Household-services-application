@@ -14,6 +14,8 @@
             <p class="card-text">Service type:{{ result.service_type }}</p>
             <p class="card-text">Experience:{{ result.experience }}</p>
             <p class="card-text">Description:{{ result.description }}</p>
+            <p class="card-text">Rating:{{ result.rating }}</p>
+            <p class="card-text">Mobile no:{{ result.phone }}</p>
             </div>
           </div>
         </div>
