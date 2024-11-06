@@ -1,14 +1,12 @@
 <template>
 
-  <header>
+  <header  v-if="prof_data.approval === 'approved'">
     <ProfBar :email="email"/>
   </header>
 
   <h2 class="text-white">Welcome Professional</h2>
   <p class="text-white">Your email: {{ email }}</p>  
   <p class="text-white">Your rating: {{ rating }}</p>
-  <!-- <img :src="'http://127.0.0.1:8080/api/view-image/' + prof_data.prof_email" alt="Profile Picture" class="profile-pic" /> -->
-
   <div>
     <button @click="toggleProfileCard" style="background-color: rgb(63, 35, 18);">View your ProfileCard</button>
     <div v-if="isProfileCardVisible">
@@ -16,6 +14,31 @@
     </div>
   </div>
   <br><br>
+
+  <div>
+  <div v-if="prof_data.approval === 'pending'" class="alert alert-warning text-center mt-4">
+       <h4>Your account is under verification.</h4>
+       <div class="d-flex justify-content-end mt-3">
+  <router-link :to="{ path: '/login' }">
+    <button class="btn btn-danger">Logout</button>
+  </router-link>
+</div>
+
+  </div>
+
+  <div v-else-if="prof_data.approval === 'rejected'" class="alert alert-danger text-center mt-4">
+        <h4>Your profile has been rejected.</h4>
+        <div class="d-flex justify-content-end mt-3">
+  <router-link :to="{ path: '/login' }">
+    <button class="btn btn-danger">Logout</button>
+  </router-link>
+</div>
+
+  </div>
+
+  <div v-else-if="prof_data.approval === 'approved'">
+
+  <!-- Service Requests Today: -->
   <div>
   <div v-if="service_requests_today.length > 0">
    <section class="service-section mt-4">
@@ -59,98 +82,102 @@
       <p class="text-white">No service requests today</p>
     </div>
   </div>
+
   <br><br>
-
-<div>
-<div v-if="closed_service_requests.length > 0">
-    <section class="service-section mt-4">
-    <h3 class="text-white">Closed Service Requests </h3>
-
-      <table class="table table-bordered">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Customer ID</th>
-            <th>Request Date</th>
-            <th>Completion Date</th>
-            <th>Status</th>
-            <th>Remarks</th>
-            <th>Service ID</th>
-            <th>Rating</th>
-          </tr>
-        </thead>
-      
-        <tbody>
-          <tr v-for="(service, index) in closed_service_requests" :key="index">
-            <td>{{ service.sevreq_id }}</td>
-            <td>{{ service.cust_email }}</td>
-            <td>{{ service.date_of_request }}</td>
-            <td>{{ service.date_of_completion }}</td>
-            <td>{{ service.sev_status }}</td>
-            <td>{{ service.remarks }}</td>
-            <td>{{ service.sev_id }}</td>
-            <td>{{ service.rating }}</td>
-      
-          </tr>
-        </tbody>
-      </table>
-    </section>>
+  <!-- Closed Service Requests : -->
+  <div>
+  <div v-if="closed_service_requests.length > 0">
+      <section class="service-section mt-4">
+      <h3 class="text-white">Closed Service Requests </h3>
+  
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Customer ID</th>
+              <th>Request Date</th>
+              <th>Completion Date</th>
+              <th>Status</th>
+              <th>Remarks</th>
+              <th>Service ID</th>
+              <th>Rating</th>
+            </tr>
+          </thead>
+        
+          <tbody>
+            <tr v-for="(service, index) in closed_service_requests" :key="index">
+              <td>{{ service.sevreq_id }}</td>
+              <td>{{ service.cust_email }}</td>
+              <td>{{ service.date_of_request }}</td>
+              <td>{{ service.date_of_completion }}</td>
+              <td>{{ service.sev_status }}</td>
+              <td>{{ service.remarks }}</td>
+              <td>{{ service.sev_id }}</td>
+              <td>{{ service.rating }}</td>
+        
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+    <div v-else>
+        <h3 class="text-white">Closed Service Requests</h3>
+        <p class="text-white">No closed requests</p>
+      </div>
+  </div>
+  
+  <br><br>
+  <!-- Pending Service Requests : -->
+  <div>
+    <div v-if="service_requests.length > 0">
+      <section class="service-section mt-4">
+      <h3 class="text-white">Pending Service Requests </h3>
+  
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Customer ID</th>
+              <th>Request Date</th>
+              <th>Completion Date</th>
+              <th>Status</th>
+              <th>Remarks</th>
+              <th>Service ID</th>
+              <th>Rating</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+        
+          <tbody>
+            <tr v-for="(service_request, index) in service_requests"  :key="index">
+              <td>{{ service_request.sevreq_id }}</td>
+              <td>{{ service_request.cust_email }}</td>
+              <td>{{ service_request.date_of_request }}</td>
+              <td>{{ service_request.date_of_completion }}</td>
+              <td>{{ service_request.sev_status }}</td>
+              <td>{{ service_request.remarks }}</td>
+              <td>{{ service_request.sev_id }}</td>
+              <td>{{ service_request.rating }}</td>
+              <td >
+                <button @click="acceptService(service_request.sevreq_id)" class="btn btn-success">Accept</button>
+                <button @click="rejectService(service_request.sevreq_id)" class="btn btn-danger">Reject</button>
+                <button @click="closeService(service_request.sevreq_id)" class="btn btn-warning">Close</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
   </div>
   <div v-else>
-      <h3 class="text-white">Closed Service Requests</h3>
-      <p class="text-white">No closed requests</p>
-    </div>
-</div>
-<br><br>
+        <h3 class="text-white">Pending Service Requests</h3>
+        <p class="text-white">No pending service requests </p>
+  </div>
+  </div>
 
-<div>
-  <div v-if="service_requests.length > 0">
-    <<section class="service-section mt-4">
-    <h3 class="text-white">Pending Service Requests </h3>
-
-      <table class="table table-bordered">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Customer ID</th>
-            <th>Request Date</th>
-            <th>Completion Date</th>
-            <th>Status</th>
-            <th>Remarks</th>
-            <th>Service ID</th>
-            <th>Rating</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-      
-        <tbody>
-          <tr v-for="(service_request, index) in service_requests"  :key="index">
-            <td>{{ service_request.sevreq_id }}</td>
-            <td>{{ service_request.cust_email }}</td>
-            <td>{{ service_request.date_of_request }}</td>
-            <td>{{ service_request.date_of_completion }}</td>
-            <td>{{ service_request.sev_status }}</td>
-            <td>{{ service_request.remarks }}</td>
-            <td>{{ service_request.sev_id }}</td>
-            <td>{{ service_request.rating }}</td>
-            <td >
-              <button @click="acceptService(service_request.sevreq_id)" class="btn btn-success">Accept</button>
-              <button @click="rejectService(service_request.sevreq_id)" class="btn btn-danger">Reject</button>
-              <button @click="closeService(service_request.sevreq_id)" class="btn btn-warning">Close</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </section>>
+  </div>  
 </div>
-<div v-else>
-      <h3 class="text-white">Pending Service Requests</h3>
-      <p class="text-white">No pending service requests </p>
-</div>
-</div>
-
 </template>
-    
+      
 <script>
 import axios from 'axios';
 import ProfBar from '../components/ProfBar.vue';
@@ -166,6 +193,7 @@ export default {
             service_requests_today: [],
             closed_service_requests: [],
             service_requests: [],
+            prof_data: [],
           };
         },
     props: ['email'],
