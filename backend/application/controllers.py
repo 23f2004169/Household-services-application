@@ -212,6 +212,19 @@ def view_image(prof_email):
   except Exception as e:
       return jsonify({"error": str(e)}), 500
   
+@cache.cached(timeout=50, key_prefix="get_services")
+@app.route('/api/reg_servicenames', methods=['GET'])
+def reg_servicenames():
+    try:
+        services = Service.query.all()
+        services_list = [
+            { 'sev_name': service.sev_name,
+            } for service in services
+        ]
+        print(services_list)
+        return jsonify(services_list), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 #===================================FETCH====================================================================================================
 @cache.cached(timeout=50, key_prefix="get_services")
 @app.route('/api/services', methods=['GET'])

@@ -27,7 +27,7 @@
             </div>
           </div>
 
-          <div class="row g-3 mt-2">
+          <!-- <div class="row g-3 mt-2">
             <div class="col-12">
               <label class="form-label">Service Type:</label>
               <select v-model="service_type" class="form-select form-select-sm" required>
@@ -38,8 +38,18 @@
                 <option value="Lifestyle and Convenience Services">Lifestyle & Convenience</option>
               </select>
             </div>
+          </div> -->
+          <div class="row g-3 mt-2">
+            <div class="col-12">
+              <label class="form-label">Service Type:</label>
+              <select v-model="service_type" class="form-select form-select-sm" required>
+                <option value="" disabled>Select service type</option>
+                <option v-for="service in services" :key="service.id" :value="service.name">
+                  {{ service.sev_name }}
+                </option>
+              </select>
+            </div>
           </div>
-
           <div class="row g-3 mt-2">
             <div class="col-md-6">
               <label for="experience" class="form-label">Experience:</label>
@@ -100,8 +110,12 @@ export default {
         phone: "",
         image: null,
         imageFile: null,
-        documentFile: null
+        documentFile: null,
+        services: [],
     };
+  },
+  created() {
+    this.fetchServices();
   },
   methods: {
     async register_prof(){
@@ -143,7 +157,17 @@ export default {
     },
     handleFileUpload(event) {
       this.documentFile = event.target.files[0];
-    }
+    },
+    async fetchServices() {
+      try {
+        const response = await axios.get('http://127.0.0.1:8080/api/reg_servicenames',
+        );
+        this.services = response.data; 
+      } catch (error) {
+        console.error("Error fetching services:", error);
+      }
+    },
+
   }
   };
 </script>
