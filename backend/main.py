@@ -73,7 +73,7 @@ celery.conf.timezone = 'Asia/Kolkata'
 
 mail = init_mail()
 
-# SCHEDULED TASKS
+#SCHEDULED TASKS 
 #DAILY REMINDER TO PROF MAIL/SMS IF SEVREQ=requested ALERT TO ACCEPT/REJECT , SET A TIME TO SEND THE REMINDER(EVENING)
 @celery.task()
 def daily_reminder_to_professional():

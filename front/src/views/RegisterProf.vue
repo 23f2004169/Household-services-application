@@ -26,19 +26,6 @@
               <textarea class="form-control form-control-sm" rows="1" placeholder="Expertise description" required v-model="description"></textarea>
             </div>
           </div>
-
-          <!-- <div class="row g-3 mt-2">
-            <div class="col-12">
-              <label class="form-label">Service Type:</label>
-              <select v-model="service_type" class="form-select form-select-sm" required>
-                <option value="" disabled>Select service type</option>
-                <option value="Home Maintenance Services">Home Maintenance</option>
-                <option value="Cleaning and Organization Services">Cleaning & Organization</option>
-                <option value="Child & Elderly Care Services">Child & Elderly Care</option>
-                <option value="Lifestyle and Convenience Services">Lifestyle & Convenience</option>
-              </select>
-            </div>
-          </div> -->
           <div class="row g-3 mt-2">
             <div class="col-12">
               <label class="form-label">Service Type:</label>

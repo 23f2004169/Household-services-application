@@ -168,8 +168,8 @@
 }
 
 .service img {
-  width: 150px;
-  height: auto;
+  width: 180px;
+  height: 150px;
 }
 
 .service p {

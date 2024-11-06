@@ -62,6 +62,7 @@ class Customer(db.Model):
             "blocked": self.blocked,
             "phone": self.phone
         }
+
 class Service(db.Model):
     __tablename__ = "service"
     sev_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
