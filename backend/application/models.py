@@ -24,9 +24,8 @@ class Professional(db.Model):
     file=db.Column(db.String)
     phone=db.Column(db.String)
     blocked = db.Column(db.Integer, default=0)
-    approval = db.Column(db.String, default='pending')
+    approval = db.Column(db.String, default='pending')      #pending, approved, rejected
     rating=db.Column(db.Numeric(1,1), default=0)
-    # Establishing relationship with Sevrequest
     prof_req = db.relationship('Sevrequest', backref='professional', cascade='all, delete-orphan')
     def to_json(self):
         return {
@@ -73,7 +72,6 @@ class Service(db.Model):
     category = db.Column(db.String, nullable=False)
     address = db.Column(db.String)
     pincode = db.Column(db.String)
-    #Establishing relationship with Sevrequest
     sev_req = db.relationship("Sevrequest", backref='service', cascade='all, delete-orphan')
     def to_json(self):
         return {
@@ -96,7 +94,7 @@ class Sevrequest(db.Model):
     date_of_request = db.Column(db.String, nullable=False) 
     date_of_completion = db.Column(db.String, nullable=False)
     remarks = db.Column(db.String)
-    sev_status = db.Column(db.String, nullable=False, default="requested")  # closed, requested, accepted(assigned), rejected
+    sev_status = db.Column(db.String, nullable=False, default="requested")  # closed, requested, accepted, rejected
     rating = db.Column(db.Numeric(1, 1), default=0)
     def to_json(self):
         return {

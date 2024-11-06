@@ -324,7 +324,6 @@ methods: {
                  console.error('Error fetching customer:', error.message);
         }
 },
-
 async updateCustomerProfile() {
     try {
         let your_jwt_token = localStorage.getItem('jwt');
@@ -517,7 +516,6 @@ async updateCustomerProfile() {
 }
 </script>
 
-  <!-- IMPORTANT background color #3b0a03 rgb(205, 176, 132); -->
 <style> 
   body{background-color:#282828;}
   .custbody {

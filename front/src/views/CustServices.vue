@@ -44,7 +44,6 @@
           <div class="mb-3">
             <label for="service" class="form-label">Service:</label>
             <select v-model="newServiceRequest.sev_id" name="service" id="service" class="form-control" required>
-              <option value="" disabled>Select a service</option>
               <option v-for="service in services" :key="service.sev_id" :value="service.sev_id">
                 {{ service.sev_name }}
               </option>
@@ -180,10 +179,7 @@ export default {
 </script>
   
     
-  
-
-
-  <style>
+<style>
   .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -216,5 +212,5 @@ export default {
     width: 100px;
     height: 100px;
   }
-  </style>
+</style>
   

@@ -124,7 +124,6 @@ UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['STATIC_FOLDER'] = "static"
-
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def allowed_file(filename):
   return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -140,17 +139,11 @@ def prof_reg():
         pincode = request.form.get("pincode")
         description = request.form.get("description")
         phone = request.form.get("phone")
-        
         image_file = request.files.get('image')
-        document_file = request.files.get('file')
-        
+        document_file = request.files.get('file')   
+          
         image_filename = None
         document_filename = None
-      
-    # if image_file and allowed_file(image_file.filename):
-    #       image_filename=prof_email.split("@")[0]+"."+image_file.filename.split(".")[-1]
-    #       image_filename=os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
-    #       image_file.save(image_filename)
       
     if image_file and allowed_file(image_file.filename):
         image_filename=prof_email.split("@")[0]+"."+ image_file.filename.split(".")[-1]
@@ -572,7 +565,6 @@ def admin_search():
     return jsonify({"results": []}), 200
 
 #=========================================CUSTOMER ============================================================================================
-
 @app.route('/api/update_customer/<cust_email>', methods=['PUT'])
 def update_customer(cust_email):
     try:
@@ -612,7 +604,6 @@ def get_customer_info(cust_email):
     }
     print(cust_data)
     return jsonify(cust_data), 200
-
 
 @app.route('/api/create_sevrequest/<cust_email>', methods=['POST'])
 @jwt_required()
@@ -780,7 +771,6 @@ def cust_rate_sev(sevreq_id):
         return jsonify({
             "error": "Service request must be closed to rate"
         }), 400
-
 
 @app.route("/api/cust_search", methods=["POST"])
 @jwt_required()
@@ -1083,43 +1073,7 @@ def prof_search(prof_email):
     print("No results found", results)
     return jsonify({"results": [], "message": "No results found"}), 200
 
-
-#========================================================================================================================
-# -------------------------------------HOME----------------------------------------------------------------------
-#------------------------------------------------------------------ADMIN-------------------------------------------------------------------------
-#login
-#home- sev(CRUD), +  prof(R),sevreqs(R) list click on then individual info
-#search-sev,sevreq,cust,prof or text search(closed req)
-#summary graphs
-#prof(block/unblock,approve)  cust(block/unblock)
-
-
-# Create a route to authenticate your users and return JWTs. The
-# create_access_token() function is used to actually generate the JWT.
-#individual details 
-#search profs to block/unblock
 #implement drop down feature, all in one search, add multiple filters -all 4 by name or search text(closed requests)
 
 
-#--------------------------------------------------------------PROFESSIONAL-----------------------------------------------------------------------
-#register
-#login
-#home- todays services, closed services , view+edit profile
-#search- Requests by name,loc, pin , or by text- date
-   #view all the service requests from all the customers
-   #accept/reject a particular service request
-   #close the service request once completed*
-#summary graphs 
-
-#--------------------------------------------------------------CUSTOMER-----------------------------------------------------------------------
-#register
-#login
-#home- Card for each category, service req HISTORY all, view+edit profile
-      #Card category service- go to avail services/cleaning packages then BOOK - then create service request
-#Create a new service request based on the services available
-  #Edit an existing service request - e.g. date_of_request, completion status, remarks etc
-   #Close an existing service request.
-#rate servicereq after closing sevrequest
-#search - Services based on their location, name, pin code etc. OR text- category
-#summary graphs 
 

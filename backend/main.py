@@ -79,11 +79,11 @@ mail = init_mail()
 def daily_reminder_to_professional():
     profs=Professional.query.all()
     for prof in profs:
-        flag=True
+        flag=False
         for req in prof.prof_req:
-            if req.sev_status!='requested':
+            if req.sev_status =='requested':
                 print(req.sev_status)
-                flag=False
+                flag=True
                 break                
         if flag:
             with mail.connect() as conn:
