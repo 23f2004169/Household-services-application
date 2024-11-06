@@ -18,7 +18,7 @@
               <p><strong>Pincode:</strong> {{ professional.pincode }}</p>
               <p><strong>Rating:</strong> {{ professional.rating }}</p>
               <p><strong>Approval Status:</strong> {{ professional.approval }}</p>
-              <p><strong>Block Status:</strong> {{ professional.block }}</p>
+              <p><strong>Block Status:</strong> {{ professional.blocked }}</p>
               <div class="d-flex">
                 <button @click="blockProfessional(professional.prof_email)" class="btn btn-dark btn-sm">Block/Unblock</button>
                 <button @click="viewDocument(professional.prof_email)" class="btn btn-primary btn-sm">View</button> 
@@ -38,7 +38,7 @@
               <p><strong>Address:</strong> {{ customer.address }}</p>
               <p><strong>Pincode:</strong> {{ customer.pincode }}</p>
               <p><strong>Mobile no:</strong> {{ customer.phone }}</p>
-              <p><strong>Block status:</strong>{{customer.block }}</p>
+              <p><strong>Block status:</strong>{{customer.blocked }}</p>
               <div class="d-flex">
                 <button @click="blockCustomer(customer.cust_email)" class="btn btn-dark btn-sm">Block/Unblock</button>
                 <button @click="deleteCustomer(customer.cust_email)" class="btn btn-danger btn-sm">Delete User</button>
@@ -150,6 +150,7 @@ export default {
         );
         if (response.status === 200) {
           this.professionals = response.data; // Update the services array with the data from the backend
+          console.log(this.professionals);
         } else {
           console.error("Failed to fetch professionals:", response.data.error);
         }

@@ -25,7 +25,7 @@
             
             <div class="mb-3">
               <label class="form-label">Email:</label>
-              <input v-model="updateprof.prof_email" type="email" class="form-control" required />
+              <input v-model="updateprof.prof_email" type="email" class="form-control" required readonly/>
             </div>
             
             
@@ -146,18 +146,18 @@ export default {
           //   this.prof_data[index] = { ...updatedprofdata };
           // }
 
-          this.showEditServiceForm = false;
-          this.editedService = { 
-            prof_email: "",
-            prof_password: "",
-            service_type: "",
-            experience: "",
-            address: "",
-            pincode: "",
-            description: "",
-            phone: ""
-          };
-          location.reload();
+          // this.showEditServiceForm = false;
+          // this.editedService = { 
+          //   prof_email: "",
+          //   prof_password: "",
+          //   service_type: "",
+          //   experience: "",
+          //   address: "",
+          //   pincode: "",
+          //   description: "",
+          //   phone: ""
+          // };
+          // location.reload();
         } else {
           alert("Failed to update service: " + response.data.error);
         }

@@ -639,7 +639,46 @@ def update_service_request(sevreq_id,cust_email):
         except Exception as e:
             db.session.rollback()  # Rollback in case of an error
             return jsonify({"error": str(e)}), 500
-        
+
+@app.route('/api/update_customer/<cust_email>', methods=['GET','POST'])   
+def update_customer(cust_email):
+    if request.method == 'GET':
+        customer = Customer.query.filter_by(cust_email=cust_email).first()
+        if customer:
+            customer_data = {
+                "cust_email": customer.cust_email,
+                "phone": customer.phone,
+                "address": customer.address,
+                "pincode": customer.pincode
+            }
+            return jsonify(customer_data), 200
+        else:
+            return jsonify({"error": "Customer not found"}), 404
+    if request.method == 'POST':
+        try:
+            data = request.json
+            customer_to_update = Customer.query.get(cust_email)
+            if customer_to_update:
+                customer_to_update.cust_email = data.get("cust_email", customer_to_update.cust_email)
+                customer_to_update.phone = data.get("phone", customer_to_update.phone)
+                customer_to_update.address = data.get("address", customer_to_update.address)
+                customer_to_update.pincode = data.get("pincode", customer_to_update.pincode)
+                db.session.commit()
+                # Convert the updated customer object to a dictionary for JSON serialization
+                updated_customer_data = {
+                    "cust_email": customer_to_update.cust_email,
+                    "phone": customer_to_update.phone,
+                    "address": customer_to_update.address,
+                    "pincode": customer_to_update.pincode
+                }
+
+                return jsonify({"message": "Customer updated successfully", "customer": updated_customer_data}), 200
+            else:
+                return jsonify({"error": "Customer not found"}), 404
+        except Exception as e:
+            db.session.rollback()  # Rollback in case of an error
+            return jsonify({"error": str(e)}), 500
+
 @app.route("/api/delete_sevreq/<int:sevreq_id>", methods=["DELETE"])
 @jwt_required()
 def delete_service_request(sevreq_id):
@@ -955,6 +994,23 @@ def prof_update(prof_email):
                               "description": update_prof.description,
                               "phone": update_prof.phone}
         return jsonify({"message": "Professional profile updated successfully", "prof_data": updated_prof_data}), 200
+
+@cache.cached(timeout=50, key_prefix="get_customer_info")
+@app.route("/api/customer/<cust_email>", methods=["GET"])
+@jwt_required()
+def get_customer_info(cust_email):
+    cust = Customer.query.get(cust_email)
+    if not cust:
+        return jsonify({"error": "Customer not found"}), 404
+    cust_data = {
+        "cust_email": cust.cust_email,
+        "address": cust.address,
+        "pincode": cust.pincode,
+        "phone": cust.phone
+    }
+    print(cust_data)
+    return jsonify(cust_data), 200
+
 
 @cache.cached(timeout=50, key_prefix="get_professional_info")
 @app.route("/api/professional/<prof_email>", methods=["GET"])

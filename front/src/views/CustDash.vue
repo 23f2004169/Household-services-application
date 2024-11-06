@@ -4,6 +4,7 @@
         <CustBar :email="email"/>
         <h2 class="white">Welcome Customer</h2>
         <p class="white">Your email: {{ email }}</p>
+        <button @click.prevent="openUpdateCustForm(customer)"  class="white" style="background-color: rgb(63, 35, 18);">Edit your profile</button>
         </header>
         <h1 class="white">Category of Services</h1> 
         <div class="rating white">
@@ -186,9 +187,44 @@
             </div>
         </div>
     </div>
-</div>
 
-    
+    </div>
+     <!---Edit customer form-->
+     <div v-show="showEditCustForm" class="modal fade show" style="display: block;" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Customer</h5>
+                    <button @click.prevent="showEditCustForm = false" class="btn-close"></button>
+                </div>
+                <div class="modal-body">
+                    <form @submit.prevent="updateCustomerProfile(updatecust.cust_email)">
+                        <div class="mb-3">
+                            <label class="form-label">Email:</label>
+                            <input v-model="updatecust.cust_email" type="text" class="form-control" required readonly />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Address:</label>
+                            <input v-model="updatecust.address" type="text" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Pincode:</label>
+                            <input v-model="updatecust.pincode" type="text" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Phone:</label>
+                            <input v-model="updatecust.phone" type="text" class="form-control" required />
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Save Changes</button> 
+                            <button @click.prevent="showEditCustForm = false" class="btn btn-secondary">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     </div>
 </template>
 
@@ -201,6 +237,14 @@ export default {
   components: { CustBar },
   data() {
     return {
+      cust_data: [],
+      showEditCustForm: false,
+      updatecust: {
+        cust_email: '',
+        address: '',
+        phone: '',
+        pincode: ''
+      },
       service_requests: [],
       showEditServiceForm: false, 
       editedService: {
@@ -223,7 +267,9 @@ export default {
     };
     },
   created() {
-    this.fetchServiceRequests();},    
+    this.fetchServiceRequests();
+  this.fetchCust();
+},    
     mounted() {
     console.log('CustDashboard received email:', this.email); },
     methods: {
@@ -241,6 +287,7 @@ export default {
     });
            if (response.status === 200) {
              this.service_requests = response.data; 
+             console.log("Service requests fetched successfully:", this.service_requests);
            } else {
              console.error("Failed to fetch service requests:", response.data.error);
            }
@@ -249,8 +296,74 @@ export default {
         }
     },  
     openEditServiceForm(service) {
-      this.showEditServiceForm = true; // Show the edit form
-      this.editedService = { ...service }; // Populate the form with selected service data
+      this.showEditServiceForm = true; 
+      this.editedService = { ...service }; 
+    },
+    openUpdateCustForm(cust){
+      this.showEditCustForm = true;
+    },
+    async fetchCust() {
+          try {
+                let your_jwt_token = localStorage.getItem('jwt');
+                if (!your_jwt_token) throw new Error('JWT token is missing');
+                
+                const response = await axios.get(`http://127.0.0.1:8080/api/customer/${this.email}`, {
+                  headers: { 'Authorization': `Bearer ${your_jwt_token}` },
+                  withCredentials: true
+                });
+                if (response.status === 200) {
+                  this.cust_data = response.data;
+                  console.log("Customer data fetched successfully:", this.cust_data);
+                  this.updatecust = { ...this.cust_data }; 
+                } else {
+                  console.error("Failed to fetch customer:", response.data.error);
+                }
+           } catch (error) {
+                 console.error('Error fetching customer:', error.message);
+        }
+},
+  async updateCustomerProfile() {
+      try {
+        let your_jwt_token = localStorage.getItem('jwt');
+        if (!your_jwt_token) {
+          throw new Error('JWT token is missing');
+      }
+      const response = await axios.post(`http://127.0.0.1:8080/api/update_customer/${this.email}`, {
+          "cust_email": this.updatecust.cust_email,
+          "address": this.updatecust.address,
+          "pincode": this.updatecust.pincode,
+          "phone": this.updatecust.phone
+        }, {
+      headers: {
+        'Authorization': `Bearer ${your_jwt_token}` 
+      },
+      withCredentials: true
+    });
+        if (response.status === 200) {
+          console.log("Customer profile updated successfully:", response.data);
+          this.fetchCust();
+          this.showEditCustForm = false;
+          const updatedCust = response.data.cust_data;
+          const index = this.cust_data.findIndex(cust => cust.cust_email === this.email);
+          if (index !== -1) {
+            // Replace the old customer data with the updated one from the backend
+            this.cust_data[index] = { ...updatedCust };
+          }
+          this.showEditCustForm = false;
+           this.updatecust = { 
+            cust_email: '',
+            address: '',
+            phone: '',
+            pincode: ''
+           };
+           location.reload();
+          
+        } else {
+          console.error("Failed to update customer profile:", response.data.error);
+        }
+      } catch (error) {
+        console.error('Error updating customer profile:', error.message);
+      }
     },
     async editService(sevreq_id) {
       try { 
@@ -278,7 +391,6 @@ export default {
           this.showEditServiceForm = false;
            // Update the local services array with the updated service data from the backend
            const updatedService = response.data.service_requests;
-
            const index = this.service_requests.findIndex(service_request=> service_request.sevreq_id === sevreq_id);
            if (index !== -1) {
              // Replace the old service data with the updated one from the backend

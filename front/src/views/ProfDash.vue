@@ -1,4 +1,5 @@
 <template>
+
   <header>
     <ProfBar :email="email"/>
   </header>
@@ -14,8 +15,9 @@
       <ProfileCard :email="email" />
     </div>
   </div>
+
+  <div>
   <div v-if="service_requests_today.length > 0">
-    >
    <section class="service-section mt-4">
     <h3 class="text-white">Service Requests TODAY</h3>
 
@@ -51,7 +53,14 @@
         </tbody>
       </table>
     </section>
+    </div>
+    <div v-else>
+      <h3 class="text-white">Service Requests TODAY</h3>
+      <p class="text-white">No service requests today</p>
+    </div>
   </div>
+
+<div>
 <div v-if="closed_service_requests.length > 0">
     <section class="service-section mt-4">
     <h3 class="text-white">Closed Service Requests </h3>
@@ -86,6 +95,13 @@
       </table>
     </section>>
   </div>
+  <div v-else>
+      <h3 class="text-white">Closed Service Requests</h3>
+      <p class="text-white">No closed requests</p>
+    </div>
+</div>
+
+<div>
   <div v-if="service_requests.length > 0">
     <<section class="service-section mt-4">
     <h3 class="text-white">Pending Service Requests </h3>
@@ -124,8 +140,13 @@
         </tbody>
       </table>
     </section>>
+</div>
+<div v-else>
+      <h3 class="text-white">Pending Service Requests</h3>
+      <p class="text-white">No pending service requests </p>
+</div>
+</div>
 
-  </div>
 </template>
     
 <script>
