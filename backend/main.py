@@ -40,7 +40,7 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
 
 #doubtful
 app.config["REDIS_URL"] = "redis://localhost"
-app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+cache = Cache(app)
 ######
 
 jwt = JWTManager(app)

@@ -10,7 +10,7 @@ from flask import send_from_directory, Flask, jsonify, request
 from sqlalchemy import or_
 from flask_caching import Cache
 
-# cache = Cache()
+#cache = Cache(app)
 cache = Cache(config={'CACHE_TYPE': 'redis', 'CACHE_REDIS_URL': 'redis://localhost:6379/0'})
 
 @app.route("/")
@@ -212,7 +212,7 @@ def view_image(prof_email):
   except Exception as e:
       return jsonify({"error": str(e)}), 500
   
-@cache.cached(timeout=50, key_prefix="get_services")
+@cache.cached(timeout=50, key_prefix="reg_servicenames")
 @app.route('/api/reg_servicenames', methods=['GET'])
 def reg_servicenames():
     try:
@@ -225,6 +225,7 @@ def reg_servicenames():
         return jsonify(services_list), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 #===================================FETCH====================================================================================================
 @cache.cached(timeout=50, key_prefix="get_services")
 @app.route('/api/services', methods=['GET'])
@@ -572,44 +573,29 @@ def admin_search():
 
 #=========================================CUSTOMER ============================================================================================
 
-@app.route('/api/update_customer/<cust_email>', methods=['GET','POST'])   
+@app.route('/api/update_customer/<cust_email>', methods=['PUT'])
 def update_customer(cust_email):
-    if request.method == 'GET':
-        customer = Customer.query.filter_by(cust_email=cust_email).first()
-        if customer:
-            customer_data = {
-                "cust_email": customer.cust_email,
-                "phone": customer.phone,
-                "address": customer.address,
-                "pincode": customer.pincode
-            }
-            return jsonify(customer_data), 200
+    try:
+        data = request.json
+        customer_to_update = Customer.query.filter_by(cust_email=cust_email).first()       
+        if customer_to_update:
+            customer_to_update.cust_email = data.get("cust_email", customer_to_update.cust_email)
+            customer_to_update.phone = data.get("phone", customer_to_update.phone)
+            customer_to_update.address = data.get("address", customer_to_update.address)
+            customer_to_update.pincode = data.get("pincode", customer_to_update.pincode)            
+            db.session.commit()
+            updated_customer_data = {
+                "cust_email": customer_to_update.cust_email,
+                "phone": customer_to_update.phone,
+                "address": customer_to_update.address,
+                "pincode": customer_to_update.pincode
+            }        
+            return jsonify({"message": "Customer updated successfully", "customer": updated_customer_data}), 200
         else:
             return jsonify({"error": "Customer not found"}), 404
-    if request.method == 'POST':
-        try:
-            data = request.json
-            customer_to_update = Customer.query.get(cust_email)
-            if customer_to_update:
-                customer_to_update.cust_email = data.get("cust_email", customer_to_update.cust_email)
-                customer_to_update.phone = data.get("phone", customer_to_update.phone)
-                customer_to_update.address = data.get("address", customer_to_update.address)
-                customer_to_update.pincode = data.get("pincode", customer_to_update.pincode)
-                db.session.commit()
-                # Convert the updated customer object to a dictionary for JSON serialization
-                updated_customer_data = {
-                    "cust_email": customer_to_update.cust_email,
-                    "phone": customer_to_update.phone,
-                    "address": customer_to_update.address,
-                    "pincode": customer_to_update.pincode
-                }
-
-                return jsonify({"message": "Customer updated successfully", "customer": updated_customer_data}), 200
-            else:
-                return jsonify({"error": "Customer not found"}), 404
-        except Exception as e:
-            db.session.rollback()  # Rollback in case of an error
-            return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        db.session.rollback()  # Rollback in case of an error
+        return jsonify({"error": str(e)}), 500
 
 @cache.cached(timeout=50, key_prefix="get_customer_info")
 @app.route("/api/customer/<cust_email>", methods=["GET"])
@@ -1067,7 +1053,6 @@ def prof_summary(prof_email):
     except Exception as e:
         print("Error in prof_summary:", e)
         return jsonify({"error": "An error occurred while fetching data."}), 500
-from sqlalchemy import or_
 
 @app.route("/api/prof_search/<prof_email>", methods=["POST"])
 @jwt_required()

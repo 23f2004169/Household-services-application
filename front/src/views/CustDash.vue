@@ -7,7 +7,7 @@
         <button @click.prevent="openUpdateCustForm(customer)"  class="white" style="background-color: rgb(63, 35, 18);">Edit your profile</button>
         </header>
 
-        <h1 class="white">Category of Services</h1> 
+      <h1 class="white">Category of Services</h1> 
         <div class="rating white">
             <span class="star white">★★★★</span>
         </div>      
@@ -324,49 +324,49 @@ methods: {
                  console.error('Error fetching customer:', error.message);
         }
 },
-    async updateCustomerProfile() {
-      try {
+
+async updateCustomerProfile() {
+    try {
         let your_jwt_token = localStorage.getItem('jwt');
         if (!your_jwt_token) {
-          throw new Error('JWT token is missing');
-      }
-      const response = await axios.post(`http://127.0.0.1:8080/api/update_customer/${this.email}`, {
-          "cust_email": this.updatecust.cust_email,
-          "address": this.updatecust.address,
-          "pincode": this.updatecust.pincode,
-          "phone": this.updatecust.phone
-        }, {
-      headers: {
-        'Authorization': `Bearer ${your_jwt_token}` 
-      },
-      withCredentials: true
-    });
-        if (response.status === 200) {
-          console.log("Customer profile updated successfully:", response.data);
-          this.fetchCust();
-          this.showEditCustForm = false;
-          const updatedCust = response.data.cust_data;
-          const index = this.cust_data.findIndex(cust => cust.cust_email === this.email);
-          if (index !== -1) {
-            // Replace the old customer data with the updated one from the backend
-            this.cust_data[index] = { ...updatedCust };
-          }
-          this.showEditCustForm = false;
-           this.updatecust = { 
-            cust_email: '',
-            address: '',
-            phone: '',
-            pincode: ''
-           };
-           location.reload();
-          
-        } else {
-          console.error("Failed to update customer profile:", response.data.error);
+            throw new Error('JWT token is missing');
         }
-      } catch (error) {
+        const response = await axios.put(`http://127.0.0.1:8080/api/update_customer/${this.email}`, {
+            "cust_email": this.updatecust.cust_email,
+            "address": this.updatecust.address,
+            "pincode": this.updatecust.pincode,
+            "phone": this.updatecust.phone
+        }, {
+            headers: {
+                'Authorization': `Bearer ${your_jwt_token}`
+            },
+            withCredentials: true
+        });
+        
+        if (response.status === 200) {
+            console.log("Customer profile updated successfully:", response.data);
+            this.fetchCust();
+            this.showEditCustForm = false;
+            const updatedCust = response.data.customer;
+            const index = this.cust_data.findIndex(cust => cust.cust_email === this.email);
+            if (index !== -1) {
+                this.cust_data[index] = { ...updatedCust };
+            }
+            this.showEditCustForm = false;
+            this.updatecust = { 
+                cust_email: '',
+                address: '',
+                phone: '',
+                pincode: ''
+            };
+            location.reload();
+        } else {
+            console.error("Failed to update customer profile:", response.data.error);
+        }
+    } catch (error) {
         console.error('Error updating customer profile:', error.message);
-      }
-    },
+    }
+},
     async editService(sevreq_id) {
       try { 
         let your_jwt_token = localStorage.getItem('jwt');
