@@ -74,13 +74,31 @@ export default {
           alert(response.data.error);
         }
       } catch (error) {
-        if (error.response && error.response.status === 403) {
-          alert(error.response.data.error);
+        // Handle errors in the case of a failed request
+        if (error.response) {
+          // If the server responds with an error status
+          if (error.response.status === 404 || error.response.status === 401) {
+            alert(error.response.data.error);  // Display the error message from the server
+          } else {
+            alert('An error occurred: ' + error.response.data.error || error.message);
+          }
         } else {
+          // If no response from the server, display network errors
           alert('An error occurred: ' + error.message);
         }
       }
     }
   }
 }
+
+// catch (error) {
+//         if (error.response && error.response.status === 403) {
+//           alert(error.response.data.error);
+//         } else {
+//           alert('An error occurred: ' + error.message);
+//         }
+//       }
+//     }
+//   }
+// }
 </script>

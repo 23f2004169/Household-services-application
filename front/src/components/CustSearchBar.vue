@@ -40,6 +40,7 @@ export default {
       sresults: [],
     };
   },
+  emits: ['updateResults'],  
   methods: {
     async searchServices() {
       try {

@@ -57,35 +57,49 @@ def login():
             db.session.add(user)
             db.session.commit()
         admin_from_db=Admin.query.filter_by(admin_email=email).first()
-        if admin_from_db:
-            if check_password_hash(admin_from_db.admin_password, password):
+        if not admin_from_db:
+            return jsonify(error="Admin account with this email does not exist"), 404
+
+        if not check_password_hash(admin_from_db.admin_password, password):
+            return jsonify(error="Incorrect password"), 401
+
+        if admin_from_db and check_password_hash(admin_from_db.admin_password, password):
                 access_token = create_access_token(identity=admin_from_db.admin_email)
                 return {"message": "login successful","access_token":access_token,"role":"admin"}
-            return jsonify(error="Authentication failed"), 401  
+        return jsonify(error="Authentication failed"), 401  
+    
     if role=="prof":
         prof_from_db=Professional.query.filter_by(prof_email=email).first() 
         print('received',prof_from_db)
-        if prof_from_db:
+        if not prof_from_db:
+            return jsonify(error="Professional account with this email does not exist"), 404
+        if not check_password_hash(prof_from_db.prof_password, password):
+            return jsonify(error="Incorrect password"), 401
+        if prof_from_db and check_password_hash(prof_from_db.prof_password, password):
             if prof_from_db.blocked:
                 print('blocked')
-                return jsonify(error="Your account has been blocked"), 403
-            if check_password_hash(prof_from_db.prof_password, password):            
-                access_token = create_access_token(identity=prof_from_db.prof_email)
-                return {"message": "login successful","access_token":access_token,"role":"prof"}
-                               
+                return jsonify(error="Your account has been blocked"), 403          
+            access_token = create_access_token(identity=prof_from_db.prof_email)
+            return {"message": "login successful","access_token":access_token,"role":"prof"}                      
         return jsonify(error="Authentication failed"), 401
+    
     if role=="cust":
         cust_from_db=Customer.query.filter_by(cust_email=email).first() 
         print('received',cust_from_db)
-        if cust_from_db:
+        if not cust_from_db:
+            return jsonify(error="Customer account with this email does not exist"), 404
+        if not check_password_hash(cust_from_db.cust_password, password):
+            return jsonify(error="Incorrect password"), 401
+        if cust_from_db and check_password_hash(cust_from_db.cust_password, password):
             if cust_from_db.blocked:
                 return jsonify(error="Your account has been blocked"), 403
-            if check_password_hash(cust_from_db.cust_password, password):            
-                access_token = create_access_token(identity=cust_from_db.cust_email)
-                return {"message": "login successful","access_token":access_token,"role":"cust"}
-                           
+            access_token = create_access_token(identity=cust_from_db.cust_email)
+            return {"message": "login successful","access_token":access_token,"role":"cust"}                   
         return jsonify(error="Authentication failed"), 401
-    return jsonify(error="wrong credentials"), 404
+    
+    return jsonify(error="Invalid role specified"), 400
+
+
 
 @app.route("/api/cust_reg", methods=['POST'])
 def cust_reg():
@@ -837,7 +851,8 @@ def get_professional_info(prof_email):
         "description": prof.description,
         "phone": prof.phone,
         "rating": prof.rating,
-        "image": prof.image
+        "image": prof.image,
+        "approval": prof.approval
     }
     
     # Return JSON response with status code 200
