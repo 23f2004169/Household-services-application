@@ -15,7 +15,7 @@
       <ProfileCard :email="email" />
     </div>
   </div>
-
+  <br><br>
   <div>
   <div v-if="service_requests_today.length > 0">
    <section class="service-section mt-4">
@@ -59,6 +59,7 @@
       <p class="text-white">No service requests today</p>
     </div>
   </div>
+  <br><br>
 
 <div>
 <div v-if="closed_service_requests.length > 0">
@@ -100,6 +101,7 @@
       <p class="text-white">No closed requests</p>
     </div>
 </div>
+<br><br>
 
 <div>
   <div v-if="service_requests.length > 0">

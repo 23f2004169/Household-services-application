@@ -9,7 +9,7 @@
 
         <h1 class="white">Category of Services</h1> 
         <div class="rating white">
-            <span class="star white">★</span>-------
+            <span class="star white">★★★★</span>
         </div>      
         <div class="services">
             <div class="service-card" @click="navigateToCategory('Child_Elderly Care Services')">
@@ -23,7 +23,7 @@
             </div>
 
             <div class="service-card"  @click="navigateToCategory('Home Maintenance Services')">
-                <img src="/static/iron.jpeg" alt="Home Maintenance Services">
+                <img src="/static/specialized.jpeg" alt="Home Maintenance Services">
                 <h3>Home Maintenance Services</h3>
             </div>
 
@@ -33,7 +33,7 @@
                 <h3>Cleaning and Organization Service</h3>
             </div>
         </div>
-
+      <br><br>
       <!-- Service Requests Table -->
       <section class="mb-5">
         <h3 class="white">HISTORY: Service Requests</h3>
@@ -550,8 +550,8 @@ methods: {
       position: relative;
   }
   .service-card img {
-      width: 60px;
-      height: 60px;
+      width: 150px;
+      height: 150px;
       margin-bottom: 10px;
   }
   .service-card h3 {
