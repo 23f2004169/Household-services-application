@@ -141,7 +141,7 @@ def prof_reg():
         phone = request.form.get("phone")
         image_file = request.files.get('image')
         document_file = request.files.get('file')   
-          
+
         image_filename = None
         document_filename = None
       

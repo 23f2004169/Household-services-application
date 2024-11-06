@@ -28,17 +28,16 @@
               <input v-model="updateprof.prof_email" type="email" class="form-control" required readonly/>
             </div>
             
-            
-            <div class="mb-3">
+            <div class="row g-3 mt-2">
+            <div class="col-12">
               <label class="form-label">Service Type:</label>
-              <select v-model="updateprof.service_type" class="form-control" required>
-                <option value="" disabled>Select a service type</option>
-                <option value="Home Maintenance Services">Home Maintenance Services</option>
-                <option value="Cleaning and Organization Services">Cleaning and Organization Services</option>
-                <option value="Child_Elderly Care Services">Child_Elderly Care Services</option>
-                <option value="Lifestyle and Convenience Services">Lifestyle and Convenience Services</option>
+              <select v-model="updateprof.service_type" class="form-select form-select-sm" required>
+                <option v-for="service in services" :key="service.sev_id" :value="service.sev_name" :selected="service.sev_name === updateprof.service_type">
+                  {{ service.sev_name }}
+                </option>
               </select>
             </div>
+          </div>
             
             <div class="mb-3">
               <label class="form-label">Experience (Years):</label>
@@ -98,20 +97,22 @@ export default {
         description: "",
         phone: ""
       },
-
+      services: []
       }
     },
   created() {
     this.fetchProf();
+    this.fetchServices();
   },
   mounted() {
+    console.log('Current service_type:', this.updateprof.service_type);
+    console.log('Available services:', this.services);
     console.log('ProfCard received email:', this.email); },
   methods: {
     openUpdateProfessionalForm(prof) {
       this.showEditProfessionalForm= true; // Show the edit form
       this.updateprof= { ...prof }; // Populate the form with selected service data
     },
-
     async updateProfessionalProfile(prof_email) {
       try {
         let your_jwt_token = localStorage.getItem('jwt');
@@ -146,18 +147,18 @@ export default {
           //   this.prof_data[index] = { ...updatedprofdata };
           // }
 
-          // this.showEditServiceForm = false;
-          // this.editedService = { 
-          //   prof_email: "",
-          //   prof_password: "",
-          //   service_type: "",
-          //   experience: "",
-          //   address: "",
-          //   pincode: "",
-          //   description: "",
-          //   phone: ""
-          // };
-          // location.reload();
+          this.showEditServiceForm = false;
+          this.editedService = { 
+            prof_email: "",
+            prof_password: "",
+            service_type: "",
+            experience: "",
+            address: "",
+            pincode: "",
+            description: "",
+            phone: ""
+          };
+          location.reload();
         } else {
           alert("Failed to update service: " + response.data.error);
         }
@@ -187,12 +188,28 @@ export default {
       } catch (error) {
         console.error('Error fetching professionals:', error.message);
       }
+    },
+    async fetchServices() {
+      try {
+        let your_jwt_token = localStorage.getItem('jwt');
+        const response = await axios.get('http://127.0.0.1:8080/api/services',
+          {
+            headers: {
+              'Authorization': `Bearer ${your_jwt_token}`
+            },
+            withCredentials: true
+          }
+        );
+        this.services = response.data; 
+      } catch (error) {
+        console.error("Error fetching services:", error);
+      }
     },}
 }
 </script>
   
   
-  <style scoped>
+<style scoped>
   .profile-card {
     background-color: #f8f9fa;
     width: 250px;
@@ -238,7 +255,7 @@ export default {
     background-color: #0056b3;
   }
  
-  </style>
+</style>
 
 
   

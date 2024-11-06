@@ -33,6 +33,7 @@ body {
   background-color: rgb(205, 176, 132);
 }
 </style>
+
 <script>
 import axios from 'axios';
 

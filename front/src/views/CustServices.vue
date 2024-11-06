@@ -37,19 +37,25 @@
             <input v-model="newServiceRequest.cust_email" type="email" class="form-control" required readonly />
           </div>
           <div class="mb-3">
-            <label class="form-label">Professional Email:</label>
-            <input v-model="newServiceRequest.prof_email" type="email" class="form-control" required />
-          </div>
-
-          <div class="mb-3">
             <label for="service" class="form-label">Service:</label>
             <select v-model="newServiceRequest.sev_id" name="service" id="service" class="form-control" required>
-              <option v-for="service in services" :key="service.sev_id" :value="service.sev_id">
+              <option value="">Select a Service</option>
+              <option v-for="service in services" :key="service.sev_id" :value="service.sev_id" >
                 {{ service.sev_name }}
               </option>
             </select>
           </div>
 
+          <div class="mb-3">
+          <label class="form-label">Professional Email:</label>
+          <select v-model="newServiceRequest.prof_email" name="professional" id="prof_email" class="form-control" required >
+            <option value="">Select a Professional</option>
+            <option v-for="professional in filteredProfessionals" :key="professional.prof_email" :value="professional.prof_email">
+              {{ professional.prof_email }}
+            </option>
+          </select>
+          </div>
+    
           <div class="mb-3">
             <label class="form-label">Date of Request:</label>
             <input v-model="newServiceRequest.date_of_request" type="date" class="form-control" required />
@@ -94,13 +100,14 @@ export default {
         date_of_request: '',
         date_of_completion: '',
       },
-      // Array to store services fetched from the API
       services: [] , 
-      requests: []
+      requests: [],
+      professionals: [],
     };
   },
   async created() {
     await this.fetchServices();
+    await this.fetchProfessionals();
   },
   methods: {
     async fetchServices() {
@@ -122,6 +129,23 @@ export default {
       this.services = response.data;
     } catch (error) {
       console.error("Error fetching services:", error);
+    }
+  },
+  async fetchProfessionals() {
+    try {
+      let your_jwt_token = localStorage.getItem('jwt');
+      if (!your_jwt_token) {
+        throw new Error('JWT token is missing');
+      }
+      const response = await axios.get(`http://127.0.0.1:8080/api/professionals`, {
+      headers: {
+        'Authorization': `Bearer ${your_jwt_token}`
+      },
+      withCredentials: true
+    });
+      this.professionals = response.data;
+    } catch (error) {
+      console.error("Error fetching professionals:", error);
     }
   },
     async addNewServiceRequest() {
@@ -173,6 +197,30 @@ export default {
     },
     getImageUrl(id) {
       return `/static/${id}.jpeg`;
+    }
+  },
+  computed: {
+    filteredProfessionals() {
+      if (!this.newServiceRequest.sev_id) {
+        return []; 
+      }
+      const selectedService = this.services.find(
+        service => service.sev_id === this.newServiceRequest.sev_id
+      );
+
+      if (!selectedService) return [];
+      const filtered = this.professionals.filter(
+      professional => professional.service_type == selectedService.sev_name
+    );
+    return filtered;
+      
+    }
+  },
+  
+  watch: {
+    // Reset professional email when service changes
+    'newServiceRequest.sev_id'() {
+      this.newServiceRequest.prof_email = '';
     }
   }
 };
