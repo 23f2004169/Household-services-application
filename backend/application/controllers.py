@@ -15,7 +15,7 @@ cache = Cache(app)
 
 @app.route("/")
 def home():
-    return render_template("try.html")
+    return render_template("index.html")
 
 @app.route("/protected", methods=["GET"])
 @jwt_required()
@@ -48,7 +48,6 @@ def protected():
 #         return decorated_function
 #     return decorator
 
-from flask_jwt_extended import get_jwt
 
 def role_required(allowed_roles):
   def decorator(f):

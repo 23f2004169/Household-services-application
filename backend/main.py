@@ -64,10 +64,7 @@ celery.conf.timezone = 'Asia/Kolkata'
 
 mail = init_mail()
 
-#SCHEDULED TASKS 
-#celery beat
-#DAILY REMINDER TO PROF MAIL/SMS IF SEVREQ=requested ALERT TO ACCEPT/REJECT , SET A TIME TO SEND THE REMINDER(EVENING)
-
+#SCHEDULED TASKS (CELERY)
 @celery.task()
 def daily_reminder_to_professional():
     profs=Professional.query.all()
@@ -99,24 +96,7 @@ def daily_reminder_to_professional():
                 conn.send(msg)
             sse.publish({"message": "You have pending service requests, please accept or reject the request!", "color":"alert alert-primary" },type=prof.prof_email)
     print('daily reminder to professionals executed')
-    return {"status": "success"}
-
-@celery.task()
-def monthly_report():
-    print('monthly report to users executed')
-    return {'message': "Monthly report to users executed"}
-
-
-@celery.task()
-def user_triggered_async_job():
-    print('user triggered async job executed')
-    return {'message': "User triggered async job executed"}
-
-
-# b. Scheduled Job - Monthly Activity Report - Devise a monthly report for the customer created using HTML and sent via mail.
-
-# The activity report can include service details, how many services were requested/closed etc.
-# For the monthly report to be sent, start a job on the first day of every month → create a report using the above parameters → send it as an email
+    return {'message': 'daily reminder to professionals executed',"status": "success"}
 
 @celery.task()
 def monthly_report_to_customers():
@@ -166,7 +146,8 @@ def monthly_report_to_customers():
                 message = template.render(name=cust.cust_email.split("@")[0], requests = cust.cust_req )
                 msg = Message(recipients=[cust.cust_email],html=message, subject=subject)
                 conn.send(msg)
-    return {"status": "success"}
+    print('monthly report to users executed')
+    return {"status": "success",'message': "Monthly report to users executed"}
 
 # @celery.task()
 # def user_triggered_async_job():
@@ -195,31 +176,36 @@ def monthly_report_to_customers():
 #             content.append(item)
 #     return {'header':header, 'content':content}
 
+@celery.task()
+def user_triggered_async_job():
+    print('user triggered async job executed')
+    return {'message': "User triggered async job executed"}
+
 
 # ------- To schedule the tasks --------#
 celery.conf.beat_schedule = {
     'my_daily_task': {
         'task': "main.daily_reminder_to_professional",
-        'schedule': crontab(minute='*/1'),
+        'schedule': crontab(hour=21, minute=0),
     },
     'my_quick_check_task': {
         'task': "main.monthly_report_to_customers",
-        'schedule': crontab(minute='*'),
+        'schedule': crontab(day_of_month='1',hour=9, minute=0),
     },
 }
 
-# day_of_month='1',hour=9, minute=0
+
 # celery.conf.beat_schedule = {
-#     'my_monthly_task': {
-#         'task': "backendjobs.tasks.monthly_entertainment_report_to_users",
-#         'schedule': crontab(hour=13, minute=50, day_of_month=1, month_of_year='*/1'),  # Sending report to users on first day of each month at 6pm
-#     },
 #     'my_daily_task': {
-#         'task': "backendjobs.tasks.daily_reminder_to_user",
-#         'schedule': crontab(hour=21, minute=0),  # Sending email and notification for inactive users
+#         'task': "main.daily_reminder_to_professional",
+#         'schedule': crontab(minute='*/1'),  
 #     },
-#     'my_quick_check_task': {
-#         'task': "backendjobs.tasks.daily_reminder_to_user",
+#     'my_monthly_task': {
+#         'task': "main.monthly_report_to_customers",
+#         'schedule': crontab(minute='*/1'), 
+#     },
+#     'my_user_triggered_async_job': {
+#         'task': "main.user_triggered_async_job",
 #         'schedule': crontab(minute='*/1'),  # Sending email and notification for inactive users
 #     },
 # }
