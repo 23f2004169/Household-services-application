@@ -10,7 +10,7 @@ def init_mail():
     app.config['MAIL_PORT'] = 1025
     app.config['MAIL_USE_TLS'] = False
     app.config['MAIL_USE_SSL'] = False
-    app.config['MAIL_DEFAULT_SENDER'] = "support@ds.study.iitm.ac.in"
+    app.config['MAIL_DEFAULT_SENDER'] = "support@homewhiz.co.in"
     mail = Mail()
     mail.init_app(app) 
     return mail

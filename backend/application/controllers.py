@@ -4,14 +4,14 @@ from application.models import *
 from datetime import datetime
 import os,decimal,logging
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_jwt_extended import create_access_token,get_jwt_identity,jwt_required, set_access_cookies,get_jwt
+from flask_jwt_extended import create_access_token,get_jwt_identity,jwt_required, set_access_cookies,get_jwt,JWTManager,current_user
 from werkzeug.utils import secure_filename
 from flask import send_from_directory, Flask, jsonify, request
 from sqlalchemy import or_
 from flask_caching import Cache
+from functools import wraps
 
-#cache = Cache(app)
-cache = Cache(config={'CACHE_TYPE': 'redis', 'CACHE_REDIS_URL': 'redis://localhost:6379/0'})
+cache = Cache(app)
 
 @app.route("/")
 def home():
@@ -41,16 +41,25 @@ def protected():
         logging.error(f"Token validation error: {str(e)}")
         return jsonify({"error": "Token validation failed"}), 500
   
+def role_required(role):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            print(current_user)
+            if current_user is None or current_user.role not in role:
+                return {'message': 'You role is not authorized'}, 401
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
 @app.route("/api/login",methods=['GET','POST'])
 def login():
     data = request.get_json()
     email = data.get("email", None)
     password = data.get("password", None)
     role=data.get("role",None)
-    print(email, password,role)
     if role=="admin":
         admin_exist = Admin.query.filter_by(admin_email="irina@gmail.com").first()
-        print(admin_exist)
         if not admin_exist:
             user= Admin(admin_email="irina@gmail.com", 
             admin_password=generate_password_hash("irina24"))
@@ -70,14 +79,12 @@ def login():
     
     if role=="prof":
         prof_from_db=Professional.query.filter_by(prof_email=email).first() 
-        print('received',prof_from_db)
         if not prof_from_db:
             return jsonify(error="Professional account with this email does not exist"), 404
         if not check_password_hash(prof_from_db.prof_password, password):
             return jsonify(error="Incorrect password"), 401
         if prof_from_db and check_password_hash(prof_from_db.prof_password, password):
             if prof_from_db.blocked:
-                print('blocked')
                 return jsonify(error="Your account has been blocked"), 403          
             access_token = create_access_token(identity=prof_from_db.prof_email)
             return {"message": "login successful","access_token":access_token,"role":"prof"}                      
@@ -85,7 +92,6 @@ def login():
     
     if role=="cust":
         cust_from_db=Customer.query.filter_by(cust_email=email).first() 
-        print('received',cust_from_db)
         if not cust_from_db:
             return jsonify(error="Customer account with this email does not exist"), 404
         if not check_password_hash(cust_from_db.cust_password, password):
@@ -98,7 +104,6 @@ def login():
         return jsonify(error="Authentication failed"), 401
     
     return jsonify(error="Invalid role specified"), 400
-
 
 
 @app.route("/api/cust_reg", methods=['POST'])
@@ -117,11 +122,7 @@ def cust_reg():
         
         exist = Customer.query.filter_by(cust_email=cust_email).first()
         if exist:
-            return jsonify({"error":"Customer username already exists"}), 400  # Bad Request
-        print(cust_password)
-        
-        # Create a new customer
-        print(generate_password_hash(cust_password), "sachin") # Hash the password
+            return jsonify({"error":"Customer username already exists"}), 400          
         new_cust = Customer(
             cust_email=cust_email,
             cust_password=generate_password_hash(cust_password),
@@ -131,8 +132,8 @@ def cust_reg():
         )
         db.session.add(new_cust)
         db.session.commit()
-        return jsonify({"msg":"Registration successful", "cust_email":"cust_email"}), 201  # Created
-    return jsonify({"error":"An error occurred during registration"}), 500  # Internal Server Error
+        return jsonify({"msg":"Registration successful", "cust_email":"cust_email"}), 201 
+    return jsonify({"error":"An error occurred during registration"}), 500  
 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg'}
@@ -218,8 +219,7 @@ def view_image(prof_email):
       )
   except Exception as e:
       return jsonify({"error": str(e)}), 500
-  
-@cache.cached(timeout=50, key_prefix="reg_servicenames")
+
 @app.route('/api/reg_servicenames', methods=['GET'])
 def reg_servicenames():
     try:
@@ -228,15 +228,15 @@ def reg_servicenames():
             { 'sev_name': service.sev_name,
             } for service in services
         ]
-        print(services_list)
         return jsonify(services_list), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 #===================================FETCH====================================================================================================
-@cache.cached(timeout=50, key_prefix="get_services")
 @app.route('/api/services', methods=['GET'])
 @jwt_required()
+# @role_required(['admin'])
+@cache.memoize(timeout=50)
 def get_services():
     try:
         category = request.args.get('category')
@@ -256,14 +256,14 @@ def get_services():
                 'pincode' : service.pincode
             } for service in services
         ]
-        print(services_list)
         return jsonify(services_list), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@cache.cached(timeout=50, key_prefix="get_professionals")
 @app.route("/api/professionals", methods=["GET"])
 @jwt_required()
+# @role_required(['admin','cust'])
+@cache.memoize(timeout=50)
 def get_professionals():
     try:
         prof= request.args.get('email')
@@ -292,8 +292,8 @@ def get_professionals():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@cache.cached(timeout=50, key_prefix="get_service_requests")
 @app.route("/api/service_requests", methods=["GET"])
+@cache.memoize(timeout=50)
 @jwt_required()
 def get_service_requests():
     try:
@@ -316,8 +316,8 @@ def get_service_requests():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@cache.cached(timeout=50, key_prefix="get_customers")
 @app.route("/api/customers", methods=["GET"])
+@cache.memoize(timeout=50)
 @jwt_required()
 def get_customers():
     try:
@@ -343,18 +343,14 @@ def get_customers():
 
 #===========================================ADMIN====================================================================================================
 @app.route("/api/create_sev", methods=["POST"])
+# @role_required(['admin'])
 @jwt_required()
 def admin_create_sev():
     if request.method == "POST":
-        # Get the data from the request body as JSON
         data = request.get_json()
-        print(data)
         if data:
-            # Check if the service with the same name already exists
             existing_service = Service.query.filter_by(sev_name=data['sev_name']).first()
-            print(existing_service)
             if not existing_service:
-                # Extract values from the JSON payload
                 sev_name = data.get("sev_name")
                 price = data.get("price")
                 time_req = data.get("time_req")
@@ -362,7 +358,6 @@ def admin_create_sev():
                 category = data.get("category")
                 address=data.get("address")
                 pincode = data.get("pincode") 
-                # Create a new Service object
                 new_sev = Service(
                     sev_name=sev_name,
                     price=price,
@@ -374,7 +369,7 @@ def admin_create_sev():
                 )
                 db.session.add(new_sev)
                 db.session.commit()
-                # Return a success message with the new service details
+                cache.delete_memoized(get_services)
                 return jsonify({
                     "message": "Service created successfully",
                     "service": {
@@ -388,14 +383,13 @@ def admin_create_sev():
                         "pincode":new_sev.pincode,
                     }
                 }), 201 
-            
-
             else:
                 return jsonify({"error": "Service with this name already exists"}), 409  
         else:
             return jsonify({"error": "Invalid data"}), 400 
 
 @app.route("/api/edit_sev/<int:sev_id>", methods=["GET", "POST"])
+# @role_required(['admin'])
 @jwt_required()
 def admin_update_sev(sev_id):
     if request.method == "GET":
@@ -426,7 +420,7 @@ def admin_update_sev(sev_id):
                 sev_to_update.address = data.get("address", sev_to_update.address)
                 sev_to_update.pincode = data.get("pincode", sev_to_update.pincode)  
                 db.session.commit()
-                # Convert the updated service object to a dictionary for JSON serialization
+                cache.delete_memoized(get_services)
                 updated_service_data = {
                     "sev_name": sev_to_update.sev_name,
                     "price": sev_to_update.price,
@@ -441,29 +435,29 @@ def admin_update_sev(sev_id):
             else:
                 return jsonify({"error": "Service not found"}), 404
         except Exception as e:
-            db.session.rollback()  # Rollback in case of an error
+            db.session.rollback()  
             return jsonify({"error": str(e)}), 500
 
 @app.route("/api/delete_sev/<int:sev_id>", methods=["DELETE"])
+# @role_required(['admin'])
 @jwt_required()
 def admin_delete_sev(sev_id):
     try:
-        # Fetch the service to delete by sev_id
         sev_to_delete = Service.query.get(sev_id)
         if not sev_to_delete:
             return jsonify({"error": "Service not found"}), 404
         
-        # Delete the service
         db.session.delete(sev_to_delete)
         db.session.commit()
-
+        cache.delete_memoized(get_services)
         return jsonify({"message": "Service deleted successfully"}), 200
     
     except Exception as e:
-        db.session.rollback()  # Rollback in case of an error
+        db.session.rollback()  
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/professional/approve/<prof_email>", methods=["POST"])
+# @role_required(['admin'])
 @jwt_required()
 def admin_approve_prof(prof_email):
     professionals = Professional.query.get(prof_email)
@@ -471,9 +465,11 @@ def admin_approve_prof(prof_email):
         return {"error": "Professional not found"}, 404
     professionals.approval ="approved"
     db.session.commit()
+    cache.delete_memoized(get_professionals)
     return jsonify({"message": "Professional approval status updated successfully"}), 200
 
 @app.route("/api/professional/reject/<prof_email>", methods=["POST"])
+# @role_required(['admin'])
 @jwt_required()
 def admin_reject_prof(prof_email):
     professionals = Professional.query.get(prof_email)
@@ -481,9 +477,11 @@ def admin_reject_prof(prof_email):
         return {"error": "Professional not found"}, 404
     professionals.approval ="rejected"
     db.session.commit()
+    cache.delete_memoized(get_professionals)
     return jsonify({"message": "Professional approval status updated successfully"}), 200
 
 @app.route("/api/professional/block/<prof_email>", methods=["POST"])
+# @role_required(['admin'])
 @jwt_required()
 def admin_block_prof(prof_email):
     professionals = Professional.query.get(prof_email)
@@ -491,6 +489,7 @@ def admin_block_prof(prof_email):
         return {"error": "Professional not found"}, 404
     professionals.blocked = not professionals.blocked
     db.session.commit()
+    cache.delete_memoized(get_professionals)
     return jsonify({"message": "Professional approval status updated successfully"}), 200
 
 @app.route("/api/professional/delete/<cust_email>", methods=["DELETE"])
@@ -501,6 +500,7 @@ def admin_delete_prof(cust_email):
         return {"error": "Professional not found"}, 404
     db.session.delete(professionals)
     db.session.commit()
+    cache.delete_memoized(get_professionals)
     return jsonify({"message": "Professional deleted successfully"}), 200
 
 @app.route("/api/customer/block/<cust_email>", methods=["POST"]) 
@@ -511,6 +511,7 @@ def admin_block_cust(cust_email):
         return {"error": "Customer not found"}, 404 
     customers.blocked = not customers.blocked
     db.session.commit()
+    cache.delete_memoized(get_customers)
     return jsonify({"message": "Customer approval status updated successfully"}), 200    
 
 @app.route("/api/customer/delete/<cust_email>", methods=["DELETE"])
@@ -521,6 +522,7 @@ def admin_delete_cust(cust_email):
         return {"error": "Customer not found"}, 404
     db.session.delete(customers)
     db.session.commit()
+    cache.delete_memoized(get_customers)
     return jsonify({"message": "Customer deleted successfully"}), 200
 
 @app.route("/api/admin_summary", methods=["GET"])
@@ -590,6 +592,8 @@ def update_customer(cust_email):
             customer_to_update.address = data.get("address", customer_to_update.address)
             customer_to_update.pincode = data.get("pincode", customer_to_update.pincode)            
             db.session.commit()
+            cache.delete_memoized(get_customer_info, cust_email)                
+
             updated_customer_data = {
                 "cust_email": customer_to_update.cust_email,
                 "phone": customer_to_update.phone,
@@ -603,8 +607,8 @@ def update_customer(cust_email):
         db.session.rollback()  # Rollback in case of an error
         return jsonify({"error": str(e)}), 500
 
-@cache.cached(timeout=50, key_prefix="get_customer_info")
 @app.route("/api/customer/<cust_email>", methods=["GET"])
+@cache.memoize(timeout=50)
 @jwt_required()
 def get_customer_info(cust_email):
     cust = Customer.query.get(cust_email)
@@ -616,7 +620,6 @@ def get_customer_info(cust_email):
         "pincode": cust.pincode,
         "phone": cust.phone
     }
-    print(cust_data)
     return jsonify(cust_data), 200
 
 @app.route('/api/create_sevrequest/<cust_email>', methods=['POST'])
@@ -628,7 +631,6 @@ def create_service_request(cust_email):
         sev_id = data.get("sev_id")
         date_of_request = data.get("date_of_request")
         date_of_completion = data.get("date_of_completion")
-        # Create a new service request
         new_request = Sevrequest(
             cust_email=cust_email,
             prof_email=prof_email,
@@ -637,7 +639,7 @@ def create_service_request(cust_email):
             date_of_completion=date_of_completion,)
         db.session.add(new_request)
         db.session.commit()
-        # Return a JSON response
+        cache.delete_memoized(cust_service_requests, cust_email)
         return jsonify({
             "status": "success",
             "message": "Service request created successfully",
@@ -649,7 +651,6 @@ def create_service_request(cust_email):
            "date_of_completion": new_request.date_of_completion,
                   }}), 201
     except Exception as e:
-        # Handle exceptions and return an error response
         return jsonify({
             "status": "error",
             "message": str(e)
@@ -684,7 +685,7 @@ def update_service_request(sevreq_id,cust_email):
                 sev_to_update.sev_status = data.get("sev_status", sev_to_update.sev_status)
                 sev_to_update.remarks = data.get("remarks", sev_to_update.remarks)
                 db.session.commit()
-                # Convert the updated service object to a dictionary for JSON serialization
+                cache.delete_memoized(cust_service_requests, cust_email)
                 updated_service_data = {
                     "prof_email": sev_to_update.prof_email,
                     "cust_email": cust_email,
@@ -706,33 +707,20 @@ def update_service_request(sevreq_id,cust_email):
 def delete_service_request(sevreq_id):
     try:
         sev_to_delete = Sevrequest.query.get(sevreq_id)
-        print(sev_to_delete)
         if not sev_to_delete:
             return jsonify({"error": "Service request not found"}), 404
         
-        # Delete the service
         db.session.delete(sev_to_delete)
         db.session.commit()
-
+        cache.delete_memoized(cust_service_requests, sev_to_delete.cust_email)
         return jsonify({"message": "Service request deleted successfully"}), 200
     
     except Exception as e:
-        db.session.rollback()  # Rollback in case of an error
+        db.session.rollback()  
         return jsonify({"error": str(e)}), 500
 
-@app.route("/api/close_sevreq/<int:sevreq_id>", methods=["POST"])
-@jwt_required()
-def close_service_request(sevreq_id):
-    sevreq = Sevrequest.query.get(sevreq_id)
-    print(sevreq,sevreq_id)
-    if sevreq is None:
-        return {"error": "Sevrequest not found"}, 404
-    sevreq.sev_status = "closed"
-    db.session.commit()
-    return jsonify({"message": "Professional approval status updated successfully"}), 200
-
-@cache.cached(timeout=50, key_prefix="cust_service_requests")
 @app.route("/api/cust_service_requests/<cust_email>", methods=["GET"])
+@cache.memoize(timeout=50)
 @jwt_required()
 def cust_service_requests(cust_email):
     try:
@@ -767,6 +755,7 @@ def cust_rate_sev(sevreq_id):
         sevreq.rating = get_rating
         sevreq.remarks = remarks
         db.session.commit()
+        cache.delete_memoized(cust_service_requests, sevreq.cust_email)
         try:
             rate_sevreq_list= {
                     "sevreq_id": sevreq.sevreq_id,
@@ -785,6 +774,17 @@ def cust_rate_sev(sevreq_id):
         return jsonify({
             "error": "Service request must be closed to rate"
         }), 400
+
+@app.route("/api/close_sevreq/<int:sevreq_id>", methods=["POST"])
+@jwt_required()
+def close_service_request(sevreq_id):
+    sevreq = Sevrequest.query.get(sevreq_id)
+    if sevreq is None:
+        return {"error": "Sevrequest not found"}, 404
+    sevreq.sev_status = "closed"
+    db.session.commit()
+    cache.delete_memoized(cust_service_requests, sevreq.cust_email)
+    return jsonify({"message": "Professional approval status updated successfully"}), 200
 
 @app.route("/api/cust_search", methods=["POST"])
 @jwt_required()
@@ -828,17 +828,15 @@ def cust_summary(cust_email):
             "requests": requests_json
         })
     except Exception as e:
-        print("Error in cust_summary:", e)
         return jsonify({"error": "An error occurred while fetching data."}), 500
     
 #=================================================PROFESSIONAL================================================================================
 
-@cache.cached(timeout=50, key_prefix="get_professional_info")
 @app.route("/api/professional/<prof_email>", methods=["GET"])
+@cache.memoize(timeout=50)
 @jwt_required()
 def get_professional_info(prof_email):
     prof = Professional.query.get(prof_email)
-    print(prof)
     if not prof:
         return jsonify({"error": "Professional not found"}), 404
     prof_data = {
@@ -854,8 +852,6 @@ def get_professional_info(prof_email):
         "image": prof.image,
         "approval": prof.approval
     }
-    
-    # Return JSON response with status code 200
     return jsonify(prof_data), 200
 
 @app.route("/api/prof_update/<prof_email>", methods=["GET", "POST"])
@@ -874,6 +870,7 @@ def prof_update(prof_email):
                            "description": prof.description,
                            "rating": prof.rating}
         return jsonify(prof_data), 200
+    
     if request.method == "POST":
         data = request.get_json() 
         prof_email= data.get("prof_email")
@@ -886,7 +883,7 @@ def prof_update(prof_email):
         update_prof = Professional.query.get(prof_email)
         if not update_prof:
             return jsonify({"error": "Professional not found"}), 404
-
+        
         update_prof.prof_email = prof_email
         update_prof.service_type = service_type
         update_prof.experience = experience
@@ -895,6 +892,7 @@ def prof_update(prof_email):
         update_prof.description = description
         update_prof.phone = phone
         db.session.commit()
+        cache.delete_memoized(get_professional_info, prof_email)
         updated_prof_data = { "prof_email": update_prof.prof_email,
                               "service_type": update_prof.service_type,
                               "experience": update_prof.experience,
@@ -904,15 +902,18 @@ def prof_update(prof_email):
                               "phone": update_prof.phone}
         return jsonify({"message": "Professional profile updated successfully", "prof_data": updated_prof_data}), 200
 
-@cache.cached(timeout=50, key_prefix="prof_sevs_today")
 @app.route("/api/prof_sevs_today/<prof_email>", methods=["GET"])
+@cache.memoize(timeout=50)
 @jwt_required()
 def prof_sevs_today(prof_email):
     try:
         prof= Professional.query.get(prof_email)
         sevreqs = Sevrequest.query.all()
         current_date = datetime.now().date()
-        formatted_date = current_date.strftime("%d-%m-%Y")
+        formatted_date = current_date.strftime("%Y-%m-%d")
+        print("now",formatted_date)
+        for i in sevreqs:
+            print(i.date_of_request)
         service_requests_today = [i for i in sevreqs if i.date_of_request== formatted_date and i.prof_email == prof.prof_email]
         requests_today= [
           {
@@ -931,8 +932,8 @@ def prof_sevs_today(prof_email):
     except Exception as e:
         return jsonify({"error": str(e)}), 500  
   
-@cache.cached(timeout=50, key_prefix="prof_closed_sevs")
 @app.route("/api/prof_closed_sevs/<prof_email>", methods=["GET"])
+@cache.memoize(timeout=50)
 @jwt_required()
 def prof_closed_sevs(prof_email):
     try:
@@ -952,14 +953,13 @@ def prof_closed_sevs(prof_email):
               "rating":closed_requests.rating
           }for closed_requests in closed_service_requests
           ]
-        print(closed_service_requests)
         return jsonify(closed_requests), 200
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500  
   
-@cache.cached(timeout=50, key_prefix="prof_pending_sevs")
 @app.route("/api/prof_pending_sevs/<prof_email>", methods=["GET"])
+@cache.memoize(timeout=50)
 @jwt_required()
 def prof_pending_sevs(prof_email):
     try:
@@ -979,7 +979,6 @@ def prof_pending_sevs(prof_email):
               "rating":service_request.rating
           }for service_request in service_requests
           ]
-        print(pending_requests)
         return jsonify(pending_requests), 200
     
     except Exception as e:
@@ -992,6 +991,9 @@ def prof_accept_sev(sevreq_id):
         sevreq = Sevrequest.query.get(sevreq_id)
         sevreq.sev_status = "accepted"
         db.session.commit()
+        cache.delete_memoized(prof_closed_sevs, sevreq.prof_email)
+        cache.delete_memoized(prof_pending_sevs, sevreq.prof_email)
+        cache.delete_memoized(prof_sevs_today, sevreq.prof_email)
         return jsonify({"message": "Service request accepted"}), 200
     
     except Exception as e:
@@ -1004,6 +1006,9 @@ def prof_reject_sev(sevreq_id):
         sevreq = Sevrequest.query.get(sevreq_id)
         sevreq.sev_status = "rejected"
         db.session.commit()
+        cache.delete_memoized(prof_closed_sevs, sevreq.prof_email)
+        cache.delete_memoized(prof_pending_sevs, sevreq.prof_email)
+        cache.delete_memoized(prof_sevs_today, sevreq.prof_email)
         return jsonify({"message": "Service request rejected"}), 200
     
     except Exception as e:  
@@ -1016,6 +1021,9 @@ def prof_close_sev(sevreq_id):
         sevreq = Sevrequest.query.get(sevreq_id)
         sevreq.sev_status = "closed"
         db.session.commit()
+        cache.delete_memoized(prof_closed_sevs, sevreq.prof_email)
+        cache.delete_memoized(prof_pending_sevs, sevreq.prof_email)
+        cache.delete_memoized(prof_sevs_today, sevreq.prof_email)
         return jsonify({"message": "Service request closed"}), 200
     
     except Exception as e:
@@ -1031,12 +1039,9 @@ def prof_rating(prof_email):
             return jsonify(error="Professional not found"), 404
         for x in prof.prof_req:
             rating += x.rating
-    
-            print(x.rating)
         average_rating = round(rating / len(prof.prof_req), 2) if prof.prof_req else 0
         prof.rating=average_rating
         db.session.commit()
-        print(average_rating,prof.rating)
         return jsonify(prof.rating), 200
     
     except Exception as e:
@@ -1056,7 +1061,6 @@ def prof_summary(prof_email):
             "requests": requests_json
         })
     except Exception as e:
-        print("Error in prof_summary:", e)
         return jsonify({"error": "An error occurred while fetching data."}), 500
 
 @app.route("/api/prof_search/<prof_email>", methods=["POST"])
@@ -1064,7 +1068,6 @@ def prof_summary(prof_email):
 def prof_search(prof_email):
     data = request.get_json() 
     query = data.get("query", "").strip()
-    print(query, prof_email)
     results = Sevrequest.query.filter(
         Sevrequest.prof_email == prof_email,
         or_(
@@ -1083,9 +1086,7 @@ def prof_search(prof_email):
             "date_of_request": result.date_of_request,
             "date_of_completion": result.date_of_completion,
         } for result in results]
-        print(result_list)
         return jsonify({"results": result_list}), 200
-    print("No results found", results)
     return jsonify({"results": [], "message": "No results found"}), 200
 
 #implement drop down feature, all in one search, add multiple filters -all 4 by name or search text(closed requests)

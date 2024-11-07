@@ -84,6 +84,7 @@
                     class="btn btn-danger btn-sm">Reject</button>
                   <button @click="blockProfessional(professional.prof_email)"
                     class="btn btn-dark btn-sm">Block/Unblock</button>
+                  <button  class="btn btn-warning btn-sm ml-2">Export</button>
                 </div>
               </td>
             </tr>

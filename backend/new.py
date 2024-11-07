@@ -37,12 +37,15 @@ app.config['BROKER_CONNECTION_RETRY_ON_STARTUP'] = True
 app.config['CELERY_TIMEZONE'] = 'Asia/Kolkata'
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1) 
 
+#doubtful
 app.config["REDIS_URL"] = "redis://localhost"
+######
 
 app.config['CACHE_TYPE'] = 'RedisCache'
 app.config['CACHE_REDIS_HOST'] = 'localhost'      
 app.config['CACHE_REDIS_PORT'] = 6379             
 app.config['CACHE_REDIS_DB'] = 0
+# cache = Cache(app)
 
 jwt = JWTManager(app)
 
@@ -52,9 +55,13 @@ app.app_context().push()
 
 from application.controllers import *
 
+with app.app_context():
+    db.create_all()
+    if __name__=='__main__':
+        app.run(host="0.0.0.0", port=8080)
 
 # ------- Flask sse-------( server sent events) for publishing events /alerts to users --frontend-in vue mounted :subscribe the event #
-app.register_blueprint(sse, url_prefix='/stream')
+# app.register_blueprint(sse, url_prefix='/stream')
 
 # ------- Celery app ------- #
 celery = Celery('Application')
@@ -74,9 +81,10 @@ mail = init_mail()
 #celery beat
 #DAILY REMINDER TO PROF MAIL/SMS IF SEVREQ=requested ALERT TO ACCEPT/REJECT , SET A TIME TO SEND THE REMINDER(EVENING)
 
-@celery.task()
+# @celery.task()
 def daily_reminder_to_professional():
     profs=Professional.query.all()
+    print(profs)
     for prof in profs:
         print(prof.prof_email)
         flag=False
@@ -86,53 +94,22 @@ def daily_reminder_to_professional():
                 flag=True
                 break                
         if flag:
-            with mail.connect() as conn:
-                subject= " HomeWhiz Household services Reminder"
-                message = """
-                        <div style="max-width: 600px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
-                            <h1 style="color: #28a745;">Reminder: Visit HomeWhiz Household services app</h1>
-                            <p>This is a friendly reminder to visit HomeWhiz Household services app and accept or reject the service requests.</p>
-                            <p>Don't miss out on the latest service requests. Click the link below to accept or reject them..</p>
-                            <a href="http://127.0.0.1:8080/" style="display: inline-block; padding: 10px 20px; background-color: #28a745; color: #fff; text-decoration: none; border-radius: 5px;">HomeWhiz Reminder</a>
-                            <p>If you have any questions or need assistance, feel free to reach out to our support team.</p>
-                        </div>
-                        """
-                msg = Message(recipients=[prof.prof_email],html=message, subject=subject)
-                conn.send(msg)
-            sse.publish({"message": "You have pending service requests, please accept or reject the request!", "color":"alert alert-primary" },type=prof.prof_email)
-    print('daily reminder to professionals executed')
-    return {"status": "success"}
+                with mail.connect() as conn:
+                    subject= " HomeWhiz Household services Reminder"
+                    message = """
+                            <div style="max-width: 600px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+                                <h1 style="color: #28a745;">Reminder: Visit HomeWhiz Household services app</h1>
+                                <p>This is a friendly reminder to visit HomeWhiz Household services app and accept or reject the service requests.</p>
+                                <p>Don't miss out on the latest service requests. Click the link below to accept or reject them..</p>
+                                <a href="http://127.0.0.1:8080/" style="display: inline-block; padding: 10px 20px; background-color: #28a745; color: #fff; text-decoration: none; border-radius: 5px;">HomeWhiz Reminder</a>
+                                <p>If you have any questions or need assistance, feel free to reach out to our support team.</p>
+                            </div>
+                            """
+                    msg = Message(recipients=["support@ds.study.iitm.ac.in"],html=message, subject=subject)
+                    conn.send(msg)
+                print('daily reminder to professionals executed')
+                return {"status": "success"}
 
-@celery.task()
-def monthly_report():
-    print('monthly report to users executed')
-    return {'message': "Monthly report to users executed"}
-
-
-@celery.task()
-def user_triggered_async_job():
-    print('user triggered async job executed')
-    return {'message': "User triggered async job executed"}
-
-
-# ------- To schedule the tasks --------#
-celery.conf.beat_schedule = {
-    'my_daily_task': {
-        'task': "main.daily_reminder_to_professional",
-        'schedule': crontab(hour=18, minute=22),
-    },
-    'my_quick_check_task': {
-        'task': "main.monthly_report",
-        'schedule': crontab(day_of_month='1',hour=9, minute=0),
-    },
-}
-
-
-with app.app_context():
-    db.create_all()
-
-if __name__=='__main__':
-    app.run(host="0.0.0.0", port=8080)
-
+print(daily_reminder_to_professional())
 
 
