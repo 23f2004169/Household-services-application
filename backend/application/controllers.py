@@ -3,8 +3,8 @@ from flask import render_template,request,Flask,jsonify
 from application.models import *
 from datetime import datetime
 import os,decimal,logging
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_jwt_extended import create_access_token,get_jwt_identity,jwt_required, set_access_cookies,get_jwt,JWTManager,current_user
+from werkzeug.security import generate_password_hash, check_password_hash 
+from flask_jwt_extended import create_access_token,get_jwt_identity,jwt_required,get_jwt,verify_jwt_in_request,current_user
 from werkzeug.utils import secure_filename
 from flask import send_from_directory, Flask, jsonify, request
 from sqlalchemy import or_
@@ -23,14 +23,9 @@ def protected():
     try:
         print("try")
         token = get_jwt()
-        print(token)
-        # Verify token format
         if not token:
-            print("Token not found")
             return jsonify({"error": "Missing token"}), 401   
-        # Get user identity
         current_user = get_jwt_identity()
-        print(current_user)
         if not current_user:
             print("Invalid token format")
             return jsonify({"error": "Invalid token format"}), 422 
@@ -41,16 +36,34 @@ def protected():
         logging.error(f"Token validation error: {str(e)}")
         return jsonify({"error": "Token validation failed"}), 500
   
-def role_required(role):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            print(current_user)
-            if current_user is None or current_user.role not in role:
-                return {'message': 'You role is not authorized'}, 401
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
+# def role_required(role):
+#     def decorator(f):
+#         @wraps(f)
+#         def decorated_function(*args, **kwargs):
+#             current_user = get_jwt_identity()
+#             print(current_user)
+#             if current_user is None or current_user.role not in role:
+#                 return {'message': 'You role is not authorized'}, 401
+#             return f(*args, **kwargs)
+#         return decorated_function
+#     return decorator
+
+from flask_jwt_extended import get_jwt
+
+def role_required(allowed_roles):
+  def decorator(f):
+      @wraps(f)
+      def decorated_function(*args, **kwargs):
+          verify_jwt_in_request()
+          claims = get_jwt()
+          user_role = claims.get('role')
+          print(user_role,allowed_roles)
+          if not user_role or user_role not in allowed_roles:
+              return {'message': 'Your role is not authorized'}, 401
+          return f(*args, **kwargs)
+      return decorated_function
+  return decorator
+
 
 @app.route("/api/login",methods=['GET','POST'])
 def login():
@@ -73,7 +86,8 @@ def login():
             return jsonify(error="Incorrect password"), 401
 
         if admin_from_db and check_password_hash(admin_from_db.admin_password, password):
-                access_token = create_access_token(identity=admin_from_db.admin_email)
+                access_token = create_access_token(identity=admin_from_db.admin_email,additional_claims={'role':'admin'})
+                print(access_token)
                 return {"message": "login successful","access_token":access_token,"role":"admin"}
         return jsonify(error="Authentication failed"), 401  
     
@@ -86,7 +100,7 @@ def login():
         if prof_from_db and check_password_hash(prof_from_db.prof_password, password):
             if prof_from_db.blocked:
                 return jsonify(error="Your account has been blocked"), 403          
-            access_token = create_access_token(identity=prof_from_db.prof_email)
+            access_token = create_access_token(identity=prof_from_db.prof_email,additional_claims={'role': 'prof'})
             return {"message": "login successful","access_token":access_token,"role":"prof"}                      
         return jsonify(error="Authentication failed"), 401
     
@@ -99,12 +113,11 @@ def login():
         if cust_from_db and check_password_hash(cust_from_db.cust_password, password):
             if cust_from_db.blocked:
                 return jsonify(error="Your account has been blocked"), 403
-            access_token = create_access_token(identity=cust_from_db.cust_email)
+            access_token = create_access_token(identity=cust_from_db.cust_email,additional_claims={'role': 'cust'})
             return {"message": "login successful","access_token":access_token,"role":"cust"}                   
         return jsonify(error="Authentication failed"), 401
     
     return jsonify(error="Invalid role specified"), 400
-
 
 @app.route("/api/cust_reg", methods=['POST'])
 def cust_reg():
@@ -233,7 +246,7 @@ def reg_servicenames():
 #===================================FETCH====================================================================================================
 @app.route('/api/services', methods=['GET'])
 @jwt_required()
-# @role_required(['admin'])
+@role_required(['admin','cust'])
 @cache.memoize(timeout=50)
 def get_services():
     try:
@@ -260,7 +273,7 @@ def get_services():
 
 @app.route("/api/professionals", methods=["GET"])
 @jwt_required()
-# @role_required(['admin','cust'])
+@role_required(['admin','cust'])
 @cache.memoize(timeout=50)
 def get_professionals():
     try:
@@ -291,8 +304,9 @@ def get_professionals():
         return jsonify({'error': str(e)}), 500
 
 @app.route("/api/service_requests", methods=["GET"])
-@cache.memoize(timeout=50)
 @jwt_required()
+@role_required(['admin'])
+@cache.memoize(timeout=50)
 def get_service_requests():
     try:
         service_requests = Sevrequest.query.all()
@@ -315,8 +329,9 @@ def get_service_requests():
         return jsonify({'error': str(e)}), 500
 
 @app.route("/api/customers", methods=["GET"])
-@cache.memoize(timeout=50)
 @jwt_required()
+@role_required(['admin'])
+@cache.memoize(timeout=50)
 def get_customers():
     try:
         cust= request.args.get('email')
@@ -341,8 +356,8 @@ def get_customers():
 
 #===========================================ADMIN====================================================================================================
 @app.route("/api/create_sev", methods=["POST"])
-# @role_required(['admin'])
 @jwt_required()
+@role_required(['admin'])
 def admin_create_sev():
     if request.method == "POST":
         data = request.get_json()
@@ -387,8 +402,8 @@ def admin_create_sev():
             return jsonify({"error": "Invalid data"}), 400 
 
 @app.route("/api/edit_sev/<int:sev_id>", methods=["GET", "POST"])
-# @role_required(['admin'])
 @jwt_required()
+@role_required(['admin'])
 def admin_update_sev(sev_id):
     if request.method == "GET":
         service = Service.query.filter_by(sev_id=sev_id).first()
@@ -437,8 +452,8 @@ def admin_update_sev(sev_id):
             return jsonify({"error": str(e)}), 500
 
 @app.route("/api/delete_sev/<int:sev_id>", methods=["DELETE"])
-# @role_required(['admin'])
 @jwt_required()
+@role_required(['admin'])
 def admin_delete_sev(sev_id):
     try:
         sev_to_delete = Service.query.get(sev_id)
@@ -455,8 +470,8 @@ def admin_delete_sev(sev_id):
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/professional/approve/<prof_email>", methods=["POST"])
-# @role_required(['admin'])
 @jwt_required()
+@role_required(['admin'])
 def admin_approve_prof(prof_email):
     professionals = Professional.query.get(prof_email)
     if professionals is None:
@@ -467,8 +482,8 @@ def admin_approve_prof(prof_email):
     return jsonify({"message": "Professional approval status updated successfully"}), 200
 
 @app.route("/api/professional/reject/<prof_email>", methods=["POST"])
-# @role_required(['admin'])
 @jwt_required()
+@role_required(['admin'])
 def admin_reject_prof(prof_email):
     professionals = Professional.query.get(prof_email)
     if professionals is None:
@@ -479,8 +494,8 @@ def admin_reject_prof(prof_email):
     return jsonify({"message": "Professional approval status updated successfully"}), 200
 
 @app.route("/api/professional/block/<prof_email>", methods=["POST"])
-# @role_required(['admin'])
 @jwt_required()
+@role_required(['admin'])
 def admin_block_prof(prof_email):
     professionals = Professional.query.get(prof_email)
     if professionals is None:
@@ -492,6 +507,7 @@ def admin_block_prof(prof_email):
 
 @app.route("/api/professional/delete/<cust_email>", methods=["DELETE"])
 @jwt_required()
+@role_required(['admin'])
 def admin_delete_prof(cust_email):
     professionals = Professional.query.get(cust_email)
     if professionals is None:
@@ -501,8 +517,9 @@ def admin_delete_prof(cust_email):
     cache.delete_memoized(get_professionals)
     return jsonify({"message": "Professional deleted successfully"}), 200
 
-@app.route("/api/customer/block/<cust_email>", methods=["POST"]) 
+@app.route("/api/customer/block/<cust_email>", methods=["POST"])
 @jwt_required()
+@role_required(['admin']) 
 def admin_block_cust(cust_email):
     customers = Customer.query.get(cust_email)
     if customers is None:
@@ -514,6 +531,7 @@ def admin_block_cust(cust_email):
 
 @app.route("/api/customer/delete/<cust_email>", methods=["DELETE"])
 @jwt_required()
+@role_required(['admin'])
 def admin_delete_cust(cust_email):
     customers = Customer.query.get(cust_email)
     if customers is None:
@@ -525,6 +543,7 @@ def admin_delete_cust(cust_email):
 
 @app.route("/api/admin_summary", methods=["GET"])
 @jwt_required()
+@role_required(['admin'])
 def api_admin_summary():
     profs = Professional.query.all()
     custs = Customer.query.all()
@@ -543,6 +562,7 @@ def api_admin_summary():
     
 @app.route("/api/admin_search", methods=["POST"])
 @jwt_required()
+@role_required(['admin'])
 def admin_search():
     data = request.get_json() 
     query = data.get("query", "").strip()
@@ -580,6 +600,8 @@ def admin_search():
 
 #=========================================CUSTOMER ============================================================================================
 @app.route('/api/update_customer/<cust_email>', methods=['PUT'])
+@jwt_required()
+@role_required(['cust'])
 def update_customer(cust_email):
     try:
         data = request.json
@@ -606,8 +628,9 @@ def update_customer(cust_email):
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/customer/<cust_email>", methods=["GET"])
-@cache.memoize(timeout=50)
 @jwt_required()
+@role_required(['cust'])
+@cache.memoize(timeout=50)
 def get_customer_info(cust_email):
     cust = Customer.query.get(cust_email)
     if not cust:
@@ -622,6 +645,7 @@ def get_customer_info(cust_email):
 
 @app.route('/api/create_sevrequest/<cust_email>', methods=['POST'])
 @jwt_required()
+@role_required(['cust'])
 def create_service_request(cust_email):
     try:
         data = request.get_json()
@@ -656,6 +680,7 @@ def create_service_request(cust_email):
     
 @app.route("/api/edit_sevreq/<int:sevreq_id>/<cust_email>", methods=["GET", "POST"])
 @jwt_required()
+@role_required(['cust'])
 def update_service_request(sevreq_id,cust_email):
     if request.method == "GET":
         service_request= Sevrequest.query.filter_by(sevreq_id=sevreq_id).first()
@@ -702,6 +727,7 @@ def update_service_request(sevreq_id,cust_email):
 
 @app.route("/api/delete_sevreq/<int:sevreq_id>", methods=["DELETE"])
 @jwt_required()
+@role_required(['cust'])
 def delete_service_request(sevreq_id):
     try:
         sev_to_delete = Sevrequest.query.get(sevreq_id)
@@ -720,6 +746,7 @@ def delete_service_request(sevreq_id):
 @app.route("/api/cust_service_requests/<cust_email>", methods=["GET"])
 @cache.memoize(timeout=50)
 @jwt_required()
+@role_required(['cust'])
 def cust_service_requests(cust_email):
     try:
         service_requests = Sevrequest.query.filter_by(cust_email=cust_email).all()
@@ -742,6 +769,7 @@ def cust_service_requests(cust_email):
 
 @app.route("/api/rate_sevreq/<sevreq_id>", methods=["POST"])
 @jwt_required()
+@role_required(['cust'])
 def cust_rate_sev(sevreq_id):
     sevreq = Sevrequest.query.get(sevreq_id)
     if not sevreq:
@@ -775,6 +803,7 @@ def cust_rate_sev(sevreq_id):
 
 @app.route("/api/close_sevreq/<int:sevreq_id>", methods=["POST"])
 @jwt_required()
+@role_required(['cust'])
 def close_service_request(sevreq_id):
     sevreq = Sevrequest.query.get(sevreq_id)
     if sevreq is None:
@@ -786,6 +815,7 @@ def close_service_request(sevreq_id):
 
 @app.route("/api/cust_search", methods=["POST"])
 @jwt_required()
+@role_required(['cust'])
 def cust_search():
     data = request.get_json()
     query = data.get("query", "").strip()
@@ -814,6 +844,7 @@ def cust_search():
 
 @app.route("/api/cust_summary/<cust_email>", methods=["GET"])
 @jwt_required()
+@role_required(['cust'])
 def cust_summary(cust_email):
     try:
         requests = Sevrequest.query.filter_by(cust_email=cust_email).all()
@@ -831,8 +862,9 @@ def cust_summary(cust_email):
 #=================================================PROFESSIONAL================================================================================
 
 @app.route("/api/professional/<prof_email>", methods=["GET"])
-@cache.memoize(timeout=50)
 @jwt_required()
+@role_required(['prof'])
+@cache.memoize(timeout=50)
 def get_professional_info(prof_email):
     prof = Professional.query.get(prof_email)
     if not prof:
@@ -854,6 +886,7 @@ def get_professional_info(prof_email):
 
 @app.route("/api/prof_update/<prof_email>", methods=["GET", "POST"])
 @jwt_required()
+@role_required(['prof'])
 def prof_update(prof_email):
     if request.method == "GET":
         prof = Professional.query.get(prof_email)
@@ -901,8 +934,9 @@ def prof_update(prof_email):
         return jsonify({"message": "Professional profile updated successfully", "prof_data": updated_prof_data}), 200
 
 @app.route("/api/prof_sevs_today/<prof_email>", methods=["GET"])
-@cache.memoize(timeout=50)
 @jwt_required()
+@role_required(['prof'])
+@cache.memoize(timeout=50)
 def prof_sevs_today(prof_email):
     try:
         prof= Professional.query.get(prof_email)
@@ -928,8 +962,9 @@ def prof_sevs_today(prof_email):
         return jsonify({"error": str(e)}), 500  
   
 @app.route("/api/prof_closed_sevs/<prof_email>", methods=["GET"])
-@cache.memoize(timeout=50)
 @jwt_required()
+@role_required(['prof'])
+@cache.memoize(timeout=50)
 def prof_closed_sevs(prof_email):
     try:
         prof = Professional.query.get(prof_email)
@@ -956,6 +991,8 @@ def prof_closed_sevs(prof_email):
 @app.route("/api/prof_pending_sevs/<prof_email>", methods=["GET"])
 @cache.memoize(timeout=50)
 @jwt_required()
+@role_required(['prof'])
+@cache.memoize(timeout=50)
 def prof_pending_sevs(prof_email):
     try:
         prof = Professional.query.get(prof_email)
@@ -981,6 +1018,7 @@ def prof_pending_sevs(prof_email):
 
 @app.route("/api/prof_accept_sev/<int:sevreq_id>", methods=["POST"])
 @jwt_required()
+@role_required(['prof'])
 def prof_accept_sev(sevreq_id):
     try:
         sevreq = Sevrequest.query.get(sevreq_id)
@@ -996,6 +1034,7 @@ def prof_accept_sev(sevreq_id):
 
 @app.route("/api/prof_reject_sev/<int:sevreq_id>", methods=["POST"])
 @jwt_required()
+@role_required(['prof'])
 def prof_reject_sev(sevreq_id):
     try:
         sevreq = Sevrequest.query.get(sevreq_id)
@@ -1011,6 +1050,7 @@ def prof_reject_sev(sevreq_id):
     
 @app.route("/api/prof_close_sev/<int:sevreq_id>", methods=["POST"])
 @jwt_required()
+@role_required(['prof'])
 def prof_close_sev(sevreq_id):
     try:
         sevreq = Sevrequest.query.get(sevreq_id)
@@ -1026,6 +1066,7 @@ def prof_close_sev(sevreq_id):
     
 @app.route("/api/prof_rating/<prof_email>", methods=["POST"])
 @jwt_required()
+@role_required(['prof'])
 def prof_rating(prof_email):
     try:
         rating = 0
@@ -1044,6 +1085,7 @@ def prof_rating(prof_email):
 
 @app.route("/api/prof_summary/<prof_email>", methods=["GET"])
 @jwt_required()
+@role_required(['prof'])
 def prof_summary(prof_email):
     try:
         requests = Sevrequest.query.filter_by(prof_email=prof_email).all()
@@ -1060,6 +1102,7 @@ def prof_summary(prof_email):
 
 @app.route("/api/prof_search/<prof_email>", methods=["POST"])
 @jwt_required()
+@role_required(['prof'])
 def prof_search(prof_email):
     data = request.get_json() 
     query = data.get("query", "").strip()
