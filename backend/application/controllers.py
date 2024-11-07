@@ -115,8 +115,6 @@ def cust_reg():
         address = data.get("address")
         pincode = data.get("pincode")
         phone=data.get("phone")
-        # try:
-            # Check if customer email already exists
         if not cust_password or cust_password.strip() == "":
             return jsonify({"error":"Password cannot be empty"}), 400
         
@@ -911,9 +909,6 @@ def prof_sevs_today(prof_email):
         sevreqs = Sevrequest.query.all()
         current_date = datetime.now().date()
         formatted_date = current_date.strftime("%Y-%m-%d")
-        print("now",formatted_date)
-        for i in sevreqs:
-            print(i.date_of_request)
         service_requests_today = [i for i in sevreqs if i.date_of_request== formatted_date and i.prof_email == prof.prof_email]
         requests_today= [
           {

@@ -159,10 +159,10 @@
               <td>{{ service_request.sev_id }}</td>
               <td>{{ service_request.rating }}</td>
               <td >
-                <button @click="acceptService(service_request.sevreq_id)" class="btn btn-success">Accept</button>
-                <button @click="rejectService(service_request.sevreq_id)" class="btn btn-danger">Reject</button>
-                <button @click="closeService(service_request.sevreq_id)" class="btn btn-warning">Close</button>
-              </td>
+              <button @click="acceptService(service.sevreq_id)" class="btn btn-success">Accept</button>
+              <button @click="rejectService(service.sevreq_id)" class="btn btn-danger">Reject</button>
+              <button @click="closeService(service.sevreq_id)" class="btn btn-warning">Close</button>
+            </td>
             </tr>
           </tbody>
         </table>
@@ -173,6 +173,7 @@
         <p class="text-white">No pending service requests </p>
   </div>
   </div>
+
 
   </div>  
 </div>
@@ -202,7 +203,7 @@ export default {
     this.fetchClosedServices(); 
     this.fetchRating(); 
     this.fetchProf();
-    this.fetchServiceRequests();
+    this.fetchPendingRequests();
 
   },  
     mounted() {
@@ -376,7 +377,7 @@ export default {
         console.error('Error fetching professionals:', error.message);
       }
     },
-    async fetchServiceRequests(){
+    async fetchPendingRequests(){
       try {
         let your_jwt_token = localStorage.getItem('jwt');
         if (!your_jwt_token) {

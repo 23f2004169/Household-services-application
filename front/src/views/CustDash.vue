@@ -34,6 +34,7 @@
             </div>
         </div>
       <br><br>
+      
       <!-- Service Requests Table -->
       <section class="mb-5">
         <h3 class="white">HISTORY: Service Requests</h3>
@@ -323,8 +324,8 @@ methods: {
            } catch (error) {
                  console.error('Error fetching customer:', error.message);
         }
-},
-async updateCustomerProfile() {
+    },
+    async updateCustomerProfile() {
     try {
         let your_jwt_token = localStorage.getItem('jwt');
         if (!your_jwt_token) {
@@ -365,7 +366,7 @@ async updateCustomerProfile() {
     } catch (error) {
         console.error('Error updating customer profile:', error.message);
     }
-},
+    },
     async editService(sevreq_id) {
       try { 
         let your_jwt_token = localStorage.getItem('jwt');
