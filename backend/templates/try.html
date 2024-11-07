@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div style="max-width: 600px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+        <h1 style="color:  rgb(63, 35, 18);">Order Report</h1>
+        <p>Dear {{ cust_name }},</p>
+        <p>Here is the order report for the specified date range.</p>
+
+        <!-- Add your report content here -->
+        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <thead>
+                <tr style="background-color: rgb(63, 35, 18); color: #fff;">
+                    <th style="padding: 10px; text-align: left;"> Service request id</th>
+                    <th style="padding: 10px; text-align: left;">Professional email</th>
+                    <th style="padding: 10px; text-align: left;">Date of request</th>
+                    <th style="padding: 10px; text-align: left;">Date of completion</th>
+                    <th style="padding: 10px; text-align: left;">Status</th>
+                    <th style="padding: 10px; text-align: left;">Rating</th>
+                    <th style="padding: 10px; text-align: left;">Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in cust_req %}
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{req.sevreq_id  }}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ req.prof_email }}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ req.date_of_request }}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ req.date_of_completion }}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ req.sev_status }}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ req.rating }}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ req.remarks }}</td>
+                   </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <p>If you have any questions or need further details, please don't hesitate to contact us.</p>
+        <p>Thank you for your attention!</p>
+        <p>Best regards,<br>Homewhiz Team</p>
+    </div>
+    
+</body>
+</html>

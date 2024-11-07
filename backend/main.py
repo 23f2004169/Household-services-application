@@ -1,13 +1,6 @@
 from flask import Flask
-import os
 from application.database import db
-from flask import jsonify
-from flask import request
 from datetime import timedelta
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended import jwt_required, set_access_cookies
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from celery.schedules import crontab
@@ -17,6 +10,7 @@ from send_mail import init_mail
 from flask_mail import Message
 from flask_sse import sse
 from functools import wraps
+from jinja2 import Template
 
 #creates app instance -object of flask
 app=Flask(__name__)
@@ -90,11 +84,15 @@ def daily_reminder_to_professional():
                 subject= " HomeWhiz Household services Reminder"
                 message = """
                         <div style="max-width: 600px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
-                            <h1 style="color: #28a745;">Reminder: Visit HomeWhiz Household services app</h1>
+                            <h1 style="color: rgb(63, 35, 18);">Reminder: Visit HomeWhiz Household services app</h1>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <a href="http://127.0.0.1:8080/" style="padding: 10px 20px; background-color: rgb(63, 35, 18); color: #fff; text-decoration: none; border-radius: 5px;">HomeWhiz Reminder</a>
+                            </div>
                             <p>This is a friendly reminder to visit HomeWhiz Household services app and accept or reject the service requests.</p>
-                            <p>Don't miss out on the latest service requests. Click the link below to accept or reject them..</p>
-                            <a href="http://127.0.0.1:8080/" style="display: inline-block; padding: 10px 20px; background-color: #28a745; color: #fff; text-decoration: none; border-radius: 5px;">HomeWhiz Reminder</a>
+                            <p>Don't miss out on the latest service requests. Click the link above to accept or reject them.</p>
                             <p>If you have any questions or need assistance, feel free to reach out to our support team.</p>
+                            <p>Best regards,<br>Homewhiz Team</p>
+
                         </div>
                         """
                 msg = Message(recipients=[prof.prof_email],html=message, subject=subject)
@@ -115,18 +113,116 @@ def user_triggered_async_job():
     return {'message': "User triggered async job executed"}
 
 
+# b. Scheduled Job - Monthly Activity Report - Devise a monthly report for the customer created using HTML and sent via mail.
+
+# The activity report can include service details, how many services were requested/closed etc.
+# For the monthly report to be sent, start a job on the first day of every month → create a report using the above parameters → send it as an email
+
+@celery.task()
+def monthly_report_to_customers():
+    custs=Customer.query.all()
+    for cust in custs:
+            with mail.connect() as conn:
+                subject= "Homewhiz household services app Monthly Report"
+                template =Template( """
+                        <div style="max-width: 600px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+                            <h1 style="color:  rgb(63, 35, 18);">Order Report</h1>
+                            <p>Dear {{ name }},</p>
+                            <p>Here is the order report for the specified date range.</p>
+                    
+                            <!-- Add your report content here -->
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                                <thead>
+                                    <tr style="background-color: rgb(63, 35, 18); color: #fff;">
+                                        <th style="padding: 10px; text-align: left;"> Service request id</th>
+                                        <th style="padding: 10px; text-align: left;">Professional email</th>
+                                        <th style="padding: 10px; text-align: left;">Date of request</th>
+                                        <th style="padding: 10px; text-align: left;">Date of completion</th>
+                                        <th style="padding: 10px; text-align: left;">Status</th>
+                                        <th style="padding: 10px; text-align: left;">Rating</th>
+                                        <th style="padding: 10px; text-align: left;">Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for req in requests %}
+                                    <tr>
+                                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{req.sevreq_id  }}</td>
+                                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ req.prof_email }}</td>
+                                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ req.date_of_request }}</td>
+                                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ req.date_of_completion }}</td>
+                                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ req.sev_status }}</td>
+                                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ req.rating }}</td>
+                                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ req.remarks }}</td>
+                                       </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                    
+                            <p>If you have any questions or need further details, please don't hesitate to contact us.</p>
+                            <p>Thank you for your attention!</p>
+                            <p>Best regards,<br>Homewhiz Team</p>
+                        </div>
+                        """)
+                message = template.render(name=cust.cust_email.split("@")[0], requests = cust.cust_req )
+                msg = Message(recipients=[cust.cust_email],html=message, subject=subject)
+                conn.send(msg)
+    return {"status": "success"}
+
+# @celery.task()
+# def user_triggered_async_job():
+#     header = ["Product Name", "Product Quantity", "Product Manufacturing Date", "Product Expiry Date", "Product RPU"]
+    
+#     with open('product_report.csv', 'w', newline='') as f:
+#         csvwriter = csv.writer(f)
+#         csvwriter.writerow(header)
+#         content = []
+#         for product in Product.query.all():
+#             csvwriter.writerow([
+#                 product.name,
+#                 product.quantity,
+#                 product.manufacture.strftime('%Y-%m-%d'),
+#                 product.expiry.strftime('%Y-%m-%d'),
+#                 product.rpu,
+#             ])
+#             item={
+#                 'name':product.name,
+#                 'quantity':product.quantity,
+#                 'manufacture':product.manufacture.strftime('%Y-%m-%d'),
+#                 'expiry':product.expiry.strftime('%Y-%m-%d'),
+#                 'description':product.description,
+#                 'rpu':product.rpu,
+#             }
+#             content.append(item)
+#     return {'header':header, 'content':content}
+
+
 # ------- To schedule the tasks --------#
 celery.conf.beat_schedule = {
     'my_daily_task': {
         'task': "main.daily_reminder_to_professional",
-        'schedule': crontab(hour=18, minute=22),
+        'schedule': crontab(minute='*/1'),
     },
     'my_quick_check_task': {
-        'task': "main.monthly_report",
-        'schedule': crontab(day_of_month='1',hour=9, minute=0),
+        'task': "main.monthly_report_to_customers",
+        'schedule': crontab(minute='*'),
     },
 }
 
+# day_of_month='1',hour=9, minute=0
+# celery.conf.beat_schedule = {
+#     'my_monthly_task': {
+#         'task': "backendjobs.tasks.monthly_entertainment_report_to_users",
+#         'schedule': crontab(hour=13, minute=50, day_of_month=1, month_of_year='*/1'),  # Sending report to users on first day of each month at 6pm
+#     },
+#     'my_daily_task': {
+#         'task': "backendjobs.tasks.daily_reminder_to_user",
+#         'schedule': crontab(hour=21, minute=0),  # Sending email and notification for inactive users
+#     },
+#     'my_quick_check_task': {
+#         'task': "backendjobs.tasks.daily_reminder_to_user",
+#         'schedule': crontab(minute='*/1'),  # Sending email and notification for inactive users
+#     },
+# }
 
 with app.app_context():
     db.create_all()

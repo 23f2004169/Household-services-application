@@ -15,7 +15,7 @@ cache = Cache(app)
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    return render_template("try.html")
 
 @app.route("/protected", methods=["GET"])
 @jwt_required()
