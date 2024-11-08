@@ -46,3 +46,49 @@
     
 </body>
 </html>
+
+
+<script>
+    import axios from 'axios';
+    
+    export default {
+        name: 'CustBar',
+        props: ['email'],
+        mounted() {
+            console.log('CustBar received email:', this.email);
+        },
+        methods: {
+            async logout() {
+                try {
+                    const jwt = localStorage.getItem('jwt');
+                    
+                    if (jwt) {
+                        // Optional: Make a logout request to backend to invalidate token
+                        await axios.post('http://127.0.0.1:8080/api/logout', {}, {
+                            headers: {
+                                'Authorization': `Bearer ${jwt}`
+                            },
+                            withCredentials: true
+                        });
+                    }
+    
+                    // Remove JWT token and other auth data
+                    localStorage.removeItem('jwt');
+                    localStorage.removeItem('user_data');
+                    sessionStorage.clear();
+                    
+                    // Navigate to login page
+                    this.$router.push('/login');
+                    
+                    console.log('Logged out successfully');
+                } catch (error) {
+                    console.error('Error during logout:', error.message);
+                    // Still redirect to login even if the logout request fails
+                    this.$router.push('/login');
+                }
+            }
+        }
+    }
+    </script>
+
+    

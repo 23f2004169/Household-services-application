@@ -14,9 +14,7 @@
               <button style="background-color:  rgb(63, 35, 18);">Summary</button>
             </router-link>
             
-            <router-link :to="{ path: '/login' }">
-              <button style="background-color:  rgb(63, 35, 18);">Logout</button>
-            </router-link>
+              <button @click="logout" style="background-color:  rgb(63, 35, 18);">Logout</button>
            
             </div>
     </nav>
@@ -57,6 +55,21 @@ export default{
    props: ['email'],
    mounted() {
     console.log('ProfBar received email:', this.email);
-  }
+  },
+  methods: {
+    logout() {
+    try {
+        const jwt = localStorage.getItem('jwt_token');       
+        localStorage.removeItem('jwt_token');        
+        localStorage.clear();
+        sessionStorage.clear();
+        this.$router.push('/login');
+        console.log('Logged out successfully');
+    } catch (error) {
+        console.error('Error during logout:', error);
+        this.$router.push('/login');}
+      }
+}
+
 }
 </script>

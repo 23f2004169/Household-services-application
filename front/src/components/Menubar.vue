@@ -5,7 +5,7 @@
             <a href="/admin_dashboard"><button style="background-color:  rgb(63, 35, 18)">Home</button></a>
             <a href="/admin_search"><button style="background-color:  rgb(63, 35, 18);">Search</button></a>
             <a href="/admin_summary"><button style="background-color:  rgb(63, 35, 18);">Summary</button></a>
-            <a href="/"><button style="background-color:  rgb(63, 35, 18);">Logout</button></a>
+            <button @click="logout" style="background-color:  rgb(63, 35, 18);">Logout</button>
 
             <button style="background-color:white" class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon" style="color:white"></span>
@@ -24,9 +24,7 @@
                             <a class="nav-link active" aria-current="page" href="/extended_view" style="color:white">Extended VIEW</a>
                         </li>
                         
-                        <li class="nav-item">
-                            <a href="/login"><button class="btn btn-danger">Logout</button></a>
-                        </li>
+                            <button @click="logout" class="btn btn-danger">Logout</button>
                         
                     </ul>
                 </div>
@@ -65,7 +63,22 @@ table {margin-top: 20px;}.form-container {margin-top: 30px;}.navbar-brand {font-
 
 <script>
 export default{
-   name:'MenuBar'
+   name:'MenuBar',
+   methods: {
+    logout() {
+    try {
+        const jwt = localStorage.getItem('jwt_token');       
+        localStorage.removeItem('jwt_token');        
+        localStorage.clear();
+        sessionStorage.clear();
+        this.$router.push('/login');
+        console.log('Logged out successfully');
+    } catch (error) {
+        console.error('Error during logout:', error);
+        this.$router.push('/login');}
+      }
+   }
+
 
 }
 </script>
