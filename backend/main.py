@@ -11,6 +11,7 @@ from flask_mail import Message
 from flask_sse import sse
 from functools import wraps
 from jinja2 import Template
+import csv
 
 #creates app instance -object of flask
 app=Flask(__name__)
@@ -92,7 +93,7 @@ def daily_reminder_to_professional():
 
                         </div>
                         """
-                msg = Message(recipients=[prof.prof_email],html=message, subject=subject)
+                msg = Message(recipients=[req.prof_email],html=message, subject=subject)
                 conn.send(msg)
             sse.publish({"message": "You have pending service requests, please accept or reject the request!", "color":"alert alert-primary" },type=prof.prof_email)
     print('daily reminder to professionals executed')
@@ -149,66 +150,75 @@ def monthly_report_to_customers():
     print('monthly report to users executed')
     return {"status": "success",'message': "Monthly report to users executed"}
 
-# @celery.task()
-# def user_triggered_async_job():
-#     header = ["Product Name", "Product Quantity", "Product Manufacturing Date", "Product Expiry Date", "Product RPU"]
-    
-#     with open('product_report.csv', 'w', newline='') as f:
-#         csvwriter = csv.writer(f)
-#         csvwriter.writerow(header)
-#         content = []
-#         for product in Product.query.all():
-#             csvwriter.writerow([
-#                 product.name,
-#                 product.quantity,
-#                 product.manufacture.strftime('%Y-%m-%d'),
-#                 product.expiry.strftime('%Y-%m-%d'),
-#                 product.rpu,
-#             ])
-#             item={
-#                 'name':product.name,
-#                 'quantity':product.quantity,
-#                 'manufacture':product.manufacture.strftime('%Y-%m-%d'),
-#                 'expiry':product.expiry.strftime('%Y-%m-%d'),
-#                 'description':product.description,
-#                 'rpu':product.rpu,
-#             }
-#             content.append(item)
-#     return {'header':header, 'content':content}
-
 @celery.task()
 def user_triggered_async_job():
+      
+    header = ["Service request id","Professional email","Customer email","Service id","Date of request","Date of completion","Status","Rating","Remarks"]
+    
+    with open('servicerequest_report.csv', 'w', newline='') as f:
+        csvwriter = csv.writer(f)
+        csvwriter.writerow(header)
+        content = []
+        for req in Sevrequest.query.all(): 
+            if req.sev_status == "closed":
+                csvwriter.writerow([
+                            req.sevreq_id,
+                            req.prof_email,
+                            req.cust_email,
+                            req.service_id,
+                            req.date_of_request.strftime('%Y-%m-%d'),
+                            req.date_of_completion.strftime('%Y-%m-%d'),
+                            req.sev_status,
+                            req.rating,
+                            req.remarks,
+                                  ])
+                item={'sevreq_id':req.sevreq_id,
+                        'prof_email':req.prof_email,
+                        'cust_email':req.cust_email,
+                        'service_id':req.service_id,
+                        'date_of_request':req.date_of_request.strftime('%Y-%m-%d'),
+                        'date_of_completion':req.date_of_completion.strftime('%Y-%m-%d'),
+                        'sev_status':req.sev_status,
+                        'rating':req.rating,
+                        'remarks':req.remarks,
+                                   }
+            content.append(item)
     print('user triggered async job executed')
-    return {'message': "User triggered async job executed"}
+    return {'header':header, 'content':content,'message': "User triggered async job executed"}
 
 
-# ------- To schedule the tasks --------#
-celery.conf.beat_schedule = {
-    'my_daily_task': {
-        'task': "main.daily_reminder_to_professional",
-        'schedule': crontab(hour=21, minute=0),
-    },
-    'my_quick_check_task': {
-        'task': "main.monthly_report_to_customers",
-        'schedule': crontab(day_of_month='1',hour=9, minute=0),
-    },
-}
 
-
+# # ------- To schedule the tasks --------#
 # celery.conf.beat_schedule = {
 #     'my_daily_task': {
 #         'task': "main.daily_reminder_to_professional",
-#         'schedule': crontab(minute='*/1'),  
+#         'schedule': crontab(hour=21, minute=0),
 #     },
-#     'my_monthly_task': {
+#     'my_quick_check_task': {
 #         'task': "main.monthly_report_to_customers",
-#         'schedule': crontab(minute='*/1'), 
+#         'schedule': crontab(day_of_month='1',hour=9, minute=0),
 #     },
 #     'my_user_triggered_async_job': {
 #         'task': "main.user_triggered_async_job",
 #         'schedule': crontab(minute='*/1'),  # Sending email and notification for inactive users
 #     },
 # }
+
+
+celery.conf.beat_schedule = {
+    'my_daily_task': {
+        'task': "main.daily_reminder_to_professional",
+        'schedule': crontab(minute='*/1'),  
+    },
+    'my_monthly_task': {
+        'task': "main.monthly_report_to_customers",
+        'schedule': crontab(minute='*/1'), 
+    },
+    'my_user_triggered_async_job': {
+        'task': "main.user_triggered_async_job",
+        'schedule': crontab(minute='*/1'),  # Sending email and notification for inactive users
+    },
+}
 
 with app.app_context():
     db.create_all()

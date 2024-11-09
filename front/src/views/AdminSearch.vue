@@ -21,7 +21,8 @@
           <p class="card-text">Mobile no:{{ result.phone }}</p>
           <div class="d-flex">
                 <button @click="blockProfessional(result.prof_email)" class="btn btn-dark btn-sm">Block/Unblock</button>
-                <button class="btn btn-dark btn-sm">View profile</button>
+                <button @click="viewDocument(result.prof_email)" class="btn btn-primary btn-sm">Review Profile</button> 
+
           </div>
         </div>
       </div>
@@ -56,39 +57,44 @@ export default {
       this.searchPerformed = true;
     },
     performSearch() {
-      this.searchPerformed = true; // Set to true when search button is clicked
+      this.searchPerformed = true;
     },
     async blockProfessional(prof_email) {
-      try { 
-      let your_jwt_token = localStorage.getItem('jwt');
-      if (!your_jwt_token) {
-        throw new Error('JWT token is missing');
-      }
-      console.log("Professional email ", prof_email);
-      const response = await axios.post(`http://127.0.0.1:8080/api/professional/block/${prof_email}`,
+      try {
+        let your_jwt_token = localStorage.getItem("jwt");
+        if (!your_jwt_token) {
+          throw new Error("JWT token is missing");
+        }
 
-      { 
-        headers: {  
-          'Authorization': `Bearer ${your_jwt_token}` 
-        },
-        withCredentials: true
-      }
-      );
+        const response = await axios.post(
+          `http://127.0.0.1:8080/api/professional/block/${prof_email}`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${your_jwt_token}`,
+            },
+            withCredentials: true,
+          }
+        );
 
-      if (response.status === 200) {  // Check if the update was successful
-        console.log("Professional blocked successfully:", response.data);
-        location.reload();
-
-      } else {          
-        console.error("Failed to block professional: " + response.data.error);
+        if (response.status === 200) {
+          console.log("Professional blocked successfully:", response.data);
+        } else {
+          console.error("Failed to block professional: " + response.data.error);
+        }
+      } catch (error) {
+        console.error("Error blocking professional:", error.message);
       }
-    }catch (error) {
-      console.error('Error blocking professional:', error.message);
-    } 
-  },}
+    },
+    
+viewDocument(prof_email) {
+      // Open document in new tab
+      const documentUrl = `http://127.0.0.1:8080/api/view-document/${prof_email}`;
+      window.open(documentUrl, '_blank');
+    }
+  },
 };
 </script>
-
 <style scoped>
 .card-deck {
   display: flex;

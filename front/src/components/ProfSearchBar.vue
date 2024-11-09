@@ -29,6 +29,7 @@
         results: [],
       };
     },
+    emits: ['updateResults', 'searchPerformed'],  
     props: {
       email: {  
         type: String,

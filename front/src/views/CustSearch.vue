@@ -6,6 +6,7 @@
   </div>
   <div>
     <CustSearchBar @updateResults="setResults" />
+
       <div v-if="profResults.length > 0" class="card-deck mt-4">
         <div v-for="result in profResults":key="result.prof_email" class="card mb-4" style="width: 18rem;">
           <div class="card-body">
@@ -16,10 +17,15 @@
             <p class="card-text">Description:{{ result.description }}</p>
             <p class="card-text">Rating:{{ result.rating }}</p>
             <p class="card-text">Mobile no:{{ result.phone }}</p>
+            <div class="d-flex">
+              <button @click.prevent="showNewServiceRequestForm = true"  class="red">
+              + New Service Request
+            </button>   
             </div>
           </div>
         </div>
-      
+      </div>
+
       <div v-if="serviceResults.length > 0" class="card-deck mt-4">
         <div v-for="result in serviceResults" :key="result.sev_id" class="card mb-4" style="width: 18rem;">
           <div class="card-body">
@@ -36,12 +42,14 @@
           </div>
         </div>
       </div>
+
       <div  v-else-if="searchPerformed" class="no-results-message mt-4">
         <p class="text-white">No results found for your search.</p>
       </div>
-    </div> 
+</div>
 
-    <div v-show="showNewServiceRequestForm" class="modal fade show" style="display: block;" tabindex="-1">
+    <!-- New Service Request Form Modal -->
+  <div v-show="showNewServiceRequestForm" class="modal fade show" style="display: block;" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -54,20 +62,6 @@
             <label class="form-label">Customer Email:</label>
             <input v-model="newServiceRequest.cust_email" type="email" class="form-control" required readonly />
           </div>
-          <!-- <div class="mb-3">
-            <label class="form-label">Professional Email:</label>
-            <input v-model="newServiceRequest.prof_email" type="email" class="form-control" required />
-          </div>
-
-          <div class="mb-3">
-            <label for="service" class="form-label">Service:</label>
-            <select v-model="newServiceRequest.sev_id" name="service" id="service" class="form-control" required>
-              <option value="" disabled>Select a service</option>
-              <option v-for="service in services" :key="service.sev_id" :value="service.sev_id">
-                {{ service.sev_name }}
-              </option>
-            </select>
-          </div> -->
 
           <div class="mb-3">
             <label for="service" class="form-label">Service:</label>
@@ -211,8 +205,6 @@
           };
 
           this.showNewServiceRequestForm = false;
-          alert("Service request created successfully!");
-          location.reload();
         } else {
           alert("Failed to create service request: " + response.data.error);
         }

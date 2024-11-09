@@ -23,6 +23,7 @@
   import axios from "axios";
   export default {
     name: "SearchBar",
+    emits: ["updateResults", "searchPerformed"], 
     data() {
       return {
         searchQuery: "",

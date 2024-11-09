@@ -185,8 +185,6 @@ export default {
           };
 
           this.showNewServiceRequestForm = false;
-          alert("Service request created successfully!");
-          location.reload();
         } else {
           alert("Failed to create service request: " + response.data.error);
         }

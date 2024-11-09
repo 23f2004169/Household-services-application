@@ -1,7 +1,7 @@
 <template>
     <nav class="navbar bg-body-tertiary fixed-top" style="background-color: rgb(63, 35, 18);">
         <div class="container-fluid" style="background-color:rgb(63, 35, 18);">
-            <a class="navbar-brand " style="color:white">ADMIN DASHBOARD</a>
+            <a class="navbar-brand " style="color:white">ADMIN DASHBOARD</a> 
             <a href="/admin_dashboard"><button style="background-color:  rgb(63, 35, 18)">Home</button></a>
             <a href="/admin_search"><button style="background-color:  rgb(63, 35, 18);">Search</button></a>
             <a href="/admin_summary"><button style="background-color:  rgb(63, 35, 18);">Summary</button></a>

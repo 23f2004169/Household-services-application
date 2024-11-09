@@ -159,9 +159,9 @@
               <td>{{ service_request.sev_id }}</td>
               <td>{{ service_request.rating }}</td>
               <td >
-              <button @click="acceptService(service.sevreq_id)" class="btn btn-success">Accept</button>
-              <button @click="rejectService(service.sevreq_id)" class="btn btn-danger">Reject</button>
-              <button @click="closeService(service.sevreq_id)" class="btn btn-warning">Close</button>
+              <button @click="acceptService(service_request.sevreq_id)" class="btn btn-success">Accept</button>
+              <button @click="rejectService(service_request.sevreq_id)" class="btn btn-danger">Reject</button>
+              <button @click="closeService(service_request.sevreq_id)" class="btn btn-warning">Close</button>
             </td>
             </tr>
           </tbody>

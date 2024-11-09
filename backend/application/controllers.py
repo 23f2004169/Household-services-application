@@ -560,8 +560,6 @@ def api_admin_summary():
     })
     
 @app.route("/api/admin_search", methods=["POST"])
-@jwt_required()
-@role_required(['admin'])
 def admin_search():
     data = request.get_json() 
     query = data.get("query", "").strip()
@@ -942,6 +940,8 @@ def prof_sevs_today(prof_email):
         sevreqs = Sevrequest.query.all()
         current_date = datetime.now().date()
         formatted_date = current_date.strftime("%Y-%m-%d")
+        print(formatted_date)
+        print("current time",datetime.now().time())
         service_requests_today = [i for i in sevreqs if i.date_of_request== formatted_date and i.prof_email == prof.prof_email]
         requests_today= [
           {

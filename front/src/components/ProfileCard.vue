@@ -158,7 +158,6 @@ export default {
             description: "",
             phone: ""
           };
-          location.reload();
         } else {
           alert("Failed to update service: " + response.data.error);
         }
@@ -192,7 +191,7 @@ export default {
     async fetchServices() {
       try {
         let your_jwt_token = localStorage.getItem('jwt');
-        const response = await axios.get('http://127.0.0.1:8080/api/services',
+        const response = await axios.get('http://127.0.0.1:8080/api/reg_servicenames',
           {
             headers: {
               'Authorization': `Bearer ${your_jwt_token}`

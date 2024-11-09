@@ -52,7 +52,7 @@
       </section>
 
       <!-- Professionals Table -->
-      <section class="mb-5">
+    <div class="table-container">
         <h3 class="white">Professionals</h3>
         <table class="table table-striped table-hover">
           <thead class="thead-dark">
@@ -65,6 +65,7 @@
               <th>Blocked</th>
               <th>Profile doc</th>
               <th>Actions</th>
+              <th>Export</th>
             </tr>
           </thead>
           <tbody>
@@ -78,19 +79,19 @@
               <td><button @click="viewDocument(professional.prof_email)" class="btn btn-primary btn-sm">View</button> </td>
               <td>
                 <div class="d-flex">
-                  <button  v-if="professional.approval === 'rejected' || professional.approval==='pending'" @click="approveProfessional(professional.prof_email)"
-                    class="btn btn-success btn-sm">Approve</button>
-                  <button v-else-if="professional.approval === 'approved'" @click="rejectProfessional(professional.prof_email)"
-                    class="btn btn-danger btn-sm">Reject</button>
-                  <button @click="blockProfessional(professional.prof_email)"
-                    class="btn btn-dark btn-sm">Block/Unblock</button>
-                  <button  class="btn btn-warning btn-sm ml-2">Export</button>
+                  <button  @click="approveProfessional(professional.prof_email)" class="btn btn-success btn-sm">Approve</button>
+                  <button  @click="rejectProfessional(professional.prof_email)" class="btn btn-danger btn-sm">Reject</button>
+                </div>
+                <br>
+                <div class="d-flex">
+                  <button @click="blockProfessional(professional.prof_email)" class="btn btn-dark btn-sm">Block/Unblock</button>
                 </div>
               </td>
+              <td><button @click="exportProfessional(professional.prof_email)" class="btn btn-secondary btn-sm">Export</button></td>
             </tr>
           </tbody>
         </table>
-      </section>
+      </div>
 
       <!-- Service Requests Table -->
       <section class="mb-5">
@@ -352,7 +353,6 @@ export default {
         pincode: ''
       };
 
-      // Close the modal
       this.showNewServiceForm = false;
       location.reload();
 
@@ -652,6 +652,42 @@ button {
 }
 
 .white {
-  color: white
+  color: white,
 }
+.table-container {
+            background-color: #282828;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        /* Custom text color for table content */
+        .table th, .table td {
+            border-color: #444444; /* Border color for contrast */
+        }
+        .table thead th {
+            color: #ffffff; /* Header text color */
+            background-color: #333333; /* Header background color */
+
+        }
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: #333333; /* Alternate row background color */
+        }
+        .table-striped tbody tr:nth-of-type(even) {
+            background-color: #282828; /* Alternate row background color */
+        }
+        .table-striped tbody tr:hover {
+            background-color: #444444; /* Hovered row background color */
+        }
+        .table-bordered td, .table-bordered th {
+            border-color: #444444; /* Border color for contrast */
+        }
+        .table-bordered thead td, .table-bordered thead th {
+            border-color: #444444; /* Border color for contrast */
+        }
+        .table-bordered thead td, .table-bordered thead th {
+            border-color: #444444; /* Border color for contrast */
+        }
+        .table-bordered thead th {
+            color: #ffffff; /* Header text color */
+        }
+                
 </style>
