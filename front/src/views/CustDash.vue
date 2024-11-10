@@ -77,7 +77,8 @@
               </td>
               <td>
                 <div class="d-flex">
-                <button @click.prevent="openEditServiceForm(service_request)" class="btn btn-warning btn-sm mr-5">Edit</button>
+                <button v-if="service_request.sev_status === 'requested' || service_request.sev_status === 'rejected'"
+                   @click.prevent="openEditServiceForm(service_request)" class="btn btn-warning btn-sm mr-5">Edit</button>
                 <button @click.prevent="deleteService(service_request.sevreq_id)" class="btn btn-danger btn-sm mr-5">Delete</button>
                 </div>
               </td>

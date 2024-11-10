@@ -1,7 +1,7 @@
 from flask import current_app as app #alias for current running app
 from flask import render_template,request,Flask,jsonify
 from application.models import *
-from datetime import datetime
+from datetime import datetime,date
 import os,decimal,logging
 from werkzeug.security import generate_password_hash, check_password_hash 
 from flask_jwt_extended import create_access_token,get_jwt_identity,jwt_required,get_jwt,verify_jwt_in_request,current_user
@@ -741,9 +741,9 @@ def delete_service_request(sevreq_id):
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/cust_service_requests/<cust_email>", methods=["GET"])
-@cache.memoize(timeout=50)
 @jwt_required()
 @role_required(['cust'])
+@cache.memoize(timeout=50)
 def cust_service_requests(cust_email):
     try:
         service_requests = Sevrequest.query.filter_by(cust_email=cust_email).all()
@@ -941,7 +941,8 @@ def prof_sevs_today(prof_email):
         current_date = datetime.now().date()
         formatted_date = current_date.strftime("%Y-%m-%d")
         print(formatted_date)
-        print("current time",datetime.now().time())
+        for i in sevreqs:
+            print(i.date_of_request)
         service_requests_today = [i for i in sevreqs if i.date_of_request== formatted_date and i.prof_email == prof.prof_email]
         requests_today= [
           {

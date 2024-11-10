@@ -58,17 +58,20 @@
     
           <div class="mb-3">
             <label class="form-label">Date of Request:</label>
-            <input v-model="newServiceRequest.date_of_request" type="date" class="form-control" required />
+            <datepicker 
+              v-model="newServiceRequest.date_of_request" 
+              :format="formatDateOnly"
+              class="form-control" 
+              required />
           </div>
-
+          
           <div class="mb-3">
             <label class="form-label">Date of Completion:</label>
-            <input v-model="newServiceRequest.date_of_completion" type="date" class="form-control" required />
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Remarks:</label>
-            <textarea v-model="newServiceRequest.remarks" class="form-control"></textarea>
+            <datepicker 
+              v-model="newServiceRequest.date_of_completion" 
+              :format="formatDateOnly"
+              class="form-control" 
+              required />
           </div>
 
           <div class="modal-footer">
@@ -85,12 +88,13 @@
  
 <script>
 import CustBar from '../components/CustBar.vue';
+import Datepicker from 'vue3-datepicker';
 import axios from 'axios';
 
 export default {
-  components: { CustBar },
-  props: ['category', 'email'], 
-  data() {
+components: { CustBar , Datepicker},
+props: ['category', 'email'], 
+data() {
     return {
       showNewServiceRequestForm: false,
       newServiceRequest: {
@@ -110,7 +114,60 @@ export default {
     await this.fetchProfessionals();
   },
   methods: {
-    async fetchServices() {
+    async addNewServiceRequest() {
+  try {
+    let your_jwt_token = localStorage.getItem('jwt');
+    if (!your_jwt_token) {
+      throw new Error('JWT token is missing');
+    }
+
+    const formattedRequestDate = this.formatDateOnly(this.newServiceRequest.date_of_request);
+    const formattedCompletionDate = this.formatDateOnly(this.newServiceRequest.date_of_completion);
+
+    const response = await axios.post(
+      `http://127.0.0.1:8080/api/create_sevrequest/${this.email}`, 
+      { 
+        "cust_email": this.email,
+        "prof_email": this.newServiceRequest.prof_email,
+        "sev_id": this.newServiceRequest.sev_id,
+        "date_of_request": formattedRequestDate,
+        "date_of_completion": formattedCompletionDate,
+      }, 
+      {
+        headers: {
+          'Authorization': `Bearer ${your_jwt_token}` 
+        },
+        withCredentials: true
+      }
+    );
+
+    if (response.status === 201) {
+      console.log("Service request created successfully:", response.data);
+      await this.fetchServices();
+
+      this.requests.push({
+        ...this.newServiceRequest,
+        id: response.data.sevreq_id 
+      });
+
+      this.newServiceRequest = {
+        cust_email: '',
+        prof_email: '',
+        sev_id: '',
+        date_of_request: '',
+        date_of_completion: '',
+      };
+
+      this.showNewServiceRequestForm = false;
+    } else {
+      alert("Failed to create service request: " + response.data.error);
+    }
+  } catch (error) {
+    console.error('Error creating service request:', error);
+    alert('An error occurred while creating the service request.');
+  }
+},  
+  async fetchServices() {
     try {
       let your_jwt_token = localStorage.getItem('jwt');
       if (!your_jwt_token) {
@@ -148,54 +205,17 @@ export default {
       console.error("Error fetching professionals:", error);
     }
   },
-    async addNewServiceRequest() {
-      try {
-        let your_jwt_token = localStorage.getItem('jwt');
-        if (!your_jwt_token) {
-          throw new Error('JWT token is missing');
-        }
-        const response = await axios.post(`http://127.0.0.1:8080/api/create_sevrequest/${this.email}`, { 
-          "cust_email": this.email,
-          "prof_email": this.newServiceRequest.prof_email,
-          "sev_id": this.newServiceRequest.sev_id,
-          "date_of_request": this.newServiceRequest.date_of_request,
-          "date_of_completion": this.newServiceRequest.date_of_completion,
-        }, {
-          headers: {
-            'Authorization': `Bearer ${your_jwt_token}` 
-          },
-          withCredentials: true
-        });
-
-        if (response.status === 201) { // Changed from 200 to 201
-          console.log("Service request created successfully:", response.data);
-          await this.fetchServices(); // Optionally fetch services again if necessary
-          
-          this.requests.push({
-            ...this.newServiceRequest,
-            id: response.data.sevreq_id 
-          }); 
-
-          this.newServiceRequest = {
-            cust_email: '',
-            prof_email: '',
-            sev_id: '',
-            date_of_request: '',
-            date_of_completion: '',
-          };
-
-          this.showNewServiceRequestForm = false;
-        } else {
-          alert("Failed to create service request: " + response.data.error);
-        }
-      } catch (error) {
-        console.error('Error creating service request:', error); 
-        alert('An error occurred while creating the service request.');
-      }
-    },
     getImageUrl(id) {
       return `/static/${id}.jpeg`;
-    }
+    },
+formatDateOnly(date) {
+  if (!date) return '';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+},
+
   },
   computed: {
     filteredProfessionals() {

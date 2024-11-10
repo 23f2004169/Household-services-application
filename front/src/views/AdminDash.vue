@@ -104,9 +104,10 @@
               <th>Customer</th>
               <th>Requested Date</th>
               <th>Completion Date</th>
+              <th>Service status</th>
               <th>Service ID</th>
-              <th>Status (R/A/C)</th>
               <th>Rating</th>
+              <th>Status (R/A/C)</th>
             </tr>
           </thead>
           <tbody>
@@ -116,9 +117,13 @@
               <td>{{ service_request.cust_email }}</td>
               <td>{{ service_request.date_of_request }}</td>
               <td>{{ service_request.date_of_completion }}</td>
-              <td>{{ service_request.sev_id }}</td>
               <td>{{ service_request.sev_status }}</td>
+              <td>{{ service_request.sev_id }}</td>
               <td>{{ service_request.rating }}</td>
+              <td v-if ="service_request.sev_status === 'accepted'"><div class="btn btn-success">Accepted</div></td>
+              <td v-else-if="service_request.sev_status === 'rejected'"><div class="btn btn-danger">Rejected</div></td>
+              <td v-else-if="service_request.sev_status === 'requested'"><div class="btn btn-primary">Requested</div></td>
+              <td v-else><div class="btn btn-warning">Closed</div></td>
             </tr>
           </tbody>
         </table>
