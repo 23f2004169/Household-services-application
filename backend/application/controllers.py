@@ -13,6 +13,16 @@ from functools import wraps
 
 cache = Cache(app)
 
+@app.route('/api/export-professional/<prof_email>', methods=['POST'])
+def export_professional(prof_email):
+    from main import user_triggered_async_job  
+    if not prof_email:
+        return jsonify({'error': 'Professional email is required'}), 400
+    print("before")
+    var=user_triggered_async_job.delay(prof_email)
+    print("after",var)
+    return jsonify({'message': 'Export job started successfully, you will be notified when it completes.'}), 202
+
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -149,6 +159,7 @@ UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['STATIC_FOLDER'] = "static"
+app.config['REPORT_FOLDER'] = "reports"  
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def allowed_file(filename):
   return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -203,6 +214,7 @@ def prof_reg():
     return jsonify({"msg": "Registration successful", "prof_email": prof_email}), 201
   
 @app.route('/api/view-document/<prof_email>', methods=['GET'])
+@jwt_required
 def view_document(prof_email):
     try:
         professional = Professional.query.filter_by(prof_email=prof_email).first()
@@ -229,6 +241,16 @@ def view_image(prof_email):
       )
   except Exception as e:
       return jsonify({"error": str(e)}), 500
+
+@app.route('/api/reports/<filename>', methods=['GET'])
+@jwt_required()
+@role_required(['admin'])
+def get_reports(filename):
+    try:
+        return send_from_directory(app.config['REPORT_FOLDER'], filename)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/reg_servicenames', methods=['GET'])
 def reg_servicenames():

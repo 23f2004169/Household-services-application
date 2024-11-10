@@ -248,6 +248,24 @@
         </div>
       </div>
     </div>
+    
+    <!-- <div v-if="isDownloading" class="download-overlay">
+      <div class="download-spinner">
+        <span>Downloading...</span>
+      </div>
+    </div>
+    <div> -->
+    
+
+    <div>
+    <div v-if="isExporting || isDownloading" class="loading-overlay">
+      <div class="loading-content">
+        <div class="spinner"></div>
+        <span>{{ isExporting ? 'Preparing CSV export...' : 'Downloading CSV...' }}</span>
+      </div>
+    </div>
+  </div>
+
   </div>
 </template>
 
@@ -258,13 +276,79 @@ import axios from 'axios';
 
 export default {
   name: 'AdminDash',
-  data() {
+  mounted() {
+  //   console.log("AdminDash mounted");
+  //   const source = new EventSource( "http://127.0.0.1:8080/stream");
+  //       source.addEventListener('notifyadmin', event => {
+  //         let data = JSON.parse(event.data);
+  //         alert(<a href="http://127.0.0.1:8080/api/reports/"+ data.filename)</a>); 
+  //         // # this.notifications.push(data);
+  //         // start downloading data.message.link
+  //         console.log("Received notification:", data);
+  //       }, false);
+
+  // },
+//     console.log("AdminDash mounted");
+    
+//     const source = new EventSource("http://127.0.0.1:8080/stream");
+    
+//     source.onerror = (error) => {
+//         console.error("EventSource failed:", error);
+//         source.close();
+//     };
+
+//     source.addEventListener('notifyadmin', event => {
+//         try {
+//             const data = JSON.parse(event.data);
+//             const sanitizedFilename = encodeURIComponent(data.filename);
+//             const reportUrl = `http://127.0.0.1:8080/api/reports/${sanitizedFilename}`;
+            
+//             this.downloadDocument(reportUrl, data.filename);
+//             console.log("Received notification:", data);
+//         } catch (error) {
+//             console.error("Error processing notification:", error);
+//         }
+//     }, false);
+// },
+
+console.log("AdminDash mounted");
+    
+    const source = new EventSource("http://127.0.0.1:8080/stream");
+    
+    source.onerror = (error) => {
+        console.error("EventSource failed:", error);
+        source.close();
+    };
+
+    source.addEventListener('notifyadmin', event => {
+        try {
+            const data = JSON.parse(event.data);
+            const sanitizedFilename = encodeURIComponent(data.filename);
+            const reportUrl = `http://127.0.0.1:8080/api/reports/${sanitizedFilename}`;
+            
+            // Show confirmation with options
+            // console.log("beofre")
+            // if (confirm(`New report available: ${data.filename}\nClick OK to download, Cancel to view in browser`)) {
+                // this.downloadDocument(reportUrl, data.filename);
+            // } else {
+                // this.viewcsvDocument(reportUrl);
+            // }
+
+            this.downloadDocument(reportUrl, data.filename);
+
+            console.log("Received notification:", data);
+        } catch (error) {
+            console.error("Error processing notification:", error);
+        }
+    }, false);
+},
+data() {
     return {
       services: [],
       professionals: [],
       service_requests: [],
-      showNewServiceForm: false, // Controls the visibility of the new service form modal
-      showEditServiceForm: false, // Controls the visibility of the edit service form modal
+      showNewServiceForm: false, // Controls the visibility
+      showEditServiceForm: false, 
       newService: {
         sev_name: '',
         description: '',
@@ -274,7 +358,7 @@ export default {
         category: '',
         pincode: ''
       },
-      editedService: { // Holds the service being edited
+      editedService: { 
         sev_id: '',
         sev_name: '',
         description: '',
@@ -283,7 +367,9 @@ export default {
         address: '',
         category: '',
         pincode: ''
-      }
+      },
+      isDownloading: false,
+      isExporting: false
     };
   },
   components: { MenuBar },
@@ -306,7 +392,7 @@ export default {
         withCredentials: true
       });
       if(response.status === 200) {
-        this.services = response.data; // Update the services array with the data from the backend
+        this.services = response.data; 
         console.log("Services fetched successfully:", response.data);
 }     else {
          console.error("Failed to fetch services:", response.data.error);
@@ -337,17 +423,15 @@ export default {
       withCredentials: true
     });
 
-    // If the response is successful, add the new service to the list and close the modal
     if (response.status === 201) {
       console.log("Service added successfully:", response.data);
       await this.fetchServices();
 
       this.services.push({
         ...this.newService,
-        id: response.data.service_id // Assuming the backend returns the new service's ID
+        id: response.data.service_id 
       });
 
-      // Clear the new service form
       this.newService = {
         sev_name: '',
         description: '',
@@ -370,8 +454,8 @@ export default {
   }
 },
 openEditServiceForm(service) { 
-  this.showEditServiceForm = true; // Show the edit form
-  this.editedService = { ...service }; // Populate the form with selected service data
+  this.showEditServiceForm = true; 
+  this.editedService = { ...service }; 
 },
     async editService(sev_id) {
   if (!sev_id) {
@@ -398,21 +482,18 @@ openEditServiceForm(service) {
       withCredentials: true
     });
 
-    if (response.status === 200) { // Check if the update was successful
+    if (response.status === 200) {
       console.log("Service updated successfully:", response.data);
 
-      // Update the local services array with the updated service data from the backend
       const updatedService = response.data.service;
 
       const index = this.services.findIndex(service => service.sev_id === sev_id);
       if (index !== -1) {
-        // Replace the old service data with the updated one from the backend
         this.services[index] = { ...updatedService };
       }
 
-      // Clear and close the edit form
       this.showEditServiceForm = false;
-      this.editedService = { // Reset editedService
+      this.editedService = { 
         sev_id: '',
         sev_name: '',
         description: '',
@@ -585,8 +666,117 @@ openEditServiceForm(service) {
 viewDocument(prof_email) {
       const documentUrl = `http://127.0.0.1:8080/api/view-document/${prof_email}`;
       window.open(documentUrl, '_blank');
-    }
-}
+    },
+async exportProfessional(prof_email) {
+        try {
+            let your_jwt_token = localStorage.getItem('jwt');
+            if (!your_jwt_token) {
+                throw new Error('JWT token is missing');
+            }
+            const response = await axios.post(`http://127.0.0.1:8080/api/export-professional/${prof_email}`,
+                {},
+                { headers: {
+                        'Authorization': `Bearer ${your_jwt_token}` 
+                    },
+                    withCredentials: true
+                }
+            );
+            if (response.status === 202) {
+                console.log("Export started successfully:", response.data);
+            }
+            alert('Export started. You will be notified once the export is done.');
+        } catch (error) {
+            console.error('Error triggering export:', error);
+        }
+    },
+async downloadDocument(url, filename) {
+      this.isDownloading = true;
+
+      try {
+        let your_token = localStorage.getItem('jwt');
+        const response = await axios({
+          url,
+          method: 'GET',
+          responseType: 'blob',
+          headers: {
+            'Authorization': `Bearer ${your_token}`
+          },
+          onDownloadProgress: (progressEvent) => {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            console.log(`Download Progress: ${percentCompleted}%`);
+          }
+        });
+
+        // Create blob URL
+        const blob = new Blob([response.data], { 
+          type: response.headers['content-type'] 
+        });
+        const downloadUrl = window.URL.createObjectURL(blob);
+
+        // Create download link and trigger download
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+
+        // Cleanup
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+
+        this.showNotification(`Downloaded ${filename} successfully`, 'success');
+
+      } catch (error) {
+        console.error('Download error:', error);
+        this.showNotification(
+          `Failed to download ${filename}: ${error.message}`, 
+          'error'
+        );
+      } finally {
+        this.isDownloading = false;
+      }
+    },
+showNotification(message, type = 'success') {
+        alert(message);
+    },
+viewcsvDocument(url) {
+        try {
+            let jwt = localStorage.getItem('jwt');
+            if (!jwt) {
+                throw new Error('Please login to view the document');
+            }
+
+            // Open in new tab with JWT
+            const newTab = window.open('about:blank', '_blank');
+            newTab.document.write('Loading document...');
+            
+            // Create form for secure GET request
+            const form = document.createElement('form');
+            form.method = 'GET';
+            form.action = url;
+            form.target = '_blank';
+
+            // Add authorization header as hidden input
+            const authInput = document.createElement('input');
+            authInput.type = 'hidden';
+            authInput.name = 'Authorization';
+            authInput.value = `Bearer ${jwt}`;
+            form.appendChild(authInput);
+
+            // Submit form
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+
+        } catch (error) {
+            console.error('Error viewing document:', error);
+            this.showNotification('Failed to view document: ' + error.message);
+        }
+},
+
+
+    
+  }
 }
 </script>
 
@@ -658,40 +848,94 @@ button {
 .white {
   color: white,
 }
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.loading-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 .table-container {
             background-color: #282828;
             border-radius: 8px;
             padding: 20px;
-        }
-        /* Custom text color for table content */
-        .table th, .table td {
-            border-color: #444444; /* Border color for contrast */
-        }
-        .table thead th {
-            color: #ffffff; /* Header text color */
-            background-color: #333333; /* Header background color */
+  }
+  /* Custom text color for table content */
+  .table th, .table td {
+      border-color: #444444; /* Border color for contrast */
+  }
+  .table thead th {
+      color: #ffffff; /* Header text color */
+      background-color: #333333; /* Header background color 
+  }
+  .table-striped tbody tr:nth-of-type(odd) {
+      background-color: #333333; /* Alternate row background color */
+  }
+  .table-striped tbody tr:nth-of-type(even) {
+      background-color: #282828; /* Alternate row background color */
+  }
+  .table-striped tbody tr:hover {
+      background-color: #444444; /* Hovered row background color */
+  }
+  .table-bordered td, .table-bordered th {
+      border-color: #444444; /* Border color for contrast */
+  }
+  .table-bordered thead td, .table-bordered thead th {
+      border-color: #444444; /* Border color for contrast */
+  }
+  .table-bordered thead td, .table-bordered thead th {
+      border-color: #444444; /* Border color for contrast */
+  }
+  .table-bordered thead th {
+      color: #ffffff; /* Header text color */
+  }
+  .download-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
 
-        }
-        .table-striped tbody tr:nth-of-type(odd) {
-            background-color: #333333; /* Alternate row background color */
-        }
-        .table-striped tbody tr:nth-of-type(even) {
-            background-color: #282828; /* Alternate row background color */
-        }
-        .table-striped tbody tr:hover {
-            background-color: #444444; /* Hovered row background color */
-        }
-        .table-bordered td, .table-bordered th {
-            border-color: #444444; /* Border color for contrast */
-        }
-        .table-bordered thead td, .table-bordered thead th {
-            border-color: #444444; /* Border color for contrast */
-        }
-        .table-bordered thead td, .table-bordered thead th {
-            border-color: #444444; /* Border color for contrast */
-        }
-        .table-bordered thead th {
-            color: #ffffff; /* Header text color */
-        }
+.download-spinner {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
                 
 </style>
