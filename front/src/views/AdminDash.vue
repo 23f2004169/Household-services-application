@@ -583,7 +583,6 @@ openEditServiceForm(service) {
   }
 },
 viewDocument(prof_email) {
-      // Open document in new tab
       const documentUrl = `http://127.0.0.1:8080/api/view-document/${prof_email}`;
       window.open(documentUrl, '_blank');
     }

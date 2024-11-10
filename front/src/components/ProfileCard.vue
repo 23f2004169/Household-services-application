@@ -9,6 +9,7 @@
       <p class="pincode">Pincode: {{ prof_data.pincode }}</p>
       <p class="description">Description: {{ prof_data.description }}</p>
       <p class="phone" >Phone: {{ prof_data.phone }}</p>
+      <button @click="viewDocument(prof_data.prof_email)" class="btn btn-primary btn-sm">View</button> 
       <button @click.prevent="openUpdateProfessionalForm(prof_data)" class="btn btn-warning btn-sm mr-2">Edit Profile</button>
     </div>
 
@@ -203,7 +204,11 @@ export default {
       } catch (error) {
         console.error("Error fetching services:", error);
       }
-    },}
+    },
+viewDocument(prof_email) {
+      const documentUrl = `http://127.0.0.1:8080/api/view-document/${prof_email}`;
+      window.open(documentUrl, '_blank');
+    }}
 }
 </script>
   

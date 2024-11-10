@@ -101,9 +101,14 @@
                           <label class="form-label">Service Request ID:</label>
                           <input v-model="editedService.sevreq_id" type="text" class="form-control" required readonly/>
                         </div>
-                        <div class="mb-3">  
-                          <label class="form-label">Professional Email:</label>
-                          <input v-model="editedService.prof_email" type="text" class="form-control" required />
+                        <div class="mb-3"> 
+                        <label class="form-label">Professional Email:</label>
+                        <select v-model="editedService.prof_email" name="professional" id="prof_email" class="form-control" required >
+                          <option value="" disabled>Select a Professional</option>
+                          <option v-for="professional in professionals" :key="professional.prof_email" :value="professional.prof_email">
+                            {{ professional.prof_email }}
+                          </option>
+                        </select>
                         </div>
                         <div class="mb-3">
                           <label class="form-label">Remarks:</label>
@@ -249,6 +254,7 @@ data() {
         pincode: ''
       },
       service_requests: [],
+      professionals: [],
       showEditServiceForm: false, 
       editedService: {
         sevreq_id: '',
@@ -272,6 +278,7 @@ data() {
 created() {
     this.fetchServiceRequests();
     this.fetchCust();
+    this.fetchProfessionals();
 },    
 mounted() {
     console.log('CustDashboard received email:', this.email);
@@ -513,7 +520,30 @@ methods: {
       } catch (error) {
         console.error("Error rating service request:", error.message);
       }
-   }
+   },
+   async fetchProfessionals() {
+    try {
+      let your_jwt_token = localStorage.getItem('jwt');
+      if (!your_jwt_token) {
+        throw new Error('JWT token is missing');
+      }
+      const response = await axios.get(`http://127.0.0.1:8080/api/professionals`, {
+      headers: {
+        'Authorization': `Bearer ${your_jwt_token}`
+      },
+      withCredentials: true
+    });
+
+      if (response.status === 200) {
+        this.professionals = response.data;
+        console.log("Professionals fetched successfully:", this.professionals);
+      } else {
+        console.error("Failed to fetch professionals:", response.data.error);
+      }
+    } catch (error) {
+      console.error("Error fetching professionals:", error);
+    }
+  },
   }
 }
 </script>
