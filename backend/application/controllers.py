@@ -1070,18 +1070,42 @@ def prof_close_sev(sevreq_id):
 def prof_rating(prof_email):
     try:
         rating = 0
+        count = 0
         prof = Professional.query.filter_by(prof_email=prof_email).first()
         if not prof:
             return jsonify(error="Professional not found"), 404
         for x in prof.prof_req:
-            rating += x.rating
-        average_rating = round(rating / len(prof.prof_req), 2) if prof.prof_req else 0
+            if x.sev_status == "closed":
+                rating += x.rating
+                count += 1
+        average_rating = round(rating /count, 2) if prof.prof_req else 0
         prof.rating=average_rating
+        print(prof.rating)
         db.session.commit()
         return jsonify(prof.rating), 200
     
     except Exception as e:
         return jsonify({"error":str(e)}),500
+
+@app.route('/api/reupload-document/<prof_email>', methods=['POST'])
+def reupload_document(prof_email):
+    professional = Professional.query.filter_by(prof_email=prof_email).first()
+    print(professional.prof_email)
+    if not professional:
+        return jsonify({"error": "Professional not found"}), 404
+    if professional.approval != "rejected":
+        return jsonify({"error": "Document re-upload is only allowed if status is 'rejected'"}), 403
+
+    document_file = request.files.get('document')
+    if not document_file or not allowed_file(document_file.filename):
+        return jsonify({"error": "Invalid document file"}), 400
+    new_document_filename = prof_email.split("@")[0] + "_reupload." + document_file.filename.split(".")[-1]
+    document_path = os.path.join(app.config['UPLOAD_FOLDER'], new_document_filename)
+    document_file.save(document_path)
+    professional.file = new_document_filename
+    db.session.commit()
+
+    return jsonify({"msg": "Document re-upload successful"}), 200
 
 @app.route("/api/prof_summary/<prof_email>", methods=["GET"])
 @jwt_required()

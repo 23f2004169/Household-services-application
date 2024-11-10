@@ -11,6 +11,13 @@
       <p class="phone" >Phone: {{ prof_data.phone }}</p>
       <button @click="viewDocument(prof_data.prof_email)" class="btn btn-primary btn-sm">View</button> 
       <button @click.prevent="openUpdateProfessionalForm(prof_data)" class="btn btn-warning btn-sm mr-2">Edit Profile</button>
+      <div>
+    <button v-if="prof_data.approval === 'rejected'" @click="reuploadDocument(prof_data.prof_email)" class="btn btn-danger btn-sm">
+  Reupload Document
+</button>
+      </div>
+<input type="file" ref="documentInput" accept=".pdf" @change="handleFileUpload" style="display:none" />
+
     </div>
 
   
@@ -208,7 +215,54 @@ export default {
 viewDocument(prof_email) {
       const documentUrl = `http://127.0.0.1:8080/api/view-document/${prof_email}`;
       window.open(documentUrl, '_blank');
-    }}
+    },
+    async reuploadDocument(prof_email) {
+  try {
+    let your_jwt_token = localStorage.getItem('jwt');
+    if (!your_jwt_token) {
+      throw new Error('JWT token is missing');
+    }
+
+    // Trigger the file input click
+    this.$refs.documentInput.click();
+  } catch (error) {
+    console.error('Error triggering file upload:', error.message);
+    alert('An error occurred while triggering the file upload.');
+  }
+},
+async handleFileUpload(event) {
+  const file = event.target.files[0];  
+  if (!file) {
+    return;
+  }
+  const formData = new FormData();
+  formData.append('document', file);
+  try {
+    let your_jwt_token = localStorage.getItem('jwt');
+    if (!your_jwt_token) {
+      throw new Error('JWT token is missing');
+    }
+
+    const response = await axios.post(`http://127.0.0.1:8080/api/reupload-document/${this.email}`, formData, {
+      headers: {
+        'Authorization': `Bearer ${your_jwt_token}`,
+        'Content-Type': 'multipart/form-data'
+      },
+      withCredentials: true
+    });
+
+    if (response.status === 200) {
+      alert('Document reuploaded successfully.');
+    } else {
+      alert('Failed to reupload document: ' + response.data.error);
+    }
+  } catch (error) {
+    console.error('Error uploading document:', error.message);
+    alert('An error occurred while uploading the document.');
+  }
+}
+  
+  }
 }
 </script>
   
