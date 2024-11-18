@@ -686,6 +686,8 @@ def create_service_request(cust_email):
         date_of_request = data.get("date_of_request")
         date_of_completion = data.get("date_of_completion")
         print(prof_email,sev_id,date_of_request,date_of_completion)
+        print(type(date_of_request),type(date_of_completion))
+
         new_request = Sevrequest(
             cust_email=cust_email,
             prof_email=prof_email,
@@ -784,8 +786,7 @@ def cust_service_requests(cust_email):
     try:
         service_requests = Sevrequest.query.filter_by(cust_email=cust_email).all()
         service_requests_list = [
-            {
-                'sevreq_id': service_request.sevreq_id,
+            {   'sevreq_id': service_request.sevreq_id,
                 'prof_email': service_request.prof_email,
                 'cust_email': service_request.cust_email,
                 'sev_id': service_request.sev_id,
@@ -977,9 +978,9 @@ def prof_sevs_today(prof_email):
         current_date = datetime.now().date()
         print("today",current_date,type(current_date))
         formatted_date = current_date.strftime("%Y-%m-%d")
-        print(formatted_date,type(formatted_date))
+        print(formatted_date,type(formatted_date)) 
         # for i in sevreqs:
-        #     print(i.date_of_request)
+        #     print(i.date_of_request) 
         service_requests_today = [i for i in sevreqs if i.date_of_request== formatted_date and i.prof_email == prof.prof_email]
         requests_today= [
           {
