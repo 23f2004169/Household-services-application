@@ -30,8 +30,7 @@
             <div class="col-12">
               <label for="service_type" class="form-label">Service Type:</label>
               <select v-model="service_type" class="form-select form-select-sm" required>
-                <option value="" disabled>Select service type</option>
-                <option v-for="service in services" :key="service.id" :value="service.name">
+                <option v-for="service in services" :key="service.id" :value="service.sev_name">
                   {{ service.sev_name }}
                 </option>
               </select>

@@ -22,7 +22,6 @@
                 <th>Base Price</th>
                 <th>Service Category</th>
                 <th>Time Required</th>
-                <th>Description</th>
                 <th>Address</th>
                 <th>Pincode</th>
                 <th>Actions</th>
@@ -35,7 +34,6 @@
                 <td>{{ service.price }}</td>
                 <td>{{ service.category }}</td>
                 <td>{{ service.time_req }}</td>
-                <td>{{ service.description }}</td>
                 <td>{{ service.address }}</td>
                 <td>{{ service.pincode }}</td>
                 <td>
@@ -58,7 +56,6 @@
           <thead class="thead-dark">
             <tr>
               <th>ID</th>
-              <th>Description</th>
               <th>Experience (Yrs)</th>
               <th>Service Name</th>
               <th>Approval</th>
@@ -71,7 +68,6 @@
           <tbody>
             <tr v-for="(professional, index) in professionals" :key="index">
               <td>{{ professional.prof_email }}</td>
-              <td>{{ professional.description }}</td>
               <td>{{ professional.experience }}</td>
               <td>{{ professional.service_type }}</td>
               <td>{{ professional.approval }}</td>
@@ -81,9 +77,7 @@
                 <div class="d-flex">
                   <button  @click="approveProfessional(professional.prof_email)" class="btn btn-success btn-sm">Approve</button>
                   <button  @click="rejectProfessional(professional.prof_email)" class="btn btn-danger btn-sm">Reject</button>
-                </div>
-                <br>
-                <div class="d-flex">
+             
                   <button @click="blockProfessional(professional.prof_email)" class="btn btn-dark btn-sm">Block/Unblock</button>
                 </div>
               </td>
@@ -277,44 +271,8 @@ import axios from 'axios';
 export default {
   name: 'AdminDash',
   mounted() {
-  //   console.log("AdminDash mounted");
-  //   const source = new EventSource( "http://127.0.0.1:8080/stream");
-  //       source.addEventListener('notifyadmin', event => {
-  //         let data = JSON.parse(event.data);
-  //         alert(<a href="http://127.0.0.1:8080/api/reports/"+ data.filename)</a>); 
-  //         // # this.notifications.push(data);
-  //         // start downloading data.message.link
-  //         console.log("Received notification:", data);
-  //       }, false);
-
-  // },
-//     console.log("AdminDash mounted");
-    
-//     const source = new EventSource("http://127.0.0.1:8080/stream");
-    
-//     source.onerror = (error) => {
-//         console.error("EventSource failed:", error);
-//         source.close();
-//     };
-
-//     source.addEventListener('notifyadmin', event => {
-//         try {
-//             const data = JSON.parse(event.data);
-//             const sanitizedFilename = encodeURIComponent(data.filename);
-//             const reportUrl = `http://127.0.0.1:8080/api/reports/${sanitizedFilename}`;
-            
-//             this.downloadDocument(reportUrl, data.filename);
-//             console.log("Received notification:", data);
-//         } catch (error) {
-//             console.error("Error processing notification:", error);
-//         }
-//     }, false);
-// },
-
-console.log("AdminDash mounted");
-    
+    console.log("AdminDash mounted");
     const source = new EventSource("http://127.0.0.1:8080/stream");
-    
     source.onerror = (error) => {
         console.error("EventSource failed:", error);
         source.close();

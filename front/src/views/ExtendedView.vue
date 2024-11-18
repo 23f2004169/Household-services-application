@@ -6,7 +6,7 @@
         <div v-for="professional in professionals" :key="professional.id" class="col-md-4 mb-4">
           <div class="card h-100">
             <div class="card-body">
-              <h5 class="card-title">Email id:{{ professional.prof_email}}</h5>
+              <h5 class="card-title">{{ professional.prof_email}}</h5>
                 <!-- <img id="image"src="http://127.0.0.1:8080/api/view-image/{{ professional.prof_email }}"   alt="Profile Picture" class="profile-pic" @error="handleImageError" /> -->
                 <img :src="'http://127.0.0.1:8080/api/view-image/' + professional.prof_email" alt="Profile Picture" class="pic" />
                 <p><strong>Description:</strong> {{ professional.description }}</p>
