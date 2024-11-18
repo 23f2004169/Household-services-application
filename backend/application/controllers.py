@@ -13,15 +13,6 @@ from functools import wraps
 
 cache = Cache(app)
 
-@app.route('/api/export-professional/<prof_email>', methods=['POST'])
-def export_professional(prof_email):
-    from main import user_triggered_async_job  
-    if not prof_email:
-        return jsonify({'error': 'Professional email is required'}), 400
-    print("before")
-    var=user_triggered_async_job.delay(prof_email)
-    print("after",var)
-    return jsonify({'message': 'Export job started successfully, you will be notified when it completes.'}), 202
 
 @app.route("/")
 def home():
@@ -45,19 +36,6 @@ def protected():
         print("Error in protected route:", str(e))
         logging.error(f"Token validation error: {str(e)}")
         return jsonify({"error": "Token validation failed"}), 500
-  
-# def role_required(role):
-#     def decorator(f):
-#         @wraps(f)
-#         def decorated_function(*args, **kwargs):
-#             current_user = get_jwt_identity()
-#             print(current_user)
-#             if current_user is None or current_user.role not in role:
-#                 return {'message': 'You role is not authorized'}, 401
-#             return f(*args, **kwargs)
-#         return decorated_function
-#     return decorator
-
 
 def role_required(allowed_roles):
   def decorator(f):
@@ -214,7 +192,6 @@ def prof_reg():
     return jsonify({"msg": "Registration successful", "prof_email": prof_email}), 201
   
 @app.route('/api/view-document/<prof_email>', methods=['GET'])
-@jwt_required
 def view_document(prof_email):
     try:
         professional = Professional.query.filter_by(prof_email=prof_email).first()
@@ -251,6 +228,17 @@ def get_reports(filename):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+#async trigger job
+@app.route('/api/export-professional/<prof_email>', methods=['POST'])
+@jwt_required()
+def export_professional(prof_email):
+    from main import user_triggered_async_job  
+    if not prof_email:
+        return jsonify({'error': 'Professional email is required'}), 400
+    print("before")
+    var=user_triggered_async_job.delay(prof_email)
+    print("after",var)
+    return jsonify({'message': 'Export job started successfully, you will be notified when it completes.'}), 202
 
 @app.route('/api/reg_servicenames', methods=['GET'])
 def reg_servicenames():
@@ -267,16 +255,11 @@ def reg_servicenames():
 #===================================FETCH====================================================================================================
 @app.route('/api/services', methods=['GET'])
 @jwt_required()
-@role_required(['admin','cust'])
+@role_required(['admin'])
 @cache.memoize(timeout=50)
 def get_services():
     try:
-        category = request.args.get('category')
-        if category:
-            services = Service.query.filter_by(category=category).all()
-        else:
-            services = Service.query.all()
-
+        services = Service.query.all()
         services_list = [
             {   'sev_id': service.sev_id,
                 'sev_name': service.sev_name,
@@ -288,7 +271,9 @@ def get_services():
                 'pincode' : service.pincode
             } for service in services
         ]
+        print(services_list)
         return jsonify(services_list), 200
+    
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -566,10 +551,12 @@ def admin_delete_cust(cust_email):
 @jwt_required()
 @role_required(['admin'])
 def api_admin_summary():
+    cache.delete_memoized(get_service_requests)
     profs = Professional.query.all()
     custs = Customer.query.all()
     reqs = Sevrequest.query.all()
     sevs = Service.query.all()
+    print(reqs)
     services_json = [sev.to_json() for sev in sevs]
     profs_json = [prof.to_json() for prof in profs]
     custs_json = [cust.to_json() for cust in custs]
@@ -618,6 +605,32 @@ def admin_search():
     return jsonify({"results": []}), 200
 
 #=========================================CUSTOMER ============================================================================================
+@app.route('/api/servicesforcust', methods=['GET'])
+@jwt_required()
+@role_required(['cust'])
+def get_servicesforcust():
+    try:
+        category = request.args.get('category')
+        if category:
+            services = Service.query.filter_by(category=category).all()
+        else:
+            services = Service.query.all()
+
+        services_list = [
+            {   'sev_id': service.sev_id,
+                'sev_name': service.sev_name,
+                'description': service.description,
+                'price': service.price,
+                'time_req': service.time_req,
+                'address': service.address,
+                'category': service.category,
+                'pincode' : service.pincode
+            } for service in services
+        ]
+        return jsonify(services_list), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/update_customer/<cust_email>', methods=['PUT'])
 @jwt_required()
 @role_required(['cust'])
@@ -672,6 +685,7 @@ def create_service_request(cust_email):
         sev_id = data.get("sev_id")
         date_of_request = data.get("date_of_request")
         date_of_completion = data.get("date_of_completion")
+        print(prof_email,sev_id,date_of_request,date_of_completion)
         new_request = Sevrequest(
             cust_email=cust_email,
             prof_email=prof_email,
@@ -961,10 +975,11 @@ def prof_sevs_today(prof_email):
         prof= Professional.query.get(prof_email)
         sevreqs = Sevrequest.query.all()
         current_date = datetime.now().date()
+        print("today",current_date,type(current_date))
         formatted_date = current_date.strftime("%Y-%m-%d")
-        print(formatted_date)
-        for i in sevreqs:
-            print(i.date_of_request)
+        print(formatted_date,type(formatted_date))
+        # for i in sevreqs:
+        #     print(i.date_of_request)
         service_requests_today = [i for i in sevreqs if i.date_of_request== formatted_date and i.prof_email == prof.prof_email]
         requests_today= [
           {
@@ -1019,7 +1034,9 @@ def prof_pending_sevs(prof_email):
     try:
         prof = Professional.query.get(prof_email)
         sevreqs = Sevrequest.query.all()
-        service_requests = [i for i in sevreqs if i.sev_status == "requested" and i.prof_email == prof.prof_email]
+        current_date = datetime.now().date()
+        formatted_date = current_date.strftime("%Y-%m-%d")
+        service_requests = [i for i in sevreqs if  i.sev_status in["requested", "accepted"] and i.date_of_completion>= formatted_date and i.prof_email == prof.prof_email]
         pending_requests= [
           {
               "sevreq_id":  service_request.sevreq_id,

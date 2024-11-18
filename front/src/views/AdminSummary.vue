@@ -30,8 +30,8 @@
         ratingChart: null,
         statusCounts: {
           accepted: 0,
-          rejected: 0,
           requested: 0,
+          rejected: 0,
           closed: 0,
         },
         ratingCounts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },

@@ -14,7 +14,7 @@ class Professional(db.Model):
     __tablename__ = "professional"
     prof_email = db.Column(db.String(100), primary_key=True, unique=True)
     prof_password = db.Column(db.String, nullable=False)
-    description = db.Column(db.String)
+    description = db.Column(db.String) 
     service_type = db.Column(db.String, nullable=False)
     experience = db.Column(db.String, nullable=False)
     date_created = db.Column(db.String, nullable=False)

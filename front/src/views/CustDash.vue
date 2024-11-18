@@ -133,7 +133,24 @@
                           <label class="form-label">Date of Completion:</label>
                           <input v-model="editedService.date_of_completion" type="text" class="form-control" required />
                         </div>
+
+                        <!-- <div class="mb-3">
+                          <label class="form-label">Date of Request:</label>
+                          <datepicker 
+                            v-model="editedService.date_of_request" 
+                            :format="formatDateOnly"
+                            class="form-control" 
+                            required />
+                        </div>
                         
+                        <div class="mb-3">
+                          <label class="form-label">Date of Completion:</label>
+                          <datepicker 
+                            v-model="editedService.date_of_completion" 
+                            :format="formatDateOnly"
+                            class="form-control" 
+                            required />
+                        </div> -->
                         <div class="modal-footer">
                           <button type="submit" class="btn btn-primary">Save Changes</button>
                           <button @click.prevent="showEditServiceForm = false" class="btn btn-secondary">Cancel</button>
@@ -239,6 +256,7 @@
 <script>
 import CustBar from '../components/CustBar.vue';
 import axios from 'axios';
+import Datepicker from 'vue3-datepicker';
 export default {
   props: ['email'],
   name: 'CustDash',
@@ -404,7 +422,7 @@ methods: {
            const index = this.service_requests.findIndex(service_request=> service_request.sevreq_id === sevreq_id);
            if (index !== -1) {
              // Replace the old service data with the updated one from the backend
-             this.service_requests[index] = { ...updatedService_Request };
+             this.service_requests[index] = { ...updatedService };
            }
            // Clear and close the edit form
            this.showEditServiceForm = false;
@@ -417,7 +435,6 @@ methods: {
             sev_status:'',
             remarks: '', 
            };
-           location.reload();
         } else {
           console.error("Failed to update service request:", response.data.error);
         }

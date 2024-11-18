@@ -4,7 +4,6 @@ from datetime import timedelta
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from celery.schedules import crontab
-# from config import LocalDevelopmentConfig
 from celery import Celery
 from send_mail import init_mail
 from flask_mail import Message
@@ -37,7 +36,7 @@ def create_app():
     app.config['CACHE_REDIS_HOST'] = 'localhost'      
     app.config['CACHE_REDIS_PORT'] = 6379             
     app.config['CACHE_REDIS_DB'] = 0
-    CORS(app, origins=['http://localhost:5173'], supports_credentials=True)
+    CORS(app, supports_credentials=True, origins="http://localhost:5173")
     jwt = JWTManager(app)
     db.init_app(app)
     app.app_context().push()
@@ -76,11 +75,6 @@ from application.controllers import *
 
 # ------- Flask sse-------( server sent events) for publishing events /alerts to users --frontend-in vue mounted :subscribe the event #
 app.register_blueprint(sse, url_prefix='/stream')
-
-# ------- Celery app ------- #
-
-# Update celery app configurations
-
 
 mail = init_mail()
 
@@ -169,40 +163,6 @@ def monthly_report_to_customers():
     print('monthly report to users executed')
     return {"status": "success",'message': "Monthly report to users executed"}
 
-# @celery.task()
-# def user_triggered_async_job():  
-#     header = ["Service request id","Professional email","Customer email","Service id","Date of request","Date of completion","Status","Rating","Remarks"]
-#     with open('servicerequest_report.csv', 'w', newline='') as f:
-#         csvwriter = csv.writer(f)
-#         csvwriter.writerow(header)
-#         content = []
-#         for req in Sevrequest.query.all(): 
-#             if req.sev_status == "closed":
-#                 csvwriter.writerow([
-#                             req.sevreq_id,
-#                             req.prof_email,
-#                             req.cust_email,
-#                             req.service_id,
-#                             req.date_of_request.strftime('%Y-%m-%d'),
-#                             req.date_of_completion.strftime('%Y-%m-%d'),
-#                             req.sev_status,
-#                             req.rating,
-#                             req.remarks,
-#                                   ])
-#                 item={'sevreq_id':req.sevreq_id,
-#                         'prof_email':req.prof_email,
-#                         'cust_email':req.cust_email,
-#                         'service_id':req.service_id,
-#                         'date_of_request':req.date_of_request.strftime('%Y-%m-%d'),
-#                         'date_of_completion':req.date_of_completion.strftime('%Y-%m-%d'),
-#                         'sev_status':req.sev_status,
-#                         'rating':req.rating,
-#                         'remarks':req.remarks,
-#                                    }
-#             content.append(item)
-#     print('user triggered async job executed')
-#     return {'header':header, 'content':content,'message': "User triggered async job executed"}
-
 @celery.task()
 def user_triggered_async_job(prof_email):
     header = ["Service request id", "Professional email", "Customer email", "Service id", "Date of request", "Date of completion", "Status", "Rating", "Remarks"]
@@ -244,33 +204,28 @@ def user_triggered_async_job(prof_email):
     
 
 # ------- To schedule the tasks --------#
-celery.conf.beat_schedule = {
-    'my_daily_task': {
-        'task': "main.daily_reminder_to_professional",
-        'schedule': crontab(hour=21, minute=0),
-    },
-    'my_quick_check_task': {
-        'task': "main.monthly_report_to_customers",
-        'schedule': crontab(day_of_month='1',hour=9, minute=0),
-    }
-}
-
-
 # celery.conf.beat_schedule = {
 #     'my_daily_task': {
 #         'task': "main.daily_reminder_to_professional",
-#         'schedule': crontab(minute='*/1'),  
+#         'schedule': crontab(hour=21, minute=0),
 #     },
-#     'my_monthly_task': {
+#     'my_quick_check_task': {
 #         'task': "main.monthly_report_to_customers",
-#         'schedule': crontab(minute='*/1'), 
-#     },
-#     'my_user_triggered_async_job': {
-#         'task': "main.user_triggered_async_job",
-#         'schedule': crontab(minute='*/1'),  
-#         'args': ['prof_email'],
-#     },
+#         'schedule': crontab(day_of_month='1',hour=9, minute=0),
+#     }
 # }
+
+
+celery.conf.beat_schedule = {
+    'my_daily_task': {
+        'task': "main.daily_reminder_to_professional",
+        'schedule': crontab(minute='*/1'),  
+    },
+    'my_monthly_task': {
+        'task': "main.monthly_report_to_customers",
+        'schedule': crontab(minute='*/1'), 
+    }
+}
 
 with app.app_context():
     db.create_all()

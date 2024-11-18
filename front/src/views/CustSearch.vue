@@ -34,6 +34,9 @@
             <p class="card-text">{{ result.description }}</p>
             <p class="card-text">Base Price:{{ result.price }}</p>
             <p class="card-text">Service Category:{{ result.category }}</p>
+            <p class="card-text">Duration:{{ result.time_req }} minutes</p>
+            <p class="card-text">Address:{{ result.address }}</p>
+            <p class="card-text">Pincode:{{ result.pincode }}</p>
             <div class="d-flex">
               <button @click.prevent="showNewServiceRequestForm = true"  class="red">
               + New Service Request
@@ -65,7 +68,7 @@
           </div>
           <div class="mb-3">
             <label for="service" class="form-label">Service:</label>
-            <select v-model="newServiceRequest.sev_id" name="service" id="service" class="form-control" required>
+            <select v-model="newServiceRequest.sev_id" name="service" id="service" class="form-control" required  >
               <option value="">Select a Service</option>
               <option v-for="service in services" :key="service.sev_id" :value="service.sev_id" >
                 {{ service.sev_name }}
@@ -135,8 +138,8 @@
         cust_email: this.email,
         prof_email: '',
         sev_id: '',
-        date_of_request: '',
-        date_of_completion: '',
+        date_of_request: null,
+        date_of_completion: null,
       },
       requests: [],
       services: [],
@@ -211,8 +214,8 @@
         cust_email: '',
         prof_email: '',
         sev_id: '',
-        date_of_request: '',
-        date_of_completion: '',
+        date_of_request: null,
+        date_of_completion: null,
       };
 
       this.showNewServiceRequestForm = false;
@@ -230,7 +233,7 @@
       if (!your_jwt_token) {
         throw new Error('JWT token is missing');
       }
-      const response = await axios.get(`http://127.0.0.1:8080/api/services`, {
+      const response = await axios.get(`http://127.0.0.1:8080/api/servicesforcust`, {
       params: {
         category: this.category,
         email: this.email 
@@ -273,15 +276,14 @@
     },
     getImageUrl(id) {
       return `/static/${id}.jpeg`;
-    },
-    
-formatDateOnly(date) {
+    },    
+    formatDateOnly(date) {
   if (!date) return '';
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
-},
+    },
 
 },
   computed: {

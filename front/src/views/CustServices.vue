@@ -71,7 +71,7 @@
               v-model="newServiceRequest.date_of_completion" 
               :format="formatDateOnly"
               class="form-control" 
-              required />
+              required/>
           </div>
 
           <div class="modal-footer">
@@ -101,8 +101,8 @@ data() {
         cust_email: this.email,
         prof_email: '',
         sev_id: '',
-        date_of_request: '',
-        date_of_completion: '',
+        date_of_request: null,
+        date_of_completion: null,
       },
       services: [] , 
       requests: [],
@@ -114,18 +114,27 @@ data() {
     await this.fetchProfessionals();
   },
   methods: {
-    async addNewServiceRequest() {
+  async addNewServiceRequest() {
   try {
     let your_jwt_token = localStorage.getItem('jwt');
     if (!your_jwt_token) {
       throw new Error('JWT token is missing');
     }
 
-    const formattedRequestDate = this.formatDateOnly(this.newServiceRequest.date_of_request);
-    const formattedCompletionDate = this.formatDateOnly(this.newServiceRequest.date_of_completion);
+    // Ensure that date_of_request and date_of_completion are valid Date objects
+    const requestDate = new Date(this.newServiceRequest.date_of_request);
+    const completionDate = new Date(this.newServiceRequest.date_of_completion);
+
+    // Validate the dates before formatting
+    if (isNaN(requestDate) || isNaN(completionDate)) {
+      throw new Error("Invalid date format");
+    }
+
+    const formattedRequestDate = this.formatDateOnly(requestDate);
+    const formattedCompletionDate = this.formatDateOnly(completionDate);
 
     const response = await axios.post(
-      `http://127.0.0.1:8080/api/create_sevrequest/${this.email}`, 
+      `http://127.0.0.1:8080/api/create_sevrequest/${this.email}`,
       { 
         "cust_email": this.email,
         "prof_email": this.newServiceRequest.prof_email,
@@ -149,13 +158,12 @@ data() {
         ...this.newServiceRequest,
         id: response.data.sevreq_id 
       });
-
-      this.newServiceRequest = {
+       this.newServiceRequest = {
         cust_email: '',
         prof_email: '',
         sev_id: '',
-        date_of_request: '',
-        date_of_completion: '',
+        date_of_request: null,
+        date_of_completion: null,
       };
 
       this.showNewServiceRequestForm = false;
@@ -166,14 +174,84 @@ data() {
     console.error('Error creating service request:', error);
     alert('An error occurred while creating the service request.');
   }
-},  
+},
+
+formatDateOnly(date) {
+  if (!date) return '';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+},
+
+//   async addNewServiceRequest() {
+//     try {
+//     let your_jwt_token = localStorage.getItem('jwt');
+//     if (!your_jwt_token) {
+//       throw new Error('JWT token is missing');
+//     }
+
+//     const formattedRequestDate = this.formatDateOnly(this.newServiceRequest.date_of_request);
+//     const formattedCompletionDate = this.formatDateOnly(this.newServiceRequest.date_of_completion);
+
+//     const response = await axios.post(
+//       `http://127.0.0.1:8080/api/create_sevrequest/${this.email}`, 
+//       { 
+//         "cust_email": this.email,
+//         "prof_email": this.newServiceRequest.prof_email,
+//         "sev_id": this.newServiceRequest.sev_id,
+//         "date_of_request": formattedRequestDate,
+//         "date_of_completion": formattedCompletionDate,
+//       }, 
+//       {
+//         headers: {
+//           'Authorization': `Bearer ${your_jwt_token}` 
+//         },
+//         withCredentials: true
+//       }
+//     );
+
+//     if (response.status === 201) {
+//       console.log("Service request created successfully:", response.data);
+//       await this.fetchServices();
+
+//       this.requests.push({
+//         ...this.newServiceRequest,
+//         id: response.data.sevreq_id 
+//       });
+
+//       // this.newServiceRequest = {
+//       //   cust_email: '',
+//       //   prof_email: '',
+//       //   sev_id: '',
+//       //   date_of_request: '',
+//       //   date_of_completion: '',
+//       // };
+
+//       this.showNewServiceRequestForm = false;
+//       location.reload();
+//     } else {
+//       alert("Failed to create service request: " + response.data.error);
+//     }
+//   } catch (error) {
+//     console.error('Error creating service request:', error);
+//     alert('An error occurred while creating the service request.');
+//   }
+// },  
+// formatDateOnly(date) {
+//   if (!date) return '';
+//   const year = date.getFullYear();
+//   const month = String(date.getMonth() + 1).padStart(2, '0');
+//   const day = String(date.getDate()).padStart(2, '0');
+//   return `${year}-${month}-${day}`;
+// },
   async fetchServices() {
     try {
       let your_jwt_token = localStorage.getItem('jwt');
       if (!your_jwt_token) {
         throw new Error('JWT token is missing');
       }
-      const response = await axios.get(`http://127.0.0.1:8080/api/services`, {
+      const response = await axios.get(`http://127.0.0.1:8080/api/servicesforcust`, {
       params: {
         category: this.category,
         email: this.email 
@@ -208,13 +286,7 @@ data() {
     getImageUrl(id) {
       return `/static/${id}.jpeg`;
     },
-formatDateOnly(date) {
-  if (!date) return '';
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-},
+
 
   },
   computed: {
@@ -239,6 +311,16 @@ formatDateOnly(date) {
     // Reset professional email when service changes
     'newServiceRequest.sev_id'() {
       this.newServiceRequest.prof_email = '';
+    },
+    // Optional: Watch and ensure the values remain valid Date objects
+    'newServiceRequest.date_of_request'(newValue) {
+      if (!(newValue instanceof Date)) {
+        this.newServiceRequest.date_of_request = new Date(newValue);
+      }
+    },
+    'newServiceRequest.date_of_completion'(newValue) {
+      if (!(newValue instanceof Date)) {
+        this.newServiceRequest.date_of_completion = new Date(newValue);}
     }
   }
 };

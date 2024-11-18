@@ -68,9 +68,9 @@
             <td>{{ service.remarks }}</td>
             <td>{{ service.sev_id }}</td>
             <td >
-              <button @click="acceptService(service.sevreq_id)" class="btn btn-success">Accept</button>
-              <button @click="rejectService(service.sevreq_id)" class="btn btn-danger">Reject</button>
-              <button @click="closeService(service.sevreq_id)" class="btn btn-warning">Close</button>
+              <button v-if ="service.sev_status === 'requested'"  @click="acceptService(service.sevreq_id)" class="btn btn-success">Accept</button>
+              <button v-if ="service.sev_status === 'requested'" @click="rejectService(service.sevreq_id)" class="btn btn-danger">Reject</button>
+              <button v-if ="service.sev_status === 'accepted'"  @click="closeService(service.sevreq_id)" class="btn btn-warning">Close</button>
             </td>
           </tr>
         </tbody>
@@ -127,11 +127,11 @@
   </div>
   
   <br><br>
-  <!-- Pending Service Requests : -->
+  <!-- Service Requests : -->
   <div>
     <div v-if="service_requests.length > 0">
       <section class="service-section mt-4">
-      <h3 class="text-white">Pending Service Requests </h3>
+      <h3 class="text-white"> Handle Service Requests </h3>
   
         <table class="table table-bordered">
           <thead>
@@ -158,11 +158,11 @@
               <td>{{ service_request.remarks }}</td>
               <td>{{ service_request.sev_id }}</td>
               <td>{{ service_request.rating }}</td>
-              <td >
-              <button @click="acceptService(service_request.sevreq_id)" class="btn btn-success">Accept</button>
-              <button @click="rejectService(service_request.sevreq_id)" class="btn btn-danger">Reject</button>
-              <button @click="closeService(service_request.sevreq_id)" class="btn btn-warning">Close</button>
-            </td>
+                <td >
+              <button v-if ="service_request.sev_status === 'requested'" @click="acceptService(service_request.sevreq_id)" class="btn btn-success">Accept</button>
+              <button v-if ="service_request.sev_status === 'requested'" @click="rejectService(service_request.sevreq_id)" class="btn btn-danger">Reject</button>
+              <button v-if ="service_request.sev_status === 'accepted'" @click="closeService(service_request.sevreq_id)" class="btn btn-warning"> Close </button>
+               </td>
             </tr>
           </tbody>
         </table>
