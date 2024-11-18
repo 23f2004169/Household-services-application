@@ -55,7 +55,7 @@
             <div class="card-body">
               <h5 class="card-title">Name:{{ service.sev_name }}</h5>
                <p><strong>Service id:</strong>{{service.sev_id}}</p>
-               <img :src="getImageUrl(service.sev_id)" alt="Service image" class="pic">
+               <img :src="getImageUrl(service.sev_name)" alt="Service image" class="pic">
               <p class="card-text">{{ service.description }}</p>
               <p><strong>Price:</strong> {{ service.price }}</p>
               <p><strong>Category:</strong> {{ service.category }}</p>

@@ -30,7 +30,7 @@
         <div v-for="result in serviceResults" :key="result.sev_id" class="card mb-4" style="width: 18rem;">
           <div class="card-body">
             <h5 class="card-title">Service:{{ result.sev_name }}</h5>
-            <img :src="getImageUrl(result.sev_id)" alt="Service image" class="pic">
+            <img :src="getImageUrl(result.sev_name)" alt="Service image" class="pic">
             <p class="card-text">{{ result.description }}</p>
             <p class="card-text">Base Price:{{ result.price }}</p>
             <p class="card-text">Service Category:{{ result.category }}</p>

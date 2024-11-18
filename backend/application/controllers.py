@@ -687,7 +687,17 @@ def create_service_request(cust_email):
         date_of_completion = data.get("date_of_completion")
         print(prof_email,sev_id,date_of_request,date_of_completion)
         print(type(date_of_request),type(date_of_completion))
-
+        # Get today's date
+        today = datetime.today()
+        formatted_today = today.strftime("%Y-%m-%d")
+        print("formatted_today",formatted_today,type(formatted_today))
+        # Check if the request date or completion date is before today
+        if date_of_request < formatted_today or date_of_completion < formatted_today:
+            print(date_of_request,date_of_completion)
+            return jsonify({
+                "message": "Dates must be today or in the future"
+            }), 400
+        
         new_request = Sevrequest(
             cust_email=cust_email,
             prof_email=prof_email,
@@ -711,7 +721,7 @@ def create_service_request(cust_email):
         return jsonify({
             "status": "error",
             "message": str(e)
-        }), 400
+        }), 401
     
 @app.route("/api/edit_sevreq/<int:sevreq_id>/<cust_email>", methods=["GET", "POST"])
 @jwt_required()
@@ -916,6 +926,8 @@ def get_professional_info(prof_email):
         "image": prof.image,
         "approval": prof.approval
     }
+    for i in prof_data:
+        print(prof_data[i])
     return jsonify(prof_data), 200
 
 @app.route("/api/prof_update/<prof_email>", methods=["GET", "POST"])

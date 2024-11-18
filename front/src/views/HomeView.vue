@@ -42,7 +42,7 @@
           <p style="color:#fff">Childcare services</p>
         </div>
         <div class="service">
-          <img src="/static/mealprep.jpeg" alt="Mealprep Services" />
+          <img src="/static/Meal prep service.jpeg" alt="Mealprep Services" />
           <p style="color:#fff">Mealprep service</p>
         </div>
         <div class="service">
@@ -50,7 +50,7 @@
           <p style="color:#fff">Handyman</p>
         </div>
         <div class="service">
-          <img src="/static/carwash.jpeg" alt="Plumbing Services" />
+          <img src="/static/Car Washing.jpeg" alt="Plumbing Services" />
           <p style="color:#fff">Carwash</p>
         </div>
         <div class="service">
@@ -58,7 +58,7 @@
           <p style="color:#fff">Specialized</p>
         </div>
         <div class="service">
-          <img src="/static/homeorg.jpeg" alt="Home Organization Services" />
+          <img src="/static/Cleaning and Organizing Service.jpeg" alt="Home Organization Services" />
           <p style="color:#fff">Home org</p>
         </div>
       </div>  

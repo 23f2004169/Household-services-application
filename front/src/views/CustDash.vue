@@ -18,7 +18,7 @@
             </div>
             <div class="service-card" @click="navigateToCategory('Lifestyle and Convenience Services') ">
                 <div class="badge">Trending Now</div>
-                <img src="/static/mealprep.jpeg" alt="Lifestyle and Convenience Services">
+                <img src="/static/Meal prep service.jpeg" alt="Lifestyle and Convenience Services">
                 <h3>Lifestyle and Convenience Services</h3>
             </div>
 
@@ -29,7 +29,7 @@
 
             <div class="service-card" @click="navigateToCategory('Cleaning and Organization Services')">
                 <div class="badge">Trending Now</div>
-                <img src="/static/homeorg.jpeg"  alt="Cleaning and Organization Services">
+                <img src="/static/Cleaning and Organizing Service.jpeg"  alt="Cleaning and Organization Services">
                 <h3>Cleaning and Organization Service</h3>
             </div>
         </div>

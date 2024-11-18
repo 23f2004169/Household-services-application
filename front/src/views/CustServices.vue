@@ -7,7 +7,7 @@
       <div v-if="services && services.length > 0">
         <div class="services">
           <div class="service-card" v-for="service in services" :key="service.sev_id">
-            <img :src="getImageUrl(service.sev_id)" alt="Service image" class="pic">
+            <img :src="getImageUrl(service.sev_name)" alt="Service image" class="pic">
             <h3>{{ service.sev_name }}</h3>
             <p>{{ service.description }}</p>
             <p>Price: Rs.{{ service.price }}</p>
@@ -84,6 +84,10 @@
   </div>
 </div>
 
+<div v-if="errorMessage" class="alert alert-danger">
+      {{ errorMessage }}
+</div>
+
 </template>
  
 <script>
@@ -107,6 +111,7 @@ data() {
       services: [] , 
       requests: [],
       professionals: [],
+      errorMessage: '',
     };
   },
   async created() {
@@ -167,12 +172,16 @@ data() {
       };
 
       this.showNewServiceRequestForm = false;
+    }
+    else if (response.status === 400) {
+      // Set error message in the component's state
+      this.errorMessage = "Dates must be today or in the future: " + response.data.message;
     } else {
-      alert("Failed to create service request: " + response.data.error);
+      this.errorMessage = "Failed to create service request: " + response.data.message;
     }
   } catch (error) {
     console.error('Error creating service request:', error);
-    alert('An error occurred while creating the service request.');
+    this.errorMessage = 'Make sure you entered the required fields while creating the service request.';
   }
 },
 
@@ -302,5 +311,12 @@ formatDateOnly(date) {
     width: 100px;
     height: 100px;
   }
+  .alert {
+  color: red;
+  padding: 10px;
+  background-color: #f8d7da;
+  border-radius: 5px;
+  margin-top: 10px;
+}
 </style>
   
