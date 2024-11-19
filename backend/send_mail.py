@@ -15,6 +15,3 @@ def init_mail():
     mail.init_app(app) 
     return mail
 
-# Usage in other files:
-# from send_mail import init_mail
-# mail = init_mail()

@@ -119,13 +119,13 @@
   
   <script>
   import CustSearchBar from "../components/CustSearchBar.vue";
-  import Datepicker from 'vue3-datepicker';
+  // import Datepicker from 'vue3-datepicker';
   import axios from 'axios';
   import CustBar from '../components/CustBar.vue';
   
   export default {
     name: "CustSearch",
-    components: {CustSearchBar,CustBar,Datepicker},
+    components: {CustSearchBar,CustBar},
     props: {email: {type: String, required: true,}, },
     data() {
       return {

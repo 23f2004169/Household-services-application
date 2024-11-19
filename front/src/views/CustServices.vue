@@ -92,11 +92,11 @@
  
 <script>
 import CustBar from '../components/CustBar.vue';
-import Datepicker from 'vue3-datepicker';
+// import Datepicker from 'vue3-datepicker';
 import axios from 'axios';
 
 export default {
-components: { CustBar, Datepicker },
+components: { CustBar},
 props: ['category', 'email'], 
 data() {
     return {
@@ -181,7 +181,7 @@ data() {
     }
   } catch (error) {
     console.error('Error creating service request:', error);
-    this.errorMessage = 'Make sure you entered the required fields while creating the service request.';
+    this.errorMessage = 'Make sure you entered the correct details while creating the service request.';
   }
 },
 

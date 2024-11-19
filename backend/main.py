@@ -1,4 +1,4 @@
-from flask import Flask,url_for
+from flask import Flask
 from application.database import db
 from datetime import timedelta
 from flask_jwt_extended import JWTManager #JWT  Authentication for user
@@ -8,7 +8,6 @@ from celery import Celery # For background task scheduling
 from send_mail import init_mail
 from flask_mail import Message
 from flask_sse import sse #For publishing events
-from functools import wraps
 from jinja2 import Template
 import csv
 
@@ -32,8 +31,8 @@ def create_app():
     app.config['CELERY_TIMEZONE'] = 'Asia/Kolkata'  # timezone for Celery tasks
 
     #Redis Cache: Configures Redis for caching. (helps speed up certain queries by storing the result in memory)
-    app.config["REDIS_URL"] = "redis://localhost" # URL for redis server
-    app.config['CACHE_TYPE'] = 'RedisCache'  # specify cache type as Redis
+    app.config["REDIS_URL"] = "redis://localhost" 
+    app.config['CACHE_TYPE'] = 'RedisCache'  # Redis as cache
     app.config['CACHE_REDIS_HOST'] = 'localhost'   # redis host for cache  
     app.config['CACHE_REDIS_PORT'] = 6379   # redis port for cache          
     app.config['CACHE_REDIS_DB'] = 0  # Database 0 for cache
@@ -59,8 +58,6 @@ def create_app():
 
 #App and JWT Initialization  
 app, jwt = create_app()
-
-
 
 from application.controllers import *
 
@@ -152,6 +149,19 @@ def monthly_report_to_customers():
     print('monthly report to users executed')
     return {"status": "success",'message': "Monthly report to users executed"}
 
+
+# ------- To schedule the tasks --------#
+celery.conf.beat_schedule = {
+    'my_daily_task': {
+        'task': "main.daily_reminder_to_professional",
+        'schedule': crontab(hour=21, minute=0),
+    },
+    'my_quick_check_task': {
+        'task': "main.monthly_report_to_customers",
+        'schedule': crontab(day_of_month='1',hour=9, minute=0),
+    }
+}
+
 @celery.task()
 def user_triggered_async_job(prof_email):
     header = ["Service request id", "Professional email", "Customer email", "Service id", "Date of request", "Date of completion", "Status", "Rating", "Remarks"]
@@ -191,20 +201,6 @@ def user_triggered_async_job(prof_email):
     print(f'Export job for {prof_email} completed.')
     return {'header': header, 'content': content, 'message': "User triggered async job executed"}
     
-
-# ------- To schedule the tasks --------#
-celery.conf.beat_schedule = {
-    'my_daily_task': {
-        'task': "main.daily_reminder_to_professional",
-        'schedule': crontab(hour=21, minute=0),
-    },
-    'my_quick_check_task': {
-        'task': "main.monthly_report_to_customers",
-        'schedule': crontab(day_of_month='1',hour=9, minute=0),
-    }
-}
-
-
 
 with app.app_context():
     db.create_all()

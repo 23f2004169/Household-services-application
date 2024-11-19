@@ -1,5 +1,5 @@
+<!-- App.vue provides a basic container with dynamic routing using <router-view>. -->
 <script>
-
 
 export default {
   name:'mainapp' ,
