@@ -1,12 +1,11 @@
 from flask import current_app as app #alias for current running app
-from flask import render_template,request,Flask,jsonify
+from flask import render_template,request,Flask,jsonify,send_from_directory
 from application.models import *
 from datetime import datetime,date
 import os,decimal,logging
 from werkzeug.security import generate_password_hash, check_password_hash 
 from flask_jwt_extended import create_access_token,get_jwt_identity,jwt_required,get_jwt,verify_jwt_in_request,current_user
 from werkzeug.utils import secure_filename
-from flask import send_from_directory, Flask, jsonify, request
 from sqlalchemy import or_
 from flask_caching import Cache
 from functools import wraps
@@ -36,20 +35,22 @@ def protected():
         print("Error in protected route:", str(e))
         logging.error(f"Token validation error: {str(e)}")
         return jsonify({"error": "Token validation failed"}), 500
+    
+    
 
 def role_required(allowed_roles):
-  def decorator(f):
-      @wraps(f)
-      def decorated_function(*args, **kwargs):
-          verify_jwt_in_request()
-          claims = get_jwt()
-          user_role = claims.get('role')
-          print(user_role,allowed_roles)
-          if not user_role or user_role not in allowed_roles:
-              return {'message': 'Your role is not authorized'}, 401
-          return f(*args, **kwargs)
-      return decorated_function
-  return decorator
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            verify_jwt_in_request()
+            claims = get_jwt()
+            user_role = claims.get('role')
+            print(user_role,allowed_roles)
+            if not user_role or user_role not in allowed_roles:
+                return {'message': 'Your role is not authorized'}, 401
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 
 @app.route("/api/login",methods=['GET','POST'])

@@ -7,8 +7,8 @@
   <div>
     <CustSearchBar @updateResults="setResults" />
 
-      <div v-if="profResults.length > 0" class="card-deck mt-4">
-        <div v-for="result in profResults":key="result.prof_email" class="card mb-4" style="width: 18rem;">
+      <div v-if="profResults.length > 0" class="services">
+        <div v-for="result in profResults":key="result.prof_email" class="service-card" style="width: 18rem;">
           <div class="card-body">
             <h5 class="card-title">{{ result.prof_email }}</h5>
             <img :src="'http://127.0.0.1:8080/api/view-image/' + result.prof_email" alt="Profile Picture" class="pic" />
@@ -25,9 +25,9 @@
           </div>
         </div>
       </div>
-
-      <div v-if="serviceResults.length > 0" class="card-deck mt-4">
-        <div v-for="result in serviceResults" :key="result.sev_id" class="card mb-4" style="width: 18rem;">
+      
+      <div v-if="serviceResults.length > 0" class="services">
+        <div v-for="result in serviceResults" :key="result.sev_id" class="service-card" style="width: 18rem;">
           <div class="card-body">
             <h5 class="card-title">Service:{{ result.sev_name }}</h5>
             <img :src="getImageUrl(result.sev_name)" alt="Service image" class="pic">
@@ -227,6 +227,13 @@
     alert('An error occurred while creating the service request.');
   }
 }, 
+formatDateOnly(date) {
+  if (!date) return '';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+    },
     async fetchServices() {
     try {
       let your_jwt_token = localStorage.getItem('jwt');
@@ -277,13 +284,6 @@
     getImageUrl(id) {
       return `/static/${id}.jpeg`;
     },    
-    formatDateOnly(date) {
-  if (!date) return '';
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-    },
 
 },
   computed: {
@@ -311,9 +311,45 @@
     }
   }
 };
-  </script>
+</script>
   
 <style scoped>
+.modal.show {
+  display: block;
+}
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .services {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  .service-card {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+  }
+  .service-card img {
+    width: 120px;
+    height: 100px;
+    margin-bottom: 10px;
+  }
+  .pic {
+    border-radius: 100%;
+    margin-bottom: 12px;
+    width: 120px;
+    height: 100px;
+  }
+
   .card-deck {
     display: flex;
     flex-wrap: wrap;
@@ -328,11 +364,6 @@
       table {margin-top: 20px;}.form-container {margin-top: 30px;}.navbar-brand {font-weight: bold;}.navbar, .offcanvas-header, .offcanvas-body {background-color: #f0f2ec;}
       .navbar-brand, .nav-link, .offcanvas-title {color: #020b17;}
       .nav-link.active {font-weight: bold;color: #e98e0f !important;}.btn-primary, .btn-outline-success {margin-top: 10px;}
-      .pic {
-    border-radius: 100%;
-    margin-bottom: 12px;
-    width: 100px;
-    height: 100px;
-  }
+     
 </style>
   

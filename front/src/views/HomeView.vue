@@ -16,9 +16,8 @@
       <div class="horizontal-section">
         <!-- Logo Section -->
         <div class="logo-section">
-          <img src="/static/logo.jpeg" alt="Homewhiz Logo" class="logo" />
-          <p class="info-text" style="color:#fff">30+  Happy Users & Verified Experts in 20+ Services</p>
-          <h4 class="info-text" style="color:#fff">Our top services include:</h4>
+
+          <img src="/static/logo.jpeg" alt="Homewhiz Logo" class="logo" />      
         </div>
 
         <!-- Information Section -->
@@ -37,6 +36,7 @@
 
       <!-- Services Section -->
       <div class="services">
+
         <div class="service">
           <img src="/static/childcare.jpeg" alt="Childcare Services" />
           <p style="color:#fff">Childcare services</p>
@@ -87,7 +87,7 @@
 .header {
   flex-wrap: wrap;
   background-color:rgb(63, 35, 18);
-  padding: 10px;
+  padding: 15px;
   text-align: center;
 }
 
@@ -115,7 +115,7 @@
 }
 
 .logo {
-  width: 300px;
+  width: 400px;
   height: auto;
   margin-bottom: 20px;
 }
@@ -150,7 +150,7 @@
 }
 
 .info-text {
-  font-size: 18px;
+  font-size: 20px;
   color: black;
   font-family: 'Georgia', serif; 
 }
@@ -188,4 +188,5 @@
   font-size: 1.2rem;
   margin-top: 100px;
   height: auto;
-}</style>
+}
+</style>

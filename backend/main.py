@@ -45,7 +45,7 @@ def create_app():
     result_backend=app.config["CELERY_RESULT_BACKEND"],
     timezone=app.config["CELERY_TIMEZONE"],
     broker_connection_retry_on_startup=app.config["BROKER_CONNECTION_RETRY_ON_STARTUP"]
-    )
+    ) 
     celery.conf.timezone = 'Asia/Kolkata'
     class ContextTask(celery.Task):
       def __call__(self, *args, **kwargs):
@@ -204,28 +204,28 @@ def user_triggered_async_job(prof_email):
     
 
 # ------- To schedule the tasks --------#
-# celery.conf.beat_schedule = {
-#     'my_daily_task': {
-#         'task': "main.daily_reminder_to_professional",
-#         'schedule': crontab(hour=21, minute=0),
-#     },
-#     'my_quick_check_task': {
-#         'task': "main.monthly_report_to_customers",
-#         'schedule': crontab(day_of_month='1',hour=9, minute=0),
-#     }
-# }
-
-
 celery.conf.beat_schedule = {
     'my_daily_task': {
         'task': "main.daily_reminder_to_professional",
-        'schedule': crontab(minute='*/1'),  
+        'schedule': crontab(hour=21, minute=0),
     },
-    'my_monthly_task': {
+    'my_quick_check_task': {
         'task': "main.monthly_report_to_customers",
-        'schedule': crontab(minute='*/1'), 
+        'schedule': crontab(day_of_month='1',hour=9, minute=0),
     }
 }
+
+
+# celery.conf.beat_schedule = {
+#     'my_daily_task': {
+#         'task': "main.daily_reminder_to_professional",
+#         'schedule': crontab(minute='*/1'),  
+#     },
+#     'my_monthly_task': {
+#         'task': "main.monthly_report_to_customers",
+#         'schedule': crontab(minute='*/1'), 
+#     }
+# }
 
 with app.app_context():
     db.create_all()

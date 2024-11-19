@@ -275,7 +275,7 @@ formatDateOnly(date) {
 </script>
   
     
-<style>
+<style scoped>
 .modal.show {
   display: block;
 }
@@ -295,20 +295,20 @@ formatDateOnly(date) {
     background-color: #fff;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    width: 200px;
+    width: 300px;
     padding: 20px;
     text-align: center;
     position: relative;
   }
   .service-card img {
-    width: 100px;
+    width: 120px;
     height: 100px;
     margin-bottom: 10px;
   }
   .pic {
     border-radius: 100%;
     margin-bottom: 12px;
-    width: 100px;
+    width: 120px;
     height: 100px;
   }
   .alert {
