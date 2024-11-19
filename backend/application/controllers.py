@@ -1,4 +1,4 @@
-from flask import current_app as app #alias for current running app
+from flask import current_app as app 
 from flask import render_template,request,Flask,jsonify,send_from_directory
 from application.models import *
 from datetime import datetime,date
@@ -12,7 +12,6 @@ from functools import wraps
 
 cache = Cache(app)
 
-
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -21,23 +20,17 @@ def home():
 @jwt_required()
 def protected():
     try:
-        print("try")
         token = get_jwt()
         if not token:
             return jsonify({"error": "Missing token"}), 401   
         current_user = get_jwt_identity()
         if not current_user:
-            print("Invalid token format")
             return jsonify({"error": "Invalid token format"}), 422 
-        return jsonify({"message": f"Hello, {current_user}!"}), 200
-      
+        return jsonify({"message": f"Hello, {current_user}!"}), 200 
     except Exception as e:
-        print("Error in protected route:", str(e))
         logging.error(f"Token validation error: {str(e)}")
         return jsonify({"error": "Token validation failed"}), 500
     
-    
-
 def role_required(allowed_roles):
     def decorator(f):
         @wraps(f)
@@ -51,7 +44,6 @@ def role_required(allowed_roles):
             return f(*args, **kwargs)
         return decorated_function
     return decorator
-
 
 @app.route("/api/login",methods=['GET','POST'])
 def login():
@@ -75,7 +67,6 @@ def login():
 
         if admin_from_db and check_password_hash(admin_from_db.admin_password, password):
                 access_token = create_access_token(identity=admin_from_db.admin_email,additional_claims={'role':'admin'})
-                print(access_token)
                 return {"message": "login successful","access_token":access_token,"role":"admin"}
         return jsonify(error="Authentication failed"), 401  
     
@@ -137,7 +128,6 @@ def cust_reg():
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['STATIC_FOLDER'] = "static"
 app.config['REPORT_FOLDER'] = "reports"  
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def allowed_file(filename):
@@ -162,8 +152,7 @@ def prof_reg():
       
     if image_file and allowed_file(image_file.filename):
         image_filename=prof_email.split("@")[0]+"."+ image_file.filename.split(".")[-1]
-        image_file.save(os.path.join(app.config['UPLOAD_FOLDER'], image_filename) )
-          
+        image_file.save(os.path.join(app.config['UPLOAD_FOLDER'], image_filename) )         
     if document_file and allowed_file(document_file.filename):
         document_filename=prof_email.split("@")[0]+"."+ document_file.filename.split(".")[-1]
         document_file.save(os.path.join(app.config['UPLOAD_FOLDER'], document_filename) ) 
@@ -236,9 +225,8 @@ def export_professional(prof_email):
     from main import user_triggered_async_job  
     if not prof_email:
         return jsonify({'error': 'Professional email is required'}), 400
-    print("before")
     var=user_triggered_async_job.delay(prof_email)
-    print("after",var)
+    print("triggered job",var)
     return jsonify({'message': 'Export job started successfully, you will be notified when it completes.'}), 202
 
 @app.route('/api/reg_servicenames', methods=['GET'])
@@ -253,7 +241,7 @@ def reg_servicenames():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-#===================================FETCH====================================================================================================
+#===========================================ADMIN====================================================================================================
 @app.route('/api/services', methods=['GET'])
 @jwt_required()
 @role_required(['admin'])
@@ -272,7 +260,6 @@ def get_services():
                 'pincode' : service.pincode
             } for service in services
         ]
-        print(services_list)
         return jsonify(services_list), 200
     
     except Exception as e:
@@ -289,7 +276,6 @@ def get_professionals():
             professionals= Professional.query.filter_by(prof_email=prof).all()
         else:
             professionals = Professional.query.all()
-        # Prepare a list of professionals in JSON format
         professionals_list = [
             {
                 'prof_email': professional.prof_email,
@@ -305,7 +291,6 @@ def get_professionals():
                 'rating': professional.rating
             } for professional in professionals
         ]
-        # Return the list of professionals as a JSON response
         return jsonify(professionals_list), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -317,9 +302,8 @@ def get_professionals():
 def get_service_requests():
     try:
         service_requests = Sevrequest.query.all()
-        # Prepare a list of service requests in JSON format
         service_requests_list = [
-            {
+            {   
                 'sevreq_id': service_request.sevreq_id,
                 'prof_email': service_request.prof_email,
                 'cust_email': service_request.cust_email,
@@ -346,7 +330,6 @@ def get_customers():
             customers = Customer.query.filter_by(cust_email=cust).all()
         else:
             customers = Customer.query.all()
-        # Prepare a list of customers in JSON format
         customers_list = [
             {
                 'cust_email': customer.cust_email,
@@ -356,12 +339,10 @@ def get_customers():
                 'phone': customer.phone
             } for customer in customers
         ]
-        # Return the list of customers as a JSON response
         return jsonify(customers_list), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-#===========================================ADMIN====================================================================================================
 @app.route("/api/create_sev", methods=["POST"])
 @jwt_required()
 @role_required(['admin'])
@@ -522,6 +503,7 @@ def admin_delete_prof(cust_email):
     db.session.delete(professionals)
     db.session.commit()
     cache.delete_memoized(get_professionals)
+    cache.delete_memoized(get_service_requests)
     return jsonify({"message": "Professional deleted successfully"}), 200
 
 @app.route("/api/customer/block/<cust_email>", methods=["POST"])
@@ -546,6 +528,7 @@ def admin_delete_cust(cust_email):
     db.session.delete(customers)
     db.session.commit()
     cache.delete_memoized(get_customers)
+    cache.delete_memoized(get_service_requests)
     return jsonify({"message": "Customer deleted successfully"}), 200
 
 @app.route("/api/admin_summary", methods=["GET"])
@@ -581,11 +564,7 @@ def admin_search():
             Professional.experience.ilike(f"%{query}%"),
             Professional.address.ilike(f"%{query}%"),
             Professional.pincode.ilike(f"%{query}%"),
-           Professional.rating.ilike(f"%{query}%"),
-
-        )
-    ).all()
-
+           Professional.rating.ilike(f"%{query}%"),)).all()
     if results:
         result_list = [{
             "prof_email": result.prof_email,
@@ -599,10 +578,7 @@ def admin_search():
             "blocked": result.blocked,
             "approval": result.approval,
         } for result in results]
-
         return jsonify({"results": result_list}), 200
-    
-    # Return an empty result if no matches found
     return jsonify({"results": []}), 200
 
 #=========================================CUSTOMER ============================================================================================
@@ -616,7 +592,6 @@ def get_servicesforcust():
             services = Service.query.filter_by(category=category).all()
         else:
             services = Service.query.all()
-
         services_list = [
             {   'sev_id': service.sev_id,
                 'sev_name': service.sev_name,
@@ -646,7 +621,6 @@ def update_customer(cust_email):
             customer_to_update.pincode = data.get("pincode", customer_to_update.pincode)            
             db.session.commit()
             cache.delete_memoized(get_customer_info, cust_email)                
-
             updated_customer_data = {
                 "cust_email": customer_to_update.cust_email,
                 "phone": customer_to_update.phone,
@@ -657,7 +631,7 @@ def update_customer(cust_email):
         else:
             return jsonify({"error": "Customer not found"}), 404
     except Exception as e:
-        db.session.rollback()  # Rollback in case of an error
+        db.session.rollback() 
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/customer/<cust_email>", methods=["GET"])
@@ -688,17 +662,13 @@ def create_service_request(cust_email):
         date_of_completion = data.get("date_of_completion")
         print(prof_email,sev_id,date_of_request,date_of_completion)
         print(type(date_of_request),type(date_of_completion))
-        # Get today's date
         today = datetime.today()
         formatted_today = today.strftime("%Y-%m-%d")
-        print("formatted_today",formatted_today,type(formatted_today))
-        # Check if the request date or completion date is before today
         if date_of_request < formatted_today or date_of_completion < formatted_today:
             print(date_of_request,date_of_completion)
             return jsonify({
                 "message": "Dates must be today or in the future"
-            }), 400
-        
+            }), 400     
         new_request = Sevrequest(
             cust_email=cust_email,
             prof_email=prof_email,
@@ -737,9 +707,7 @@ def update_service_request(sevreq_id,cust_email):
                 "date_of_request": service_request.date_of_request,
                 "date_of_completion": service_request.date_of_completion,
                 "sev_status": service_request.sev_status,
-                "remarks": service_request.remarks
-            }
-            
+                "remarks": service_request.remarks}            
             return jsonify(service_data), 200
         else:
             return jsonify({"error": "Service not found"}), 404
@@ -761,14 +729,12 @@ def update_service_request(sevreq_id,cust_email):
                     "date_of_request": sev_to_update.date_of_request,
                     "date_of_completion": sev_to_update.date_of_completion,
                     "sev_status": sev_to_update.sev_status,
-                    "remarks": sev_to_update.remarks
-                }
-                
+                    "remarks": sev_to_update.remarks}
                 return jsonify({"message": "Service updated successfully", "service_request": updated_service_data}), 200
             else:
                 return jsonify({"error": "Service not found"}), 404
         except Exception as e:
-            db.session.rollback()  # Rollback in case of an error
+            db.session.rollback()  
             return jsonify({"error": str(e)}), 500
 
 @app.route("/api/delete_sevreq/<int:sevreq_id>", methods=["DELETE"])
@@ -778,13 +744,11 @@ def delete_service_request(sevreq_id):
     try:
         sev_to_delete = Sevrequest.query.get(sevreq_id)
         if not sev_to_delete:
-            return jsonify({"error": "Service request not found"}), 404
-        
+            return jsonify({"error": "Service request not found"}), 404   
         db.session.delete(sev_to_delete)
         db.session.commit()
         cache.delete_memoized(cust_service_requests, sev_to_delete.cust_email)
-        return jsonify({"message": "Service request deleted successfully"}), 200
-    
+        return jsonify({"message": "Service request deleted successfully"}), 200   
     except Exception as e:
         db.session.rollback()  
         return jsonify({"error": str(e)}), 500
@@ -837,8 +801,7 @@ def cust_rate_sev(sevreq_id):
                     "remarks": sevreq.remarks,
                     "sev_id": sevreq.sev_id
                     }  
-            return jsonify({"message": "Service updated successfully", "service_request": rate_sevreq_list}), 200
-            
+            return jsonify({"message": "Service rated successfully", "service_request": rate_sevreq_list}), 200
         except (decimal.InvalidOperation, TypeError):
             return jsonify({"error": "Invalid rating value"}), 400
     else:
@@ -856,7 +819,7 @@ def close_service_request(sevreq_id):
     sevreq.sev_status = "closed"
     db.session.commit()
     cache.delete_memoized(cust_service_requests, sevreq.cust_email)
-    return jsonify({"message": "Professional approval status updated successfully"}), 200
+    return jsonify({"message": "Service request closed successfully"}), 200
 
 @app.route("/api/cust_search", methods=["POST"])
 @jwt_required()
@@ -864,16 +827,12 @@ def close_service_request(sevreq_id):
 def cust_search():
     data = request.get_json()
     query = data.get("query", "").strip()
-
     sresults = Service.query.filter(
         or_(
             Service.sev_name.ilike(f"%{query}%"),
             Service.category.ilike(f"%{query}%"),
             Service.address.ilike(f"%{query}%"),
-            Service.pincode.ilike(f"%{query}%")
-        )
-    ).all()
-
+            Service.pincode.ilike(f"%{query}%") )).all()
     if sresults:
         result_list = [{"sev_id": result.sev_id,
                         "sev_name": result.sev_name,
@@ -884,18 +843,17 @@ def cust_search():
                         "address": result.address,
                         "pincode": result.pincode} for result in sresults]
         return jsonify({"sresults": result_list}), 200
-
     return jsonify({"sresults": [], "message": "No sresults found"}), 200
 
 @app.route("/api/cust_summary/<cust_email>", methods=["GET"])
 @jwt_required()
 @role_required(['cust'])
 def cust_summary(cust_email):
-    try:
+    cache.delete_memoized(cust_service_requests)
+    try:       
         requests = Sevrequest.query.filter_by(cust_email=cust_email).all()
         if not requests:
-            return jsonify({"message": "No service requests found for this professional."}), 404
-        
+            return jsonify({"message": "No service requests found for this customer."}), 404        
         requests_json = [request.to_json() for request in requests]
         return jsonify({
             "email": cust_email,
@@ -927,8 +885,6 @@ def get_professional_info(prof_email):
         "image": prof.image,
         "approval": prof.approval
     }
-    for i in prof_data:
-        print(prof_data[i])
     return jsonify(prof_data), 200
 
 @app.route("/api/prof_update/<prof_email>", methods=["GET", "POST"])
@@ -946,9 +902,9 @@ def prof_update(prof_email):
                            "address": prof.address,
                            "pincode": prof.pincode,
                            "description": prof.description,
-                           "rating": prof.rating}
-        return jsonify(prof_data), 200
-    
+                           "rating": prof.rating }
+        return jsonify(prof_data), 200  
+     
     if request.method == "POST":
         data = request.get_json() 
         prof_email= data.get("prof_email")
@@ -960,8 +916,7 @@ def prof_update(prof_email):
         phone = data.get("phone")
         update_prof = Professional.query.get(prof_email)
         if not update_prof:
-            return jsonify({"error": "Professional not found"}), 404
-        
+            return jsonify({"error": "Professional not found"}), 404       
         update_prof.prof_email = prof_email
         update_prof.service_type = service_type
         update_prof.experience = experience
@@ -989,14 +944,9 @@ def prof_sevs_today(prof_email):
         prof= Professional.query.get(prof_email)
         sevreqs = Sevrequest.query.all()
         current_date = datetime.now().date()
-        print("today",current_date,type(current_date))
         formatted_date = current_date.strftime("%Y-%m-%d")
-        print(formatted_date,type(formatted_date)) 
-        # for i in sevreqs:
-        #     print(i.date_of_request) 
         service_requests_today = [i for i in sevreqs if i.date_of_request== formatted_date and i.prof_email == prof.prof_email]
-        requests_today= [
-          {
+        requests_today= [ {   
               "sevreq_id":  requests_today.sevreq_id,
               "date_of_request":requests_today.date_of_request,
               "date_of_completion":requests_today.date_of_completion,
@@ -1005,10 +955,8 @@ def prof_sevs_today(prof_email):
               "prof_email":requests_today.prof_email,
               "cust_email":requests_today.cust_email,
               "sev_id":requests_today.sev_id
-          }for requests_today in service_requests_today
-          ]
+          }for requests_today in service_requests_today]
         return jsonify(requests_today), 200
-    
     except Exception as e:
         return jsonify({"error": str(e)}), 500  
   
@@ -1021,8 +969,7 @@ def prof_closed_sevs(prof_email):
         prof = Professional.query.get(prof_email)
         sevreqs = Sevrequest.query.all()
         closed_service_requests = [i for i in sevreqs if i.sev_status == "closed" and i.prof_email == prof.prof_email]
-        closed_requests= [
-          {
+        closed_requests= [{
               "sevreq_id":  closed_requests.sevreq_id,
               "date_of_request":closed_requests.date_of_request,
               "date_of_completion":closed_requests.date_of_completion,
@@ -1032,10 +979,8 @@ def prof_closed_sevs(prof_email):
               "cust_email":closed_requests.cust_email,
               "sev_id":closed_requests.sev_id,
               "rating":closed_requests.rating
-          }for closed_requests in closed_service_requests
-          ]
-        return jsonify(closed_requests), 200
-    
+          }for closed_requests in closed_service_requests]
+        return jsonify(closed_requests), 200   
     except Exception as e:
         return jsonify({"error": str(e)}), 500  
   
@@ -1051,8 +996,7 @@ def prof_pending_sevs(prof_email):
         current_date = datetime.now().date()
         formatted_date = current_date.strftime("%Y-%m-%d")
         service_requests = [i for i in sevreqs if  i.sev_status in["requested", "accepted"] and i.date_of_completion>= formatted_date and i.prof_email == prof.prof_email]
-        pending_requests= [
-          {
+        pending_requests= [{
               "sevreq_id":  service_request.sevreq_id,
               "date_of_request":service_request.date_of_request,
               "date_of_completion":service_request.date_of_completion,
@@ -1062,10 +1006,8 @@ def prof_pending_sevs(prof_email):
               "cust_email":service_request.cust_email,
               "sev_id":service_request.sev_id,
               "rating":service_request.rating
-          }for service_request in service_requests
-          ]
-        return jsonify(pending_requests), 200
-    
+          }for service_request in service_requests]
+        return jsonify(pending_requests), 200   
     except Exception as e:
         return jsonify({"error": str(e)}), 500  
 
@@ -1081,7 +1023,6 @@ def prof_accept_sev(sevreq_id):
         cache.delete_memoized(prof_pending_sevs, sevreq.prof_email)
         cache.delete_memoized(prof_sevs_today, sevreq.prof_email)
         return jsonify({"message": "Service request accepted"}), 200
-    
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -1096,8 +1037,7 @@ def prof_reject_sev(sevreq_id):
         cache.delete_memoized(prof_closed_sevs, sevreq.prof_email)
         cache.delete_memoized(prof_pending_sevs, sevreq.prof_email)
         cache.delete_memoized(prof_sevs_today, sevreq.prof_email)
-        return jsonify({"message": "Service request rejected"}), 200
-    
+        return jsonify({"message": "Service request rejected"}), 200    
     except Exception as e:  
         return jsonify({"error": str(e)}), 500  
     
@@ -1112,8 +1052,7 @@ def prof_close_sev(sevreq_id):
         cache.delete_memoized(prof_closed_sevs, sevreq.prof_email)
         cache.delete_memoized(prof_pending_sevs, sevreq.prof_email)
         cache.delete_memoized(prof_sevs_today, sevreq.prof_email)
-        return jsonify({"message": "Service request closed"}), 200
-    
+        return jsonify({"message": "Service request closed"}), 200  
     except Exception as e:
         return jsonify({"error": str(e)}), 500  
     
@@ -1133,17 +1072,14 @@ def prof_rating(prof_email):
                 count += 1
         average_rating = round(rating /count, 2) if prof.prof_req else 0
         prof.rating=average_rating
-        print(prof.rating)
         db.session.commit()
-        return jsonify(prof.rating), 200
-    
+        return jsonify(prof.rating), 200    
     except Exception as e:
         return jsonify({"error":str(e)}),500
 
 @app.route('/api/reupload-document/<prof_email>', methods=['POST'])
 def reupload_document(prof_email):
     professional = Professional.query.filter_by(prof_email=prof_email).first()
-    print(professional.prof_email)
     if not professional:
         return jsonify({"error": "Professional not found"}), 404
     if professional.approval != "rejected":
@@ -1157,7 +1093,6 @@ def reupload_document(prof_email):
     document_file.save(document_path)
     professional.file = new_document_filename
     db.session.commit()
-
     return jsonify({"msg": "Document re-upload successful"}), 200
 
 @app.route("/api/prof_summary/<prof_email>", methods=["GET"])
@@ -1167,8 +1102,7 @@ def prof_summary(prof_email):
     try:
         requests = Sevrequest.query.filter_by(prof_email=prof_email).all()
         if not requests:
-            return jsonify({"message": "No service requests found for this professional."}), 404
-        
+            return jsonify({"message": "No service requests found for this professional."}), 404       
         requests_json = [request.to_json() for request in requests]
         return jsonify({
             "email": prof_email,
@@ -1187,9 +1121,7 @@ def prof_search(prof_email):
         Sevrequest.prof_email == prof_email,
         or_(
             Sevrequest.sev_status.ilike(f"%{query}%"),
-            Sevrequest.rating.ilike(f"%{query}%")
-        )
-    ).all()
+            Sevrequest.rating.ilike(f"%{query}%") )).all()
     if results:
         result_list = [{
             "sevreq_id": result.sevreq_id,
@@ -1204,7 +1136,6 @@ def prof_search(prof_email):
         return jsonify({"results": result_list}), 200
     return jsonify({"results": [], "message": "No results found"}), 200
 
-#implement drop down feature, all in one search, add multiple filters -all 4 by name or search text(closed requests)
 
 
 

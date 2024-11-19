@@ -1,45 +1,47 @@
 from flask import Flask,url_for
 from application.database import db
 from datetime import timedelta
-from flask_jwt_extended import JWTManager
-from flask_cors import CORS
+from flask_jwt_extended import JWTManager #JWT  Authentication for user
+from flask_cors import CORS  #Allows cross-origin requests
 from celery.schedules import crontab
-from celery import Celery
+from celery import Celery # For background task scheduling
 from send_mail import init_mail
 from flask_mail import Message
-from flask_sse import sse
+from flask_sse import sse #For publishing events
 from functools import wraps
 from jinja2 import Template
 import csv
 
+#sets up the Celery object for task scheduling and background processing
 celery = Celery('Application')
 
 def create_app():
-    app = Flask(__name__)    
-    app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///Householdservices_db.db"
-    # Setup the Flask-JWT-Extended extension
+    app = Flask(__name__)   #Initializes the Flask application 
+    app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///Householdservices_db.db" #Configures SQLite as the database
+    #JWT Configuration:
     app.config["JWT_SECRET_KEY"] = "3DFGHVKxdgfbchsvdjesvfjfdrbbbby3fuyb" 
     app.config['JWT_COOKIE_SECURE'] = False
     app.config['JWT_TOKEN_LOCATION'] = ['headers']
     app.config['JWT_COOKIE_CSRF_PROTECT'] = False
-    
-    app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/1'
-    app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/2'
-    app.config['BROKER_CONNECTION_RETRY_ON_STARTUP'] = True
-    app.config['CELERY_TIMEZONE'] = 'Asia/Kolkata'
-
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1) 
-    
-    app.config["REDIS_URL"] = "redis://localhost"
-    
-    app.config['CACHE_TYPE'] = 'RedisCache'
-    app.config['CACHE_REDIS_HOST'] = 'localhost'      
-    app.config['CACHE_REDIS_PORT'] = 6379             
-    app.config['CACHE_REDIS_DB'] = 0
+
+    #Celery Config: Configures Celery to use Redis as both the broker and result backend
+    app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/1' # redis as broker, DB 1
+    app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/2' # redis as result backend, DB 2
+    app.config['BROKER_CONNECTION_RETRY_ON_STARTUP'] = True # ensure Celery retries connection if redis isn't up
+    app.config['CELERY_TIMEZONE'] = 'Asia/Kolkata'  # timezone for Celery tasks
+
+    #Redis Cache: Configures Redis for caching. (helps speed up certain queries by storing the result in memory)
+    app.config["REDIS_URL"] = "redis://localhost" # URL for redis server
+    app.config['CACHE_TYPE'] = 'RedisCache'  # specify cache type as Redis
+    app.config['CACHE_REDIS_HOST'] = 'localhost'   # redis host for cache  
+    app.config['CACHE_REDIS_PORT'] = 6379   # redis port for cache          
+    app.config['CACHE_REDIS_DB'] = 0  # Database 0 for cache
+    #CORS:Allows the frontend on localhost:5173 to interact with the backend API
     CORS(app, supports_credentials=True, origins="http://localhost:5173")
-    jwt = JWTManager(app)
-    db.init_app(app)
-    app.app_context().push()
+    jwt = JWTManager(app) #initializes JWT handling for the app.
+    db.init_app(app) #initializes SQLAlchemy with the app
+    app.app_context().push() 
     celery.conf.update(
     broker_url=app.config["CELERY_BROKER_URL"],
     result_backend=app.config["CELERY_RESULT_BACKEND"],
@@ -47,47 +49,34 @@ def create_app():
     broker_connection_retry_on_startup=app.config["BROKER_CONNECTION_RETRY_ON_STARTUP"]
     ) 
     celery.conf.timezone = 'Asia/Kolkata'
+    #ensures that the Celery tasks have access to the Flask app context
     class ContextTask(celery.Task):
       def __call__(self, *args, **kwargs):
           with app.app_context():
               return self.run(*args, **kwargs)
-
     celery.Task = ContextTask
     return app, jwt
-   
+
+#App and JWT Initialization  
 app, jwt = create_app()
-
-#creates app instance -object of flask
-# app=Flask(__name__)
-
-
-# CORS(app,supports_credentials=True)
-
-# jwt = JWTManager(app)
-
-# db.init_app(app=app) #object.method(parameter)
-
-# app.app_context().push()
 
 
 
 from application.controllers import *
 
-# ------- Flask sse-------( server sent events) for publishing events /alerts to users --frontend-in vue mounted :subscribe the event #
-app.register_blueprint(sse, url_prefix='/stream')
+# Flask sse( server sent events): For real-time communication between the server and the client, which is registered as a blueprint
+app.register_blueprint(sse, url_prefix='/stream')     #frontend will need to subscribe to /stream
 
-mail = init_mail()
+mail = init_mail() #initializes MailHog
 
 #SCHEDULED TASKS (CELERY)
 @celery.task()
 def daily_reminder_to_professional():
     profs=Professional.query.all()
     for prof in profs:
-        print(prof.prof_email)
         flag=False
         for req in prof.prof_req:
             if req.sev_status =='requested':
-                print(req.sev_status)
                 flag=True
                 break                
         if flag:
@@ -111,7 +100,7 @@ def daily_reminder_to_professional():
             sse.publish({"message": "You have pending service requests, please accept or reject the request!", "color":"alert alert-primary" },type=prof.prof_email)
     print('daily reminder to professionals executed')
     return {'message': 'daily reminder to professionals executed',"status": "success"}
-###app,app_context
+
 @celery.task()
 def monthly_report_to_customers():
     custs=Customer.query.all()
@@ -216,21 +205,11 @@ celery.conf.beat_schedule = {
 }
 
 
-# celery.conf.beat_schedule = {
-#     'my_daily_task': {
-#         'task': "main.daily_reminder_to_professional",
-#         'schedule': crontab(minute='*/1'),  
-#     },
-#     'my_monthly_task': {
-#         'task': "main.monthly_report_to_customers",
-#         'schedule': crontab(minute='*/1'), 
-#     }
-# }
 
 with app.app_context():
     db.create_all()
     if __name__=='__main__':
         app.run(host="0.0.0.0", port=8080)
 
-###
+
 

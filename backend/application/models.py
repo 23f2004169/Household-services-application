@@ -24,7 +24,7 @@ class Professional(db.Model):
     file=db.Column(db.String)
     phone=db.Column(db.String)
     blocked = db.Column(db.Integer, default=0)
-    approval = db.Column(db.String, default='pending')      #pending, approved, rejected
+    approval = db.Column(db.String, default='pending')  #pending, approved, rejected
     rating=db.Column(db.Numeric(1,1), default=0)
     prof_req = db.relationship('Sevrequest', backref='professional', cascade='all, delete-orphan')
     def to_json(self):

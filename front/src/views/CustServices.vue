@@ -170,7 +170,7 @@ data() {
         date_of_request: null,
         date_of_completion: null,
       };
-
+      location.reload();
       this.showNewServiceRequestForm = false;
     }
     else if (response.status === 400) {
