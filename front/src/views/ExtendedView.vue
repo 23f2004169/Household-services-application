@@ -1,15 +1,15 @@
 <template>
     <div class="container mt-5">
       <MenuBar />
+      <!-- Professionals -->
       <h2 class="my-4 text-white">Professionals</h2>
       <div class="row">
         <div v-for="professional in professionals" :key="professional.id" class="col-md-4 mb-4">
           <div class="card h-100">
             <div class="card-body">
               <h5 class="card-title">{{ professional.prof_email}}</h5>
-                <!-- <img id="image"src="http://127.0.0.1:8080/api/view-image/{{ professional.prof_email }}"   alt="Profile Picture" class="profile-pic" @error="handleImageError" /> -->
-                <img :src="'http://127.0.0.1:8080/api/view-image/' + professional.prof_email" alt="Profile Picture" class="pic" />
-                <p><strong>Description:</strong> {{ professional.description }}</p>
+              <img :src="'http://127.0.0.1:8080/api/view-image/' + professional.prof_email" alt="Profile Picture" class="pic" />
+              <p><strong>Description:</strong> {{ professional.description }}</p>
               <p><strong>Experience:</strong> {{ professional.experience }} years</p>
               <p><strong>Date of Registration:</strong> {{ professional.date_created}}</p>
               <p><strong>Service Type:</strong> {{ professional.service_type }}</p>
@@ -29,6 +29,7 @@
         </div>
       </div>
       
+      <!-- Customers -->
       <h2 class="my-4 text-white">Customers</h2>
       <div class="row">
         <div v-for="customer in customers" :key="customer.id" class="col-md-4 mb-4">
@@ -48,6 +49,7 @@
         </div>
       </div> 
 
+      <!-- Services -->
       <h2 class="my-4 text-white">Services</h2>
       <div class="row">
         <div v-for="service in services" :key="service.id" class="col-md-4 mb-4">
@@ -70,6 +72,7 @@
         </div>
       </div>
  
+      <!-- Service Requests -->
       <h2 class="my-4 text-white">Service Requests</h2>
       <div class="row">
         <div v-for="request in service_requests" :key="request.id" class="col-md-4 mb-4">
@@ -106,9 +109,7 @@ export default {
       services: [], 
       professionals: [] ,
       customers: [],
-      service_requests: [],
-
-    }
+      service_requests: [],}
   },
   created() {
     this.fetchServices();
@@ -129,7 +130,7 @@ export default {
         }
         );
         if (response.status === 200) {
-          this.customers = response.data; // Update the services array with the data from the backend
+          this.customers = response.data; 
         } else {
           console.error("Failed to fetch customers:", response.data.error);
         }
@@ -145,11 +146,10 @@ export default {
           headers: {
             'Authorization': `Bearer ${your_jwt_token}`
           },
-          withCredentials: true
-        }
+          withCredentials: true}
         );
         if (response.status === 200) {
-          this.professionals = response.data; // Update the services array with the data from the backend
+          this.professionals = response.data; 
           console.log(this.professionals);
         } else {
           console.error("Failed to fetch professionals:", response.data.error);
@@ -170,7 +170,7 @@ export default {
         }
         );
         if (response.status === 200) {
-          this.services = response.data; // Update the services array with the data from the backend
+          this.services = response.data;
         } else {
           console.error("Failed to fetch services:", response.data.error);
         }
@@ -190,7 +190,7 @@ export default {
       }
       );
       if (response.status === 200) {
-        this.service_requests = response.data; // Update the services array with the data from the backend
+        this.service_requests = response.data; 
       } else {
         console.error("Failed to fetch service requests:", response.data.error);
       }
@@ -215,7 +215,7 @@ export default {
       }
       );
 
-      if (response.status === 200) {  // Check if the update was successful
+      if (response.status === 200) { 
         console.log("Professional blocked successfully:", response.data);
         location.reload();
 
@@ -264,7 +264,7 @@ export default {
         withCredentials: true
       });
 
-      if (response.status === 200) {  // Check if the update was successful             
+      if (response.status === 200) {             
         console.log("Customer blocked successfully:", response.data);
         location.reload();  
 
@@ -326,7 +326,6 @@ export default {
   }
 },
   viewDocument(prof_email) {
-      // Open document in new tab
       const documentUrl = `http://127.0.0.1:8080/api/view-document/${prof_email}`;
       window.open(documentUrl, '_blank');
     },

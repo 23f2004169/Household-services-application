@@ -1,18 +1,11 @@
 <template>
-  <div><p class="text-white">Search for professional based on their service type,name,rating,address,pincode experience and description</p></div>
+  <div><h5 class="text-white">Search for professionals</h5></div>
     <div class="container my-3">
       <div class="search-bar">
         <div class="input-group">
-          <input
-            type="text"
-            class="form-control search-input"
-            placeholder="Search for professionals"
-            v-model="searchQuery"
-          />
+          <input type="text" class="form-control search-input" placeholder="Search for professionals" v-model="searchQuery" />
           <div class="input-group-append">
-            <button class="btn search-button" @click="submitSearch">
-              Search
-            </button>
+            <button class="btn search-button" @click="submitSearch">Search</button>
           </div>
         </div>
       </div>
@@ -58,8 +51,8 @@
           
           if (response.status === 200) {
             const data = response.data.results;
-            this.$emit("updateResults", data); // Pass results to parent component
-            this.results = data; // Update local results if needed
+            this.$emit("updateResults", data); 
+            this.results = data; 
           } else {
             alert("Failed to fetch services: " + response.data.error);
           }
@@ -78,7 +71,6 @@
     display: flex;
     justify-content: center;
   }
-  
   .search-bar {
     width: 100%;
     max-width: 600px;
@@ -87,11 +79,9 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     transition: box-shadow 0.3s ease;
   }
-  
   .search-bar:hover {
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-  }
-  
+  }  
   .search-input {
     border: none;
     padding: 15px 20px;
@@ -99,12 +89,10 @@
     font-size: 1rem;
     transition: all 0.3s ease;
   }
-  
   .search-input:focus {
     outline: none;
     box-shadow: none;
   }
-  
   .search-button {
     background-color:rgb(63, 35, 18);
     color: white;
@@ -114,8 +102,7 @@
     font-size: 1rem;
     font-weight: bold;
     transition: background-color 0.3s ease;
-  }
-  
+  } 
   .search-button:hover {
     background-color:#282828;
   }

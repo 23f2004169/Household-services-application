@@ -206,11 +206,9 @@ export default {
     this.fetchPendingRequests();
 
   },  
-    mounted() {
-    console.log('ProfDashboard received email:', this.email); },
-    methods: {  toggleProfileCard() {
-      this.isProfileCardVisible = !this.isProfileCardVisible; 
-    },
+  methods: {  
+    toggleProfileCard() {
+      this.isProfileCardVisible = !this.isProfileCardVisible; },
     async fetchRating() {
       try {
         let your_jwt_token = localStorage.getItem('jwt');
@@ -272,7 +270,6 @@ export default {
                withCredentials: true
              }
            );
-          //  console.log("Response:", response.data, "email:",this.email);
            if (response.status === 200) {
              this.closed_service_requests = response.data; 
            } else {
@@ -355,7 +352,7 @@ export default {
         console.error('Error closing service request:', error.message);
       }
         },
-        async fetchProf() {
+    async fetchProf() {
       try {
         let your_jwt_token = localStorage.getItem('jwt');
         if (!your_jwt_token) {
@@ -369,7 +366,7 @@ export default {
         });
         console.log(this.email,response.data);
         if (response.status === 200) {
-          this.prof_data = response.data; // Update the services array with the data from the backend
+          this.prof_data = response.data; 
         } else {
           console.error("Failed to fetch professionals:", response.data.error);
         }
@@ -390,7 +387,7 @@ export default {
           withCredentials: true
         });
         if (response.status === 200) {
-          this.service_requests = response.data; // Update the services array with the data from the backend
+          this.service_requests = response.data; 
           console.log("Service requests fetched successfully:", response.data);
         } else {
           console.error("Failed to fetch service requests:", response.data.error);
@@ -399,8 +396,8 @@ export default {
         console.error('Error fetching service requests:', error.message);
       }
     }
-    }
-    }
+  }
+}
 </script>
 
 <style scoped>
@@ -424,17 +421,17 @@ export default {
         margin: 0 auto;
         padding: 1rem;
       }
-      .table {
+.table {
     color:red;
     width: 100%;
     margin-top: 1rem;
     box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
   }
-  .table-bordered th, .table-bordered td {
+.table-bordered th, .table-bordered td {
     border: 1px solid #ccc;
     padding: 12px;
   }
-  .service-section h3 {
+.service-section h3 {
     margin-bottom: 15px;
     color: #333;
   }

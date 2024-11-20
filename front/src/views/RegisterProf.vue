@@ -2,7 +2,7 @@
   <div class="container d-flex justify-content-center align-items-center vh-100">
     <div class="card text-white shadow-lg" style="background-color: #282828; max-width: 600px;">
       <div class="card-header text-center" style="background-color: rgb(63, 35, 18);">
-        <h2 class="mb-0">Register as Professional</h2>
+        <h2 class="mb-0">Professional Registration</h2>
       </div>
       <div class="card-body">
         <div class="text-end mb-3">
@@ -19,7 +19,6 @@
               <input type="password" class="form-control form-control-sm" placeholder="Password" required v-model="pwd" />
             </div>
           </div>
-
           <div class="row g-3 mt-2">
             <div class="col-12">
               <label for="description" class="form-label">Description:</label>
@@ -46,7 +45,6 @@
               <input type="text" class="form-control form-control-sm" placeholder="Phone" required v-model="phone" />
             </div>
           </div>
-
           <div class="row g-3 mt-2">
             <div class="col-md-6">
               <label for="address" class="form-label">Address:</label>
@@ -57,7 +55,6 @@
               <input type="text" class="form-control form-control-sm" placeholder="Pincode" required v-model="pincode" />
             </div>
           </div>
-
           <div class="row g-3 mt-2">
             <div class="col-md-6">
               <label for="image" class="form-label">Profile Picture:</label>
@@ -68,7 +65,6 @@
               <input type="file" class="form-control form-control-sm" @change="handleFileUpload" accept=".pdf" required />
             </div>
           </div>
-
           <div class="d-grid gap-2 mt-3">
             <button type="submit" class="btn btn-primary btn-sm">Submit</button>
           </div>
@@ -121,16 +117,11 @@ export default {
 
       const response = await axios.post('http://127.0.0.1:8080/api/prof_reg', formData ,
         {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-
-          }
+          headers: {'Content-Type': 'multipart/form-data' }
         });
-
-        console.log(this.emailID, this.pwd, this.address, this.pincode,this.documentFile, this.imageFile);
-
         if (response.status === 201) {
           this.$router.push('/login');
+          console.log("Professional registered successfully:");
         } else {
           alert(response.data.error);
         }

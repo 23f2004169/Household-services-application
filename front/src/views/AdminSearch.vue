@@ -22,7 +22,6 @@
           <div class="d-flex">
                 <button @click="blockProfessional(result.prof_email)" class="btn btn-dark btn-sm">Block/Unblock</button>
                 <button @click="viewDocument(result.prof_email)" class="btn btn-primary btn-sm">Review Profile</button> 
-
           </div>
         </div>
       </div>
@@ -32,7 +31,6 @@
     </div>
   </div>
 </template>
-<!-- v-if="result.service_type" -->
 
 <script>
 import SearchBar from "../components/SearchBar.vue";
@@ -41,10 +39,7 @@ import MenuBar from '../components/MenuBar.vue';
 
 export default {
   name: "AdminSearch",
-  components: {
-    SearchBar,
-    MenuBar
-  },
+  components: {SearchBar,MenuBar},
   data() {
     return {
       searchResults: [],
@@ -65,10 +60,7 @@ export default {
         if (!your_jwt_token) {
           throw new Error("JWT token is missing");
         }
-
-        const response = await axios.post(
-          `http://127.0.0.1:8080/api/professional/block/${prof_email}`,
-          {},
+        const response = await axios.post(`http://127.0.0.1:8080/api/professional/block/${prof_email}`,{},
           {
             headers: {
               Authorization: `Bearer ${your_jwt_token}`,
@@ -76,8 +68,7 @@ export default {
             withCredentials: true,
           }
         );
-
-        if (response.status === 200) {
+       if (response.status === 200) {
           console.log("Professional blocked successfully:", response.data);
         } else {
           console.error("Failed to block professional: " + response.data.error);
@@ -88,13 +79,14 @@ export default {
     },
     
 viewDocument(prof_email) {
-      // Open document in new tab
+      // open doc in new tab
       const documentUrl = `http://127.0.0.1:8080/api/view-document/${prof_email}`;
       window.open(documentUrl, '_blank');
     }
   },
 };
 </script>
+
 <style scoped>
 .card-deck {
   display: flex;
@@ -104,12 +96,12 @@ viewDocument(prof_email) {
 .card {
   margin: 10px;
 }
-   body {padding-top: 70px;background-color:#282828;}
-   .white{color:white}
-    h1, h2 {margin-top: 20px;}
-    table {margin-top: 20px;}.form-container {margin-top: 30px;}.navbar-brand {font-weight: bold;}.navbar, .offcanvas-header, .offcanvas-body {background-color: #f0f2ec;}
-    .navbar-brand, .nav-link, .offcanvas-title {color: #020b17;}
-    .nav-link.active {font-weight: bold;color: #e98e0f !important;}.btn-primary, .btn-outline-success {margin-top: 10px;}
+body {padding-top: 70px;background-color:#282828;}
+.white{color:white}
+ h1, h2 {margin-top: 20px;}
+ table {margin-top: 20px;}.form-container {margin-top: 30px;}.navbar-brand {font-weight: bold;}.navbar, .offcanvas-header, .offcanvas-body {background-color: #f0f2ec;}
+ .navbar-brand, .nav-link, .offcanvas-title {color: #020b17;}
+ .nav-link.active {font-weight: bold;color: #e98e0f !important;}.btn-primary, .btn-outline-success {margin-top: 10px;}
 </style>
 
 

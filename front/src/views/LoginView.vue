@@ -22,18 +22,6 @@
   </div> 
 </template>
 
-<style>
-.top-right {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-}
-body {
-  padding-top: 20px;
-  background-color: rgb(205, 176, 132);
-}
-</style>
-
 <script>
 import axios from 'axios';
 
@@ -74,16 +62,13 @@ export default {
           alert(response.data.error);
         }
       } catch (error) {
-        // Handle errors in the case of a failed request
         if (error.response) {
-          // If the server responds with an error status
           if (error.response.status === 404 || error.response.status === 401) {
-            alert(error.response.data.error);  // Display the error message from the server
+            alert(error.response.data.error);  
           } else {
             alert('An error occurred: ' + error.response.data.error || error.message);
           }
         } else {
-          // If no response from the server, display network errors
           alert('An error occurred: ' + error.message);
         }
       }
@@ -91,14 +76,17 @@ export default {
   }
 }
 
-// catch (error) {
-//         if (error.response && error.response.status === 403) {
-//           alert(error.response.data.error);
-//         } else {
-//           alert('An error occurred: ' + error.message);
-//         }
-//       }
-//     }
-//   }
-// }
 </script>
+
+
+<style>
+.top-right {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+body {
+  padding-top: 20px;
+  background-color: rgb(205, 176, 132);
+}
+</style>

@@ -45,17 +45,15 @@
               </option>
             </select>
           </div>
-
           <div class="mb-3">
           <label class="form-label">Professional Email:</label>
           <select v-model="newServiceRequest.prof_email" name="professional" id="prof_email" class="form-control" required >
             <option value="">Select a Professional</option>
-            <option v-for="professional in filteredProfessionals" :key="professional.prof_email" :value="professional.prof_email">
+            <option v-for="professional in filteredProfessionals.filter(prof => prof.approval === 'approved')" :key="professional.prof_email" :value="professional.prof_email">
               {{ professional.prof_email }}
             </option>
           </select>
           </div>
-
           <div class="mb-3">
             <label class="form-label">Date of Request:</label>
             <datepicker 
@@ -63,8 +61,7 @@
               :format="formatDateOnly"
               class="form-control" 
               required />
-          </div>
-          
+          </div>         
           <div class="mb-3">
             <label class="form-label">Date of Completion:</label>
             <datepicker 
@@ -73,8 +70,7 @@
               class="form-control" 
               required/>
           </div>
-
-          <div class="modal-footer">
+        <div class="modal-footer">
             <button type="submit" class="btn btn-primary">Request Service</button>
             <button @click.prevent="showNewServiceRequestForm = false" class="btn btn-secondary">Cancel</button>
           </div>
@@ -92,7 +88,6 @@
  
 <script>
 import CustBar from '../components/CustBar.vue';
-// import Datepicker from 'vue3-datepicker';
 import axios from 'axios';
 
 export default {
@@ -126,11 +121,10 @@ data() {
       throw new Error('JWT token is missing');
     }
 
-    // Ensure that date_of_request and date_of_completion are valid Date objects
+    // ensure the dates are valid Date objects
     const requestDate = new Date(this.newServiceRequest.date_of_request);
     const completionDate = new Date(this.newServiceRequest.date_of_completion);
-
-    // Validate the dates before formatting
+    // validate the dates before formatting
     if (isNaN(requestDate) || isNaN(completionDate)) {
       throw new Error("Invalid date format");
     }
@@ -138,8 +132,7 @@ data() {
     const formattedRequestDate = this.formatDateOnly(requestDate);
     const formattedCompletionDate = this.formatDateOnly(completionDate);
 
-    const response = await axios.post(
-      `http://127.0.0.1:8080/api/create_sevrequest/${this.email}`,
+    const response = await axios.post(`http://127.0.0.1:8080/api/create_sevrequest/${this.email}`,
       { 
         "cust_email": this.email,
         "prof_email": this.newServiceRequest.prof_email,
@@ -163,6 +156,7 @@ data() {
         ...this.newServiceRequest,
         id: response.data.sevreq_id 
       });
+
        this.newServiceRequest = {
         cust_email: '',
         prof_email: '',
@@ -171,10 +165,10 @@ data() {
         date_of_completion: null,
       };
       location.reload();
+
       this.showNewServiceRequestForm = false;
     }
     else if (response.status === 400) {
-      // Set error message in the component's state
       this.errorMessage = "Dates must be today or in the future: " + response.data.message;
     } else {
       this.errorMessage = "Failed to create service request: " + response.data.message;
@@ -256,11 +250,11 @@ formatDateOnly(date) {
   },
   
   watch: {
-    // Reset professional email when service changes
+    // reset professional email when service changes
     'newServiceRequest.sev_id'() {
       this.newServiceRequest.prof_email = '';
     },
-    // Optional: Watch and ensure the values remain valid Date objects
+    // watch and ensure the values remain valid Date objects
     'newServiceRequest.date_of_request'(newValue) {
       if (!(newValue instanceof Date)) {
         this.newServiceRequest.date_of_request = new Date(newValue);

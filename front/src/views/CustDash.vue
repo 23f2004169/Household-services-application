@@ -280,36 +280,11 @@ created() {
     this.fetchCust();
     this.fetchProfessionals();
 },    
-mounted() {
-    console.log('CustDashboard received email:', this.email);
-},
-methods: {
-    async fetchServiceRequests() {
-        try {
-          let your_jwt_token = localStorage.getItem('jwt');
-          if (!your_jwt_token) {
-            throw new Error('JWT token is missing');
-          }
-           const response = await axios.get(`http://127.0.0.1:8080/api/cust_service_requests/${this.email}`,{
-      headers: {
-        'Authorization': `Bearer ${your_jwt_token}` 
-      },
-      withCredentials: true
-    });
-           if (response.status === 200) {
-             this.service_requests = response.data; 
-             console.log("Service requests fetched successfully:", this.service_requests);
-           } else {
-             console.error("Failed to fetch service requests:", response.data.error);
-           }
-        } catch (error) {
-           console.error('Error fetching service requests:', error.message);
-        }
-    },  
-    openEditServiceForm(service) {
-      this.showEditServiceForm = true; 
-      this.editedService = { ...service }; 
+methods: {  
+  navigateToCategory(category) {
+      this.$router.push({ path: `/services/${category}`, query: { email: this.email } });
     },
+
     openUpdateCustForm(cust){
       this.showEditCustForm = true;
     },
@@ -375,6 +350,33 @@ methods: {
         console.error('Error updating customer profile:', error.message);
     }
     },
+
+    openEditServiceForm(service) {
+      this.showEditServiceForm = true; 
+      this.editedService = { ...service }; 
+    },
+    async fetchServiceRequests() {
+        try {
+          let your_jwt_token = localStorage.getItem('jwt');
+          if (!your_jwt_token) {
+            throw new Error('JWT token is missing');
+          }
+           const response = await axios.get(`http://127.0.0.1:8080/api/cust_service_requests/${this.email}`,{
+      headers: {
+        'Authorization': `Bearer ${your_jwt_token}` 
+      },
+      withCredentials: true
+    });
+           if (response.status === 200) {
+             this.service_requests = response.data; 
+             console.log("Service requests fetched successfully:", this.service_requests);
+           } else {
+             console.error("Failed to fetch service requests:", response.data.error);
+           }
+        } catch (error) {
+           console.error('Error fetching service requests:', error.message);
+        }
+    }, 
     async editService(sevreq_id) {
       try { 
         let your_jwt_token = localStorage.getItem('jwt');
@@ -399,16 +401,13 @@ methods: {
           console.log("Service request updated successfully:", response.data);
           this.fetchServiceRequests();
           this.showEditServiceForm = false;
-           // Update the local services array with the updated service data from the backend
            const updatedService = response.data.service_requests;
            const index = this.service_requests.findIndex(service_request=> service_request.sevreq_id === sevreq_id);
            if (index !== -1) {
-             // Replace the old service data with the updated one from the backend
              this.service_requests[index] = { ...updatedService };
            }
-           // Clear and close the edit form
            this.showEditServiceForm = false;
-           this.editedService = { // Reset editedService
+           this.editedService = { 
             sevreq_id: '',
             cust_email: '',
             prof_email: '',
@@ -451,9 +450,7 @@ methods: {
         }
       }
     },
-    navigateToCategory(category) {
-      this.$router.push({ path: `/services/${category}`, query: { email: this.email } });
-    },
+    
     async closeServiceRequest(sevreq_id) {
       try {
         let your_jwt_token = localStorage.getItem('jwt');
@@ -468,7 +465,7 @@ methods: {
       withCredentials: true
     });
 
-      if (response.status === 200) {  // Check if the update was successful
+      if (response.status === 200) {  
         console.log("Service request closed successfully:", response.data);
         location.reload();
 
@@ -598,13 +595,13 @@ methods: {
       right: -10px;
   }
   .btn-violet {
-  background-color: #8a2be2; /* Violet color */
+  background-color: #8a2be2; 
   color: white;
   border: none;
 }
 .white{color:white}
 .btn-violet:hover {
-  background-color: #7a1bcf; /* Darker shade on hover */
+  background-color: #7a1bcf; 
 }
 .yellow{color:yellow}
 .star-rating {direction: rtl;
@@ -618,11 +615,11 @@ methods: {
     color: #d5c810;
     cursor: pointer;
     position: relative;
-    padding: 0 1rem; /* Add padding to create space between stars */
+    padding: 0 1rem; 
 
 }
 .star-rating label::before {
-    content: "\2605"; /* Unicode star character */
+    content: "\2605"; 
     position: absolute;
 }
 .star-rating input[type="radio"]:checked ~ label {
@@ -632,6 +629,7 @@ methods: {
 .star-rating label:hover ~ label,
 .star-rating input[type="radio"]:checked ~ label:hover,
 .star-rating input[type="radio"]:checked ~ label:hover ~ label,
-.star-rating input[type="radio"]:checked ~ label:hover ~ input[type="radio"]:checked ~ label {
-    color: #f5b301;}
+.star-rating input[type="radio"]:checked ~ label:hover ~ input[type="radio"]:checked ~ label 
+{color: #f5b301;}
+
 </style>

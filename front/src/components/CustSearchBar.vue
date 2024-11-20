@@ -1,7 +1,7 @@
 <template>
   <div class="message mb-2 text-white">
-            <p v-if="searchType === 'service'">Search for services based on their name,category,address and pincode</p>
-            <p v-else>Search for professional based on their service type,name,rating,address,pincode experience and description</p>
+            <h5 v-if="searchType === 'service'">Search for services </h5>
+            <h5 v-else>Search for professionals</h5>
         </div>
   <div class="container my-3">
     <div class="search-bar">
@@ -11,12 +11,7 @@
           <option value="service">Service</option>
         </select>
         
-        <input
-          type="text"
-          class="form-control search-input"
-          placeholder="Search for Services or Professionals"
-          v-model="searchQuery"
-        />
+        <input type="text" class="form-control search-input" placeholder="Search for Services or Professionals" v-model="searchQuery"/>
         <div class="input-group-append">
           <button class="btn search-button" @click="executeSearch">
             Search
@@ -67,8 +62,8 @@ export default {
         });
         if (response.status === 200) {
           const data = response.data.sresults;
-          this.$emit("updateResults", data); // Pass results to parent component
-          this.sresults = data; // Update local results if needed
+          this.$emit("updateResults", data); // pass results to the parent component
+          this.sresults = data; 
         } else {
           alert("Failed to fetch services: " + response.data.error);
         }
@@ -105,8 +100,8 @@ export default {
         
         if (response.status === 200) {
           const data = response.data.results;
-          this.$emit("updateResults", data); // Pass results to parent component
-          this.results = data; // Update local results if needed
+          this.$emit("updateResults", data); 
+          this.results = data; 
         } else {
           alert("Failed to fetch services: " + response.data.error);
         }
@@ -129,35 +124,25 @@ export default {
 <style scoped>
 .container {
   display: flex;
-  justify-content: center;
-}
-
+  justify-content: center;}
 .search-bar {
   width: 100%;
   max-width: 600px;
   border-radius: 50px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.3s ease;
-}
-
+  transition: box-shadow 0.3s ease;}
 .search-bar:hover {
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-}
-
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);}
 .search-input {
   border: none;
   padding: 15px 20px;
   border-radius: 50px 0 0 50px;
   font-size: 1rem;
-  transition: all 0.3s ease;
-}
-
+  transition: all 0.3s ease;}
 .search-input:focus {
   outline: none;
-  box-shadow: none;
-}
-
+  box-shadow: none;}
 .search-button {
   background-color:rgb(63, 35, 18);
   color: white;
@@ -166,11 +151,8 @@ export default {
   border-radius: 0 50px 50px 0;
   font-size: 1rem;
   font-weight: bold;
-  transition: background-color 0.3s ease;
-}
-
+  transition: background-color 0.3s ease;}
 .search-button:hover {
-  background-color:#282828;
-}
+  background-color:#282828;}
 </style>
 

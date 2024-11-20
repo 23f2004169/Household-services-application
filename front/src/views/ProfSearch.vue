@@ -32,7 +32,6 @@
   
 <script>
   import ProfSearchBar from "../components/ProfSearchBar.vue";
-  import axios from 'axios';
   import ProfBar from '../components/ProfBar.vue';
     
   export default {
@@ -53,7 +52,7 @@
         this.searchPerformed = true; 
       },
       performSearch() {
-        this.searchPerformed = true; // Set to true when search button is clicked
+        this.searchPerformed = true; 
       },
     },
   };
@@ -74,7 +73,7 @@
       table {margin-top: 20px;}.form-container {margin-top: 30px;}.navbar-brand {font-weight: bold;}.navbar, .offcanvas-header, .offcanvas-body {background-color: #f0f2ec;}
       .navbar-brand, .nav-link, .offcanvas-title {color: #020b17;}
       .nav-link.active {font-weight: bold;color: #e98e0f !important;}.btn-primary, .btn-outline-success {margin-top: 10px;}
-  </style>
+</style>
   
   
   

@@ -7,26 +7,20 @@
 <template>
     <div class="container">
 
-      <!-- Header Section -->
       <header class="header">
         <h1 class="app-title text-white"><b>WELCOME TO HOMEWHIZ HOUSEHOLD SERVICES APPLICATION</b></h1>
       </header>
 
-      <!-- Logo and Information Section -->
       <div class="horizontal-section">
-        <!-- Logo Section -->
         <div class="logo-section">
-
           <img src="/static/logo.jpeg" alt="Homewhiz Logo" class="logo" />      
         </div>
 
-        <!-- Information Section -->
         <div class="info-section">
           <div class="buttons">
             <a href="/login">
               <button class="btn btn-primary text-white"><b>LOGIN</b></button>
             </a>
-            <!-- <p style="color:#fff"> New here?</p> -->
             <a href="/register_cust">
               <button class="btn btn-primary text-white"><b>REGISTER</b></button>
             </a>
@@ -34,9 +28,7 @@
         </div>
       </div>
 
-      <!-- Services Section -->
       <div class="services">
-
         <div class="service">
           <img src="/static/childcare.jpeg" alt="Childcare Services" />
           <p style="color:#fff">Childcare services</p>
@@ -83,7 +75,6 @@
   background-color:#282828;
 }
 
-/* Header Section  rgb(205, 176, 132)*/
 .header {
   flex-wrap: wrap;
   background-color:rgb(63, 35, 18);
@@ -97,7 +88,6 @@
   margin: 0;
 }
 
-/* Horizontal Section */
 .horizontal-section {
   display: flex;
   justify-content: space-between;
@@ -106,7 +96,6 @@
   width: 100%;
 }
 
-/* Logo Section */
 .logo-section {
   display: flex;
   flex-direction: column;
@@ -143,7 +132,6 @@
   background-color: #e67e00;
 }
 
-/* Information Section */
 .info-section {
   text-align: center;
   margin: 20px;
@@ -155,7 +143,6 @@
   font-family: 'Georgia', serif; 
 }
 
-/* Services Section */
 .services {
   display: flex;
   justify-content: center;

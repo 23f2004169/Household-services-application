@@ -59,7 +59,6 @@
           const data = response.data.requests;
   
           if (data && Array.isArray(data)) {
-            // Count service request statuses for the professional
             data.forEach(item => {
               if (item.sev_status in this.statusCounts) {
                 this.statusCounts[item.sev_status]++;
@@ -80,6 +79,7 @@
           console.error("Error fetching data:", error);
         }
       },
+
       renderStatusChart() {
         const ctx = document.getElementById("professionalServiceRequestHistogram").getContext("2d");
         if (this.statusChart) {
@@ -194,10 +194,10 @@
   };
   </script>
   
-  <style scoped>
+<style scoped>
   #professionalServiceRequestHistogram, #professionalServiceRequestRatingHistogram {
     max-width: 600px;
     margin: auto;
   } 
-  </style>
+</style>
   

@@ -58,7 +58,6 @@
           const data = response.data.requests;
   
           if (data && Array.isArray(data)) {
-            // Count service request statuses for the professional
             data.forEach(item => {
               if (item.sev_status in this.statusCounts) {
                 this.statusCounts[item.sev_status]++;

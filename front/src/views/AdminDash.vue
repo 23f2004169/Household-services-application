@@ -242,15 +242,8 @@
         </div>
       </div>
     </div>
-    
-    <!-- <div v-if="isDownloading" class="download-overlay">
-      <div class="download-spinner">
-        <span>Downloading...</span>
-      </div>
-    </div>
-    <div> -->
-    
 
+<!-- Export to CSV for a particular professional -->
     <div>
     <div v-if="isExporting || isDownloading" class="loading-overlay">
       <div class="loading-content">
@@ -271,7 +264,7 @@ import axios from 'axios';
 export default {
   name: 'AdminDash',
   mounted() {
-    console.log("AdminDash mounted");
+    // Subscribing to SSE blueprint /stream :creates connection to the server
     const source = new EventSource("http://127.0.0.1:8080/stream");
     source.onerror = (error) => {
         console.error("EventSource failed:", error);
@@ -283,17 +276,7 @@ export default {
             const data = JSON.parse(event.data);
             const sanitizedFilename = encodeURIComponent(data.filename);
             const reportUrl = `http://127.0.0.1:8080/api/reports/${sanitizedFilename}`;
-            
-            // Show confirmation with options
-            // console.log("beofre")
-            // if (confirm(`New report available: ${data.filename}\nClick OK to download, Cancel to view in browser`)) {
-                // this.downloadDocument(reportUrl, data.filename);
-            // } else {
-                // this.viewcsvDocument(reportUrl);
-            // }
-
             this.downloadDocument(reportUrl, data.filename);
-
             console.log("Received notification:", data);
         } catch (error) {
             console.error("Error processing notification:", error);
@@ -305,7 +288,7 @@ data() {
       services: [],
       professionals: [],
       service_requests: [],
-      showNewServiceForm: false, // Controls the visibility
+      showNewServiceForm: false,
       showEditServiceForm: false, 
       newService: {
         sev_name: '',
@@ -330,14 +313,14 @@ data() {
       isExporting: false
     };
   },
-  components: { MenuBar },
-  created() {
+components: { MenuBar },
+created() {
     this.fetchServices();
     this.fetchProfessionals();
     this.fetchServiceRequests();
   },
-    methods: {
-      async fetchServices() {
+methods: {
+    async fetchServices() {
         try {
           let your_jwt_token = localStorage.getItem('jwt');
           if (!your_jwt_token) {
@@ -351,275 +334,274 @@ data() {
       });
       if(response.status === 200) {
         this.services = response.data; 
-        console.log("Services fetched successfully:", response.data);
-}     else {
-         console.error("Failed to fetch services:", response.data.error);
-}
+        console.log("Services fetched successfully:", response.data);}
+      else {
+         console.error("Failed to fetch services:", response.data.error);}
       } 
       catch (error) {
-  console.error('Error fetching services:', error.message);
-}
-    },
-    async addNewService() {
-  try { 
-    let your_jwt_token = localStorage.getItem('jwt');
-    if (!your_jwt_token) {
-      throw new Error('JWT token is missing');
-    }
-    const response = await axios.post('http://127.0.0.1:8080/api/create_sev', {
-      "sev_name": this.newService.sev_name,
-      "description": this.newService.description,
-      "price": this.newService.price,
-      "time_req": this.newService.time_req,
-      "category": this.newService.category,
-      "address": this.newService.address,
-      "pincode": this.newService.pincode
-    }, {
-      headers: {
-        Authorization: `Bearer ${ your_jwt_token }`
-      },
-      withCredentials: true
-    });
-
-    if (response.status === 201) {
-      console.log("Service added successfully:", response.data);
-      await this.fetchServices();
-
-      this.services.push({
-        ...this.newService,
-        id: response.data.service_id 
-      });
-
-      this.newService = {
-        sev_name: '',
-        description: '',
-        price: '',
-        time_req: '',
-        address: '',
-        category: '',
-        pincode: ''
-      };
-
-      this.showNewServiceForm = false;
-      location.reload();
-
-    } else {
-      alert("Failed to add service: " + response.data.error);
-    }
-  } catch (error) {
-    console.error('Error adding new service:', error.message);
-    alert('An error occurred while adding the service.');
-  }
-},
-openEditServiceForm(service) { 
-  this.showEditServiceForm = true; 
-  this.editedService = { ...service }; 
-},
-    async editService(sev_id) {
-  if (!sev_id) {
-    console.error("Service ID is undefined");
-    return;
-  }
-  try { 
-    let your_jwt_token = localStorage.getItem('jwt');
-    if (!your_jwt_token) {
-      throw new Error('JWT token is missing');
-    }
-    const response = await axios.post(`http://127.0.0.1:8080/api/edit_sev/${sev_id}`, {
-      "sev_name": this.editedService.sev_name,
-      "description": this.editedService.description,
-      "price": this.editedService.price,
-      "time_req": this.editedService.time_req,
-      "category": this.editedService.category,
-      "address": this.editedService.address,
-      "pincode": this.editedService.pincode
-    } , {
-      headers: {
-        Authorization: `Bearer ${ your_jwt_token }`
-      },
-      withCredentials: true
-    });
-
-    if (response.status === 200) {
-      console.log("Service updated successfully:", response.data);
-
-      const updatedService = response.data.service;
-
-      const index = this.services.findIndex(service => service.sev_id === sev_id);
-      if (index !== -1) {
-        this.services[index] = { ...updatedService };
+        console.error('Error fetching services:', error.message);
       }
-
-      this.showEditServiceForm = false;
-      this.editedService = { 
-        sev_id: '',
-        sev_name: '',
-        description: '',
-        price: '',
-        time_req: '',
-        address: '',
-        category: '',
-        pincode: ''
-      };
-      location.reload();
-    } else {
-      alert("Failed to update service: " + response.data.error);
+    },
+  async addNewService() {
+      try { 
+        let your_jwt_token = localStorage.getItem('jwt');
+        if (!your_jwt_token) {
+          throw new Error('JWT token is missing');
+        }
+        const response = await axios.post('http://127.0.0.1:8080/api/create_sev', {
+          "sev_name": this.newService.sev_name,
+          "description": this.newService.description,
+          "price": this.newService.price,
+          "time_req": this.newService.time_req,
+          "category": this.newService.category,
+          "address": this.newService.address,
+          "pincode": this.newService.pincode
+        }, {
+          headers: {
+            Authorization: `Bearer ${ your_jwt_token }`
+          },
+          withCredentials: true
+        });
+    
+        if (response.status === 201) {
+          console.log("Service added successfully:", response.data);
+          await this.fetchServices();
+    
+          this.services.push({
+            ...this.newService,
+            id: response.data.service_id 
+          });
+    
+          this.newService = {
+            sev_name: '',
+            description: '',
+            price: '',
+            time_req: '',
+            address: '',
+            category: '',
+            pincode: ''
+          };
+    
+          this.showNewServiceForm = false;
+          location.reload();
+    
+        } else {
+          alert("Failed to add service: " + response.data.error);
+        }
+      } catch (error) {
+        console.error('Error adding new service:', error.message);
+        alert('An error occurred while adding the service.');
+      }
+   },    
+  openEditServiceForm(service) { 
+       this.showEditServiceForm = true; 
+       this.editedService = { ...service }; 
+    },
+    async editService(sev_id) {
+      if (!sev_id) {
+        console.error("Service ID is undefined");
+        return;
+      }
+      try { 
+        let your_jwt_token = localStorage.getItem('jwt');
+        if (!your_jwt_token) {
+          throw new Error('JWT token is missing');
+        }
+        const response = await axios.post(`http://127.0.0.1:8080/api/edit_sev/${sev_id}`, {
+          "sev_name": this.editedService.sev_name,
+          "description": this.editedService.description,
+          "price": this.editedService.price,
+          "time_req": this.editedService.time_req,
+          "category": this.editedService.category,
+          "address": this.editedService.address,
+          "pincode": this.editedService.pincode
+        } , {
+          headers: {
+            Authorization: `Bearer ${ your_jwt_token }`
+          },
+          withCredentials: true
+        });
+    
+        if (response.status === 200) {
+          console.log("Service updated successfully:", response.data);
+    
+          const updatedService = response.data.service;
+    
+          const index = this.services.findIndex(service => service.sev_id === sev_id);
+          if (index !== -1) {
+            this.services[index] = { ...updatedService };
+          }
+    
+          this.showEditServiceForm = false;
+          this.editedService = { 
+            sev_id: '',
+            sev_name: '',
+            description: '',
+            price: '',
+            time_req: '',
+            address: '',
+            category: '',
+            pincode: ''
+          };
+          location.reload();
+        } else {
+          alert("Failed to update service: " + response.data.error);
+        }
+      } catch (error) {
+        console.error('Error updating service:', error.message);
+        alert('An error occurred while updating the service.');
+      }
+   },
+  async deleteService(sev_id) {
+      if (confirm("Are you sure you want to delete this service?")) {
+        try {
+          let your_jwt_token = localStorage.getItem('jwt');
+          if (!your_jwt_token) {
+            throw new Error('JWT token is missing');
+          }
+          const response = await axios.delete(`http://127.0.0.1:8080/api/delete_sev/${sev_id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${ your_jwt_token }`
+            },
+            withCredentials: true
+          }
+          );
+          if (response.status === 200) {
+            console.log("Service deleted successfully:", response.data);
+            this.services = this.services.filter(service => service.sev_id !== sev_id);
+          } else {
+            alert("Failed to delete service: " + response.data.error);
+          }
+        } catch (error) {
+          console.error("Error deleting service:", error.message);
+          alert("An error occurred while deleting the service.");
+        }
+      }
+    },
+  async fetchProfessionals() {
+      try {
+        let your_jwt_token = localStorage.getItem('jwt');
+        if (!your_jwt_token) {
+          throw new Error('JWT token is missing');
+        }
+        const response = await axios.get('http://127.0.0.1:8080/api/professionals', {
+          headers: {
+            'Authorization': `Bearer ${your_jwt_token}` 
+          } ,
+          withCredentials: true
+        });
+    
+        if (response.status === 200) {
+          this.professionals = response.data; 
+        } else {
+          console.error("Failed to fetch professionals:", response.data.error);
+        }
+      } catch (error) {
+        console.error('Error fetching professionals:', error.message);
+      }
+    },
+  async approveProfessional(prof_email) {
+    try {
+      let your_jwt_token = localStorage.getItem('jwt');
+      console.log(your_jwt_token);
+      console.log("Professional email ", prof_email);
+      const response = await axios.post(`http://127.0.0.1:8080/api/professional/approve/${prof_email}`,{},
+      { 
+        headers: {
+          'Authorization': `Bearer ${your_jwt_token}` 
+        },      
+        withCredentials: true
+      });
+      if (response.status === 200) {  
+        console.log("Professional approved successfully:", response.data);
+        location.reload();
+  
+      } else {
+        console.error("Failed to approve professional: " + response.data.error);
+      }
+    } catch (error) {
+      console.error('Error approving professional:', error.message);
     }
-  } catch (error) {
-    console.error('Error updating service:', error.message);
-    alert('An error occurred while updating the service.');
-  }
-},
-    async deleteService(sev_id) {
-  if (confirm("Are you sure you want to delete this service?")) {
+  },
+  async rejectProfessional(prof_email) {
+      try {
+        let your_jwt_token = localStorage.getItem('jwt');
+        if (!your_jwt_token) {  
+          throw new Error('JWT token is missing');
+        }
+        console.log("Professional email ", prof_email);
+        const response = await axios.post(`http://127.0.0.1:8080/api/professional/reject/${prof_email}`,{},
+        {
+          headers: {
+            'Authorization': `Bearer ${your_jwt_token}` 
+          },
+          withCredentials: true
+        }
+        );
+    
+        if (response.status === 200) {  
+          console.log("Professional rejected successfully:", response.data);
+          location.reload();
+    
+        } else {
+          console.error("Failed to reject professional: " + response.data.error);
+        }
+      } catch (error) {
+        console.error('Error rejecting professional:', error.message);
+      }
+    },
+  async blockProfessional(prof_email) {
+      try { 
+        let your_jwt_token = localStorage.getItem('jwt');
+        if (!your_jwt_token) {
+          throw new Error('JWT token is missing');
+        }
+        console.log("Professional email ", prof_email);
+        const response = await axios.post(`http://127.0.0.1:8080/api/professional/block/${prof_email}`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${your_jwt_token}` 
+          },
+          withCredentials: true
+        }
+        );
+    
+        if (response.status === 200) {  
+          console.log("Professional blocked successfully:", response.data);
+          location.reload();
+    
+        } else {
+          console.error("Failed to block professional: " + response.data.error);
+        }
+      } catch (error) {
+        console.error('Error blocking professional:', error.message);
+      }
+    },
+  async fetchServiceRequests() {
     try {
       let your_jwt_token = localStorage.getItem('jwt');
       if (!your_jwt_token) {
         throw new Error('JWT token is missing');
       }
-      const response = await axios.delete(`http://127.0.0.1:8080/api/delete_sev/${sev_id}`,
+      const response = await axios.get('http://127.0.0.1:8080/api/service_requests',
       {
         headers: {
-          Authorization: `Bearer ${ your_jwt_token }`
-        },
+          'Authorization': `Bearer ${your_jwt_token}` 
+        },      
         withCredentials: true
       }
       );
       if (response.status === 200) {
-        console.log("Service deleted successfully:", response.data);
-        this.services = this.services.filter(service => service.sev_id !== sev_id);
+        this.service_requests = response.data; 
+        console.log("Service requests fetched successfully:", response.data);
       } else {
-        alert("Failed to delete service: " + response.data.error);
+        console.error("Failed to fetch service requests:", response.data.error);
       }
     } catch (error) {
-      console.error("Error deleting service:", error.message);
-      alert("An error occurred while deleting the service.");
+      console.error('Error fetching service requests:', error.message);
     }
-  }
-},
-    async fetchProfessionals() {
-  try {
-    let your_jwt_token = localStorage.getItem('jwt');
-    if (!your_jwt_token) {
-      throw new Error('JWT token is missing');
-    }
-    const response = await axios.get('http://127.0.0.1:8080/api/professionals', {
-      headers: {
-        'Authorization': `Bearer ${your_jwt_token}` 
-      } ,
-      withCredentials: true
-    });
-
-    if (response.status === 200) {
-      this.professionals = response.data; // Update the services array with the data from the backend
-    } else {
-      console.error("Failed to fetch professionals:", response.data.error);
-    }
-  } catch (error) {
-    console.error('Error fetching professionals:', error.message);
-  }
-},
-  async approveProfessional(prof_email) {
-  try {
-    let your_jwt_token = localStorage.getItem('jwt');
-    console.log(your_jwt_token);
-    console.log("Professional email ", prof_email);
-    const response = await axios.post(`http://127.0.0.1:8080/api/professional/approve/${prof_email}`,{},
-    { 
-      headers: {
-        'Authorization': `Bearer ${your_jwt_token}` 
-      },      
-      withCredentials: true
-    });
-    if (response.status === 200) {  // Check if the update was successful
-      console.log("Professional approved successfully:", response.data);
-      location.reload();
-
-    } else {
-      console.error("Failed to approve professional: " + response.data.error);
-    }
-  } catch (error) {
-    console.error('Error approving professional:', error.message);
-  }
-},
-    async rejectProfessional(prof_email) {
-  try {
-    let your_jwt_token = localStorage.getItem('jwt');
-    if (!your_jwt_token) {  
-      throw new Error('JWT token is missing');
-    }
-    console.log("Professional email ", prof_email);
-    const response = await axios.post(`http://127.0.0.1:8080/api/professional/reject/${prof_email}`,{},
-    {
-      headers: {
-        'Authorization': `Bearer ${your_jwt_token}` 
-      },
-      withCredentials: true
-    }
-    );
-
-    if (response.status === 200) {  // Check if the update was successful
-      console.log("Professional rejected successfully:", response.data);
-      location.reload();
-
-    } else {
-      console.error("Failed to reject professional: " + response.data.error);
-    }
-  } catch (error) {
-    console.error('Error rejecting professional:', error.message);
-  }
-},
-  async blockProfessional(prof_email) {
-  try { 
-    let your_jwt_token = localStorage.getItem('jwt');
-    if (!your_jwt_token) {
-      throw new Error('JWT token is missing');
-    }
-    console.log("Professional email ", prof_email);
-    const response = await axios.post(`http://127.0.0.1:8080/api/professional/block/${prof_email}`,
-    {},
-    {
-      headers: {
-        'Authorization': `Bearer ${your_jwt_token}` 
-      },
-      withCredentials: true
-    }
-    );
-
-    if (response.status === 200) {  // Check if the update was successful
-      console.log("Professional blocked successfully:", response.data);
-      location.reload();
-
-    } else {
-      console.error("Failed to block professional: " + response.data.error);
-    }
-  } catch (error) {
-    console.error('Error blocking professional:', error.message);
-  }
-},
-  async fetchServiceRequests() {
-  try {
-    let your_jwt_token = localStorage.getItem('jwt');
-    if (!your_jwt_token) {
-      throw new Error('JWT token is missing');
-    }
-    const response = await axios.get('http://127.0.0.1:8080/api/service_requests',
-    {
-      headers: {
-        'Authorization': `Bearer ${your_jwt_token}` 
-      },      
-      withCredentials: true
-    }
-    );
-    if (response.status === 200) {
-      this.service_requests = response.data; // Update the services array with the data from the backend
-      console.log("Service requests fetched successfully:", response.data);
-    } else {
-      console.error("Failed to fetch service requests:", response.data.error);
-    }
-  } catch (error) {
-    console.error('Error fetching service requests:', error.message);
-  }
 },
 viewDocument(prof_email) {
       const documentUrl = `http://127.0.0.1:8080/api/view-document/${prof_email}`;
@@ -649,7 +631,6 @@ async exportProfessional(prof_email) {
     },
 async downloadDocument(url, filename) {
       this.isDownloading = true;
-
       try {
         let your_token = localStorage.getItem('jwt');
         const response = await axios({
@@ -664,21 +645,20 @@ async downloadDocument(url, filename) {
             console.log(`Download Progress: ${percentCompleted}%`);
           }
         });
-
-        // Create blob URL
+        // create blob url
         const blob = new Blob([response.data], { 
           type: response.headers['content-type'] 
         });
         const downloadUrl = window.URL.createObjectURL(blob);
 
-        // Create download link and trigger download
+        // create download link and trigger download
         const link = document.createElement('a');
         link.href = downloadUrl;
         link.download = filename;
         document.body.appendChild(link);
         link.click();
 
-        // Cleanup
+        // cleanup
         document.body.removeChild(link);
         window.URL.revokeObjectURL(downloadUrl);
 
@@ -696,44 +676,7 @@ async downloadDocument(url, filename) {
     },
 showNotification(message, type = 'success') {
         alert(message);
-    },
-viewcsvDocument(url) {
-        try {
-            let jwt = localStorage.getItem('jwt');
-            if (!jwt) {
-                throw new Error('Please login to view the document');
-            }
-
-            // Open in new tab with JWT
-            const newTab = window.open('about:blank', '_blank');
-            newTab.document.write('Loading document...');
-            
-            // Create form for secure GET request
-            const form = document.createElement('form');
-            form.method = 'GET';
-            form.action = url;
-            form.target = '_blank';
-
-            // Add authorization header as hidden input
-            const authInput = document.createElement('input');
-            authInput.type = 'hidden';
-            authInput.name = 'Authorization';
-            authInput.value = `Bearer ${jwt}`;
-            form.appendChild(authInput);
-
-            // Submit form
-            document.body.appendChild(form);
-            form.submit();
-            document.body.removeChild(form);
-
-        } catch (error) {
-            console.error('Error viewing document:', error);
-            this.showNotification('Failed to view document: ' + error.message);
-        }
-},
-
-
-    
+    },   
   }
 }
 </script>
@@ -746,15 +689,12 @@ viewcsvDocument(url) {
   padding: 20px;
   text-align: center;
 }
-
 header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-
 }
-
 table {
   width: 90%;
   max-width: 1200px;
@@ -762,23 +702,17 @@ table {
   margin: 20px auto;
   font-size: 1.1em;
 }
-
 table,
-th,
-td {
+th,td {
   border: 1px solid #ddd;
 }
-
-th,
-td {
+th,td {
   padding: 8px;
   text-align: left;
 }
-
 .add-service-btn {
   margin-bottom: 10px;
 }
-
 .new-service-form {
   position: fixed;
   top: 50%;
@@ -789,20 +723,16 @@ td {
   border: 1px solid #ddd;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
-
 .form-actions {
   margin-top: 10px;
 }
-
 button {
   margin-right: 10px;
 }
-
 .red {
   background-color: rgb(63, 35, 18);
   color: white
 }
-
 .white {
   color: white,
 }
@@ -818,7 +748,6 @@ button {
   align-items: center;
   z-index: 1000;
 }
-
 .loading-content {
   background: white;
   padding: 20px;
@@ -828,8 +757,10 @@ button {
   align-items: center;
   gap: 10px;
 }
-
 .spinner {
+  background: white;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   width: 40px;
   height: 40px;
   border: 4px solid #f3f3f3;
@@ -837,7 +768,6 @@ button {
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
-
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -847,53 +777,35 @@ button {
             border-radius: 8px;
             padding: 20px;
   }
-  /* Custom text color for table content */
   .table th, .table td {
-      border-color: #444444; /* Border color for contrast */
+      border-color: #444444;
   }
   .table thead th {
-      color: #ffffff; /* Header text color */
-      background-color: #333333; /* Header background color 
+      color: #ffffff; 
+      background-color: #333333; 
   }
   .table-striped tbody tr:nth-of-type(odd) {
-      background-color: #333333; /* Alternate row background color */
+      background-color: #333333; 
   }
   .table-striped tbody tr:nth-of-type(even) {
-      background-color: #282828; /* Alternate row background color */
+      background-color: #282828; 
   }
   .table-striped tbody tr:hover {
-      background-color: #444444; /* Hovered row background color */
+      background-color: #444444;
   }
   .table-bordered td, .table-bordered th {
-      border-color: #444444; /* Border color for contrast */
+      border-color: #444444; 
   }
   .table-bordered thead td, .table-bordered thead th {
-      border-color: #444444; /* Border color for contrast */
+      border-color: #444444; 
   }
   .table-bordered thead td, .table-bordered thead th {
-      border-color: #444444; /* Border color for contrast */
+      border-color: #444444;
   }
   .table-bordered thead th {
-      color: #ffffff; /* Header text color */
+      color: #ffffff;
   }
-  .download-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
 
-.download-spinner {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
+
                 
 </style>

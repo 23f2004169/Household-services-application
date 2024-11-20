@@ -1,5 +1,4 @@
 <template>
-
     <div class="profile-card">
       <img :src="'http://127.0.0.1:8080/api/view-image/' + prof_data.prof_email" alt="Profile Picture" class="profile-pic" />
       <p class="service">Service: {{ prof_data.service_type }}</p>
@@ -12,15 +11,12 @@
       <button @click="viewDocument(prof_data.prof_email)" class="btn btn-primary btn-sm">View</button> 
       <button @click.prevent="openUpdateProfessionalForm(prof_data)" class="btn btn-warning btn-sm mr-2">Edit Profile</button>
       <div>
-    <button v-if="prof_data.approval === 'rejected'" @click="reuploadDocument(prof_data.prof_email)" class="btn btn-danger btn-sm">
-  Reupload Document
-</button>
+      <button v-if="prof_data.approval === 'rejected'" @click="reuploadDocument(prof_data.prof_email)" class="btn btn-dark btn-sm">Reupload Document</button>
       </div>
-<input type="file" ref="documentInput" accept=".pdf" @change="handleFileUpload" style="display:none" />
-
+      <input type="file" ref="documentInput" accept=".pdf" @change="handleFileUpload" style="display:none" />
     </div>
 
-  
+<!-- ------Edit Professional Profile Modal------ -->
   <div v-show="showEditProfessionalForm" class="modal fade show" style="display: block;" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -30,12 +26,10 @@
         </div>
         <div class="modal-body">
           <form @submit.prevent="updateProfessionalProfile(updateprof.prof_email)">
-            
             <div class="mb-3">
               <label class="form-label">Email:</label>
               <input v-model="updateprof.prof_email" type="email" class="form-control" required readonly/>
-            </div>
-            
+            </div>           
             <div class="row g-3 mt-2">
             <div class="col-12">
               <label class="form-label">Service Type:</label>
@@ -45,34 +39,27 @@
                 </option>
               </select>
             </div>
-          </div>
-            
+            </div>            
             <div class="mb-3">
               <label class="form-label">Experience (Years):</label>
               <input v-model="updateprof.experience" type="number" class="form-control" required />
-            </div>
-            
+            </div>            
             <div class="mb-3">
               <label class="form-label">Address:</label>
               <input v-model="updateprof.address" type="text" class="form-control" required />
-            </div>
-            
+            </div>           
             <div class="mb-3">
               <label class="form-label">Pincode:</label>
               <input v-model="updateprof.pincode" type="text" class="form-control" required />
-            </div>
-            
+            </div>            
             <div class="mb-3">
               <label class="form-label">Description:</label>
               <textarea v-model="updateprof.description" class="form-control" required></textarea>
-            </div>
-            
+            </div>           
             <div class="mb-3">
               <label class="form-label">Phone:</label>
               <input v-model="updateprof.phone" type="text" class="form-control" required />
             </div>
-
-
             <div class="modal-footer">
               <button type="submit" class="btn btn-primary">Save Changes</button>
               <button @click.prevent="showEditProfessionalForm = false" class="btn btn-secondary">Cancel</button>
@@ -88,7 +75,6 @@
 
 <script>
 import axios from 'axios'; 
-
 export default {
   name: 'ProfileCard',
   props: ['email'],
@@ -112,22 +98,17 @@ export default {
     this.fetchProf();
     this.fetchServices();
   },
-  mounted() {
-    console.log('Current service_type:', this.updateprof.service_type);
-    console.log('Available services:', this.services);
-    console.log('ProfCard received email:', this.email); },
   methods: {
     openUpdateProfessionalForm(prof) {
-      this.showEditProfessionalForm= true; // Show the edit form
-      this.updateprof= { ...prof }; // Populate the form with selected service data
+      this.showEditProfessionalForm= true;
+      this.updateprof= { ...prof }; // Populate with current prof data
     },
-    async updateProfessionalProfile(prof_email) {
+  async updateProfessionalProfile(prof_email) {
       try {
         let your_jwt_token = localStorage.getItem('jwt');
       if (!your_jwt_token) {
         throw new Error('JWT token is missing');
       }
-      console.log("Professional email ", prof_email);
       const response = await axios.post(`http://127.0.0.1:8080/api/prof_update/${this.email}`, {
           "prof_email": this.updateprof.prof_email,
           "service_type": this.updateprof.service_type,
@@ -146,17 +127,9 @@ export default {
         if (response.status === 200) {
           console.log("Professional profile updated successfully:", response.data);
           this.fetchProf();
+
           this.showEditProfessionalForm = false;
-          
-          // const updatedprof = response.data.prof_data;
-
-          // const index = this.prof_data.findIndex(prof => prof.prof_email=== prof_email);
-          // if (index !== -1) {
-          //   this.prof_data[index] = { ...updatedprofdata };
-          // }
-
-          this.showEditServiceForm = false;
-          this.editedService = { 
+          this.updateprof = { 
             prof_email: "",
             prof_password: "",
             service_type: "",
@@ -174,7 +147,7 @@ export default {
         alert('An error occurred while updating the service.');
       }
     },    
-    async fetchProf() {
+  async fetchProf() {
       try {
         let your_jwt_token = localStorage.getItem('jwt');
         if (!your_jwt_token) {
@@ -186,9 +159,8 @@ export default {
           },
           withCredentials: true
         });
-        console.log(this.email,response.data);
         if (response.status === 200) {
-          this.prof_data = response.data; // Update the services array with the data from the backend
+          this.prof_data = response.data; 
         } else {
           console.error("Failed to fetch professionals:", response.data.error);
         }
@@ -196,7 +168,7 @@ export default {
         console.error('Error fetching professionals:', error.message);
       }
     },
-    async fetchServices() {
+  async fetchServices() {
       try {
         let your_jwt_token = localStorage.getItem('jwt');
         const response = await axios.get('http://127.0.0.1:8080/api/reg_servicenames',
@@ -212,56 +184,51 @@ export default {
         console.error("Error fetching services:", error);
       }
     },
-viewDocument(prof_email) {
+  viewDocument(prof_email) {
       const documentUrl = `http://127.0.0.1:8080/api/view-document/${prof_email}`;
       window.open(documentUrl, '_blank');
     },
-    async reuploadDocument(prof_email) {
-  try {
-    let your_jwt_token = localStorage.getItem('jwt');
-    if (!your_jwt_token) {
-      throw new Error('JWT token is missing');
-    }
-
-    // Trigger the file input click
-    this.$refs.documentInput.click();
-  } catch (error) {
-    console.error('Error triggering file upload:', error.message);
-    alert('An error occurred while triggering the file upload.');
+  async reuploadDocument(prof_email) {
+    try {
+        let your_jwt_token = localStorage.getItem('jwt');
+        if (!your_jwt_token) {
+          throw new Error('JWT token is missing');
+        }
+        this.$refs.documentInput.click();
+    } catch (error) {
+        console.error('Error triggering file upload:', error.message);
+        alert('An error occurred while triggering the file upload.');
+      }
+   },
+  async handleFileUpload(event) {
+     const file = event.target.files[0];  
+     if (!file) {
+       return;
+     }
+     const formData = new FormData();
+     formData.append('document', file);
+     try {
+       let your_jwt_token = localStorage.getItem('jwt');
+       if (!your_jwt_token) {
+         throw new Error('JWT token is missing');
+       }   
+       const response = await axios.post(`http://127.0.0.1:8080/api/reupload-document/${this.email}`, formData, {
+         headers: {
+           'Authorization': `Bearer ${your_jwt_token}`,
+           'Content-Type': 'multipart/form-data'
+         },
+         withCredentials: true
+       });    
+       if (response.status === 200) {
+         alert('Document reuploaded successfully.');
+       } else {
+         alert('Failed to reupload document: ' + response.data.error);
+       }
+     } catch (error) {
+       console.error('Error uploading document:', error.message);
+       alert('An error occurred while uploading the document.');
+     }
   }
-},
-async handleFileUpload(event) {
-  const file = event.target.files[0];  
-  if (!file) {
-    return;
-  }
-  const formData = new FormData();
-  formData.append('document', file);
-  try {
-    let your_jwt_token = localStorage.getItem('jwt');
-    if (!your_jwt_token) {
-      throw new Error('JWT token is missing');
-    }
-
-    const response = await axios.post(`http://127.0.0.1:8080/api/reupload-document/${this.email}`, formData, {
-      headers: {
-        'Authorization': `Bearer ${your_jwt_token}`,
-        'Content-Type': 'multipart/form-data'
-      },
-      withCredentials: true
-    });
-
-    if (response.status === 200) {
-      alert('Document reuploaded successfully.');
-    } else {
-      alert('Failed to reupload document: ' + response.data.error);
-    }
-  } catch (error) {
-    console.error('Error uploading document:', error.message);
-    alert('An error occurred while uploading the document.');
-  }
-}
-  
   }
 }
 </script>
@@ -276,41 +243,35 @@ async handleFileUpload(event) {
     padding: 16px;
     text-align: center;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
+  } 
   .profile-pic {
     border-radius: 100%;
     margin-bottom: 12px;
     width: 100px;
     height: 100px;
   }
-  
   .name {
     font-size: 1.5em;
     margin: 0;
-  }
-  
+  }  
   .service {
     color: #777;
     margin: 8px 0;
-  }
-  
+  } 
   .email {
     color: #555;
     margin-bottom: 16px;
-  }
-  
-  .contact-btn {
-    background-color: #007bff;
+  }  
+  .phone ,.service{
+    background-color:#55799f;
     color: white;
     border: none;
     padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
-  }
-  
-  .contact-btn:hover {
-    background-color: #0056b3;
+  }  
+  .phone:hover {
+    background-color: #55799f;
   }
  
 </style>

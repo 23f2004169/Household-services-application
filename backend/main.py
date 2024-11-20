@@ -11,35 +11,29 @@ from flask_sse import sse #For publishing events
 from jinja2 import Template
 import csv
 
-#sets up the Celery object for task scheduling and background processing
+# ------- Celery app ------- #
 celery = Celery('Application')
 
 def create_app():
-    app = Flask(__name__)   #Initializes the Flask application 
-    app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///Householdservices_db.db" #Configures SQLite as the database
-    #JWT Configuration:
+    app = Flask(__name__)  
+    app.config["SQLALCHEMY_DATABASE_URI"]="sqlite:///Householdservices_db.db" 
     app.config["JWT_SECRET_KEY"] = "3DFGHVKxdgfbchsvdjesvfjfdrbbbby3fuyb" 
     app.config['JWT_COOKIE_SECURE'] = False
     app.config['JWT_TOKEN_LOCATION'] = ['headers']
     app.config['JWT_COOKIE_CSRF_PROTECT'] = False
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1) 
-
-    #Celery Config: Configures Celery to use Redis as both the broker and result backend
-    app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/1' # redis as broker, DB 1
-    app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/2' # redis as result backend, DB 2
-    app.config['BROKER_CONNECTION_RETRY_ON_STARTUP'] = True # ensure Celery retries connection if redis isn't up
-    app.config['CELERY_TIMEZONE'] = 'Asia/Kolkata'  # timezone for Celery tasks
-
-    #Redis Cache: Configures Redis for caching. (helps speed up certain queries by storing the result in memory)
+    app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/1' 
+    app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/2'
+    app.config['BROKER_CONNECTION_RETRY_ON_STARTUP'] = True
+    app.config['CELERY_TIMEZONE'] = 'Asia/Kolkata'  
     app.config["REDIS_URL"] = "redis://localhost" 
-    app.config['CACHE_TYPE'] = 'RedisCache'  # Redis as cache
-    app.config['CACHE_REDIS_HOST'] = 'localhost'   # redis host for cache  
-    app.config['CACHE_REDIS_PORT'] = 6379   # redis port for cache          
-    app.config['CACHE_REDIS_DB'] = 0  # Database 0 for cache
-    #CORS:Allows the frontend on localhost:5173 to interact with the backend API
+    app.config['CACHE_TYPE'] = 'RedisCache'  
+    app.config['CACHE_REDIS_HOST'] = 'localhost'    
+    app.config['CACHE_REDIS_PORT'] = 6379            
+    app.config['CACHE_REDIS_DB'] = 0 
     CORS(app, supports_credentials=True, origins="http://localhost:5173")
-    jwt = JWTManager(app) #initializes JWT handling for the app.
-    db.init_app(app) #initializes SQLAlchemy with the app
+    jwt = JWTManager(app) 
+    db.init_app(app) 
     app.app_context().push() 
     celery.conf.update(
     broker_url=app.config["CELERY_BROKER_URL"],
@@ -48,7 +42,6 @@ def create_app():
     broker_connection_retry_on_startup=app.config["BROKER_CONNECTION_RETRY_ON_STARTUP"]
     ) 
     celery.conf.timezone = 'Asia/Kolkata'
-    #ensures that the Celery tasks have access to the Flask app context
     class ContextTask(celery.Task):
       def __call__(self, *args, **kwargs):
           with app.app_context():
@@ -56,17 +49,15 @@ def create_app():
     celery.Task = ContextTask
     return app, jwt
 
-#App and JWT Initialization  
 app, jwt = create_app()
 
 from application.controllers import *
 
-# Flask sse( server sent events): For real-time communication between the server and the client, which is registered as a blueprint
-app.register_blueprint(sse, url_prefix='/stream')     #frontend will need to subscribe to /stream
+# Flask sse( server sent events)which is registered as a blueprint: For real-time communication between the server and the client
+app.register_blueprint(sse, url_prefix='/stream')     
 
-mail = init_mail() #initializes MailHog
+mail = init_mail() 
 
-#SCHEDULED TASKS (CELERY)
 @celery.task()
 def daily_reminder_to_professional():
     profs=Professional.query.all()
@@ -165,8 +156,7 @@ celery.conf.beat_schedule = {
 @celery.task()
 def user_triggered_async_job(prof_email):
     header = ["Service request id", "Professional email", "Customer email", "Service id", "Date of request", "Date of completion", "Status", "Rating", "Remarks"]
-    content = []
-    
+    content = []   
     with open(f'reports/servicerequest_report_{prof_email}.csv', 'w', newline='') as f:
         csvwriter = csv.writer(f)
         csvwriter.writerow(header)
@@ -200,12 +190,82 @@ def user_triggered_async_job(prof_email):
     sse.publish({"message": " Trial User triggered async job executed","color":"alert alert-primary", "filename": f'servicerequest_report_{prof_email}.csv',}, type="notifyadmin")
     print(f'Export job for {prof_email} completed.')
     return {'header': header, 'content': content, 'message': "User triggered async job executed"}
-    
+
+# @celery.task()
+# def user_triggered_async_job(prof_email):
+#     header = [
+#         "Service request id", "Professional email", "Customer email", 
+#         "Service id", "Date of request", "Date of completion", 
+#         "Status", "Rating", "Remarks"
+#     ]
+#     content = []
+#     report_dir = 'reports'
+#     os.makedirs(report_dir, exist_ok=True)  # Ensure the directory exists
+#     file_path = os.path.join(report_dir, f'servicerequest_report_{prof_email}.csv')
+
+#     # Use a single app context
+#     with app.app_context():
+#         try:
+#             with open(file_path, 'w', newline='') as f:
+#                 csvwriter = csv.writer(f)
+#                 csvwriter.writerow(header)
+
+#                 # Query within the same app context
+#                 for req in Sevrequest.query.filter_by(prof_email=prof_email).all():
+#                     if req.sev_status == "closed":
+#                         row = [
+#                             req.sevreq_id,
+#                             req.prof_email,
+#                             req.cust_email,
+#                             req.sev_id,
+#                             req.date_of_request,
+#                             req.date_of_completion,
+#                             req.sev_status,
+#                             req.rating,
+#                             req.remarks,
+#                         ]
+#                         csvwriter.writerow(row)
+#                         content.append({
+#                             'sevreq_id': req.sevreq_id,
+#                             'prof_email': req.prof_email,
+#                             'cust_email': req.cust_email,
+#                             'service_id': req.sev_id,
+#                             'date_of_request': req.date_of_request,
+#                             'date_of_completion': req.date_of_completion,
+#                             'sev_status': req.sev_status,
+#                             'rating': req.rating,
+#                             'remarks': req.remarks,
+#                         })
+
+#             # Publish SSE notification
+#             try:
+#                 sse.publish({
+#                     "message": "User-triggered async job executed",
+#                     "color": "alert alert-primary",
+#                     "filename": file_path,
+#                 }, type="notifyadmin")
+#             except Exception as sse_error:
+#                 print(f"SSE publish failed: {sse_error}")
+
+#         except Exception as e:
+#             db.session.rollback()
+#             raise e  # Allow Celery to log the exception
+#         finally:
+#             db.session.close()  # Ensure session cleanup
+
+#     print(f'Export job for {prof_email} completed.')
+#     return {
+#         'header': header,
+#         'content': content,
+#         'message': "User-triggered async job executed"
+#     }
+
 
 with app.app_context():
     db.create_all()
-    if __name__=='__main__':
-        app.run(host="0.0.0.0", port=8080)
+
+if __name__=='__main__':
+    app.run(host="0.0.0.0", port=8080)
 
 
 

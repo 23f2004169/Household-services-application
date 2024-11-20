@@ -1,25 +1,18 @@
 <template>
-  <div><p class="text-white">Search for service requests based on their status(closed,accepted,rejected,requested) and rating(1-5)</p></div>
+  <div><h5 class="text-white">Search for service requests</h5></div>
     <div class="container my-3">
       <div class="search-bar">
         <div class="input-group">
-          <input
-            type="text"
-            class="form-control search-input"
-            placeholder="Search for Service Requests"
-            v-model="searchQuery"
-          />
+          <input type="text" class="form-control search-input" placeholder="Search for Service Requests" v-model="searchQuery"/>
           <div class="input-group-append">
-            <button class="btn search-button" @click="submitSearch">
-              Search
-            </button>
+            <button class="btn search-button" @click="submitSearch"> Search </button>
           </div>
         </div>
       </div>
     </div>
 </template>
   
-  <script>
+<script>
   import axios from "axios";
   export default {
     name: "ProfSearchBar",
@@ -30,12 +23,7 @@
       };
     },
     emits: ['updateResults', 'searchPerformed'],  
-    props: {
-      email: {  
-        type: String,
-        required: true,
-      },
-    },
+    props: {email: {type: String,required: true,},},
     methods: {
       async submitSearch() {
         try {
@@ -58,12 +46,11 @@
               'Authorization': `Bearer ${your_jwt_token}`
             },
             withCredentials: true
-          });
-          
+          });         
           if (response.status === 200) {
             const data = response.data.results;
-            this.$emit("updateResults", data); // Pass results to parent component
-            this.results = data; // Update local results if needed
+            this.$emit("updateResults", data); 
+            this.results = data; 
           } else {
             alert("Failed to fetch services: " + response.data.error);
           }
@@ -76,12 +63,11 @@
   };
   </script>
   
-  <style scoped>
+<style scoped>
   .container {
     display: flex;
     justify-content: center;
   }
-  
   .search-bar {
     width: 100%;
     max-width: 600px;
@@ -90,24 +76,20 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     transition: box-shadow 0.3s ease;
   }
-  
   .search-bar:hover {
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-  }
-  
+  }  
   .search-input {
     border: none;
     padding: 15px 20px;
     border-radius: 50px 0 0 50px;
     font-size: 1rem;
     transition: all 0.3s ease;
-  }
-  
+  }  
   .search-input:focus {
     outline: none;
     box-shadow: none;
-  }
-  
+  } 
   .search-button {
     background-color:rgb(63, 35, 18);
     color: white;
@@ -117,11 +99,10 @@
     font-size: 1rem;
     font-weight: bold;
     transition: background-color 0.3s ease;
-  }
-  
+  } 
   .search-button:hover {
     background-color:#282828;
   }
-  </style>
+</style>
   
   

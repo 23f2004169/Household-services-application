@@ -7,8 +7,9 @@
   <div>
     <CustSearchBar @updateResults="setResults" />
 
+    <!-- Professional Results --> 
       <div v-if="profResults.length > 0" class="services">
-        <div v-for="result in profResults":key="result.prof_email" class="service-card" style="width: 18rem;">
+        <div v-for="result in profResults.filter(prof => prof.approval === 'approved')"  :key="result.prof_email" class="service-card" style="width: 18rem;">
           <div class="card-body">
             <h5 class="card-title">{{ result.prof_email }}</h5>
             <img :src="'http://127.0.0.1:8080/api/view-image/' + result.prof_email" alt="Profile Picture" class="pic" />
@@ -25,7 +26,8 @@
           </div>
         </div>
       </div>
-      
+
+    <!-- Service Results -->
       <div v-if="serviceResults.length > 0" class="services">
         <div v-for="result in serviceResults" :key="result.sev_id" class="service-card" style="width: 18rem;">
           <div class="card-body">
@@ -46,8 +48,8 @@
         </div>
       </div>
 
-      <div  v-else-if="searchPerformed" class="no-results-message mt-4">
-        <p class="text-white">No results found for your search.</p>
+      <div v-else-if="profResults.length === 0 && serviceResults.length === 0 && searchPerformed" class="no-results-message mt-4">
+      <p class="text-white">No results found for your search.</p>
       </div>
 </div>
 
@@ -80,7 +82,7 @@
           <label class="form-label">Professional Email:</label>
           <select v-model="newServiceRequest.prof_email" name="professional" id="prof_email" class="form-control" required >
             <option value="">Select a Professional</option>
-            <option v-for="professional in filteredProfessionals" :key="professional.prof_email" :value="professional.prof_email">
+            <option v-for="professional in filteredProfessionals.filter(prof => prof.approval === 'approved')" :key="professional.prof_email"  :value="professional.prof_email">
               {{ professional.prof_email }}
             </option>
           </select>
@@ -119,7 +121,6 @@
   
   <script>
   import CustSearchBar from "../components/CustSearchBar.vue";
-  // import Datepicker from 'vue3-datepicker';
   import axios from 'axios';
   import CustBar from '../components/CustBar.vue';
   
@@ -358,12 +359,12 @@ formatDateOnly(date) {
   .card {
     margin: 10px;
   }
-     body {padding-top: 70px;background-color:#282828;}
-     .white{color:white}
-      h1, h2 {margin-top: 20px;}
-      table {margin-top: 20px;}.form-container {margin-top: 30px;}.navbar-brand {font-weight: bold;}.navbar, .offcanvas-header, .offcanvas-body {background-color: #f0f2ec;}
-      .navbar-brand, .nav-link, .offcanvas-title {color: #020b17;}
-      .nav-link.active {font-weight: bold;color: #e98e0f !important;}.btn-primary, .btn-outline-success {margin-top: 10px;}
+  body {padding-top: 70px;background-color:#282828;}
+  .white{color:white}
+   h1, h2 {margin-top: 20px;}
+   table {margin-top: 20px;}.form-container {margin-top: 30px;}.navbar-brand {font-weight: bold;}.navbar, .offcanvas-header, .offcanvas-body {background-color: #f0f2ec;}
+   .navbar-brand, .nav-link, .offcanvas-title {color: #020b17;}
+   .nav-link.active {font-weight: bold;color: #e98e0f !important;}.btn-primary, .btn-outline-success {margin-top: 10px;}
      
 </style>
   
