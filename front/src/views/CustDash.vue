@@ -67,7 +67,7 @@
               <td>{{ service_request.remarks }}</td>
               <td>
                 <div class="d-flex">
-                    <button v-if="service_request.sev_status === 'requested' || service_request.sev_status === 'accepted'"
+                    <button v-if="service_request.sev_status === 'accepted'"
                      @click.prevent="closeServiceRequest(service_request.sevreq_id)"class="btn btn-info btn-sm mr-5">Close</button>
         
                     <button v-else-if="service_request.sev_status === 'closed'"
@@ -79,12 +79,14 @@
                 <div class="d-flex">
                 <button v-if="service_request.sev_status === 'requested' || service_request.sev_status === 'rejected'"
                    @click.prevent="openEditServiceForm(service_request)" class="btn btn-warning btn-sm mr-5">Edit</button>
-                <button @click.prevent="deleteService(service_request.sevreq_id)" class="btn btn-danger btn-sm mr-5">Delete</button>
+                <button  v-if="service_request.sev_status === 'requested' || service_request.sev_status === 'rejected'"
+                   @click.prevent="deleteService(service_request.sevreq_id)" class="btn btn-danger btn-sm mr-5">Delete</button>
                 </div>
               </td>
             </tr>
           </tbody>
         </table>
+       
       </section>
 
       <!-- Edit Service Request Form Modal -->
@@ -109,10 +111,6 @@
                             {{ professional.prof_email }}
                           </option>
                         </select>
-                        </div>
-                        <div class="mb-3">
-                          <label class="form-label">Remarks:</label>
-                          <textarea v-model="editedService.remarks" class="form-control" ></textarea>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Status:</label>

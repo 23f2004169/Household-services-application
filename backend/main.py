@@ -4,15 +4,12 @@ from datetime import timedelta
 from flask_jwt_extended import JWTManager #JWT  Authentication for user
 from flask_cors import CORS  #Allows cross-origin requests
 from celery.schedules import crontab
-from celery import Celery # For background task scheduling
+from celery import Celery # For background task scheduling 
 from send_mail import init_mail
 from flask_mail import Message
 from flask_sse import sse #For publishing events
 from jinja2 import Template
 import csv
-
-# ------- Celery app ------- #
-celery = Celery('Application')
 
 def create_app():
     app = Flask(__name__)  
@@ -35,21 +32,20 @@ def create_app():
     jwt = JWTManager(app) 
     db.init_app(app) 
     app.app_context().push() 
-    celery.conf.update(
+    return app, jwt
+
+app, jwt = create_app()
+
+# ------- Celery app ------- #
+celery = Celery('Application')
+
+celery.conf.update(
     broker_url=app.config["CELERY_BROKER_URL"],
     result_backend=app.config["CELERY_RESULT_BACKEND"],
     timezone=app.config["CELERY_TIMEZONE"],
     broker_connection_retry_on_startup=app.config["BROKER_CONNECTION_RETRY_ON_STARTUP"]
     ) 
-    celery.conf.timezone = 'Asia/Kolkata'
-    class ContextTask(celery.Task):
-      def __call__(self, *args, **kwargs):
-          with app.app_context():
-              return self.run(*args, **kwargs)
-    celery.Task = ContextTask
-    return app, jwt
-
-app, jwt = create_app()
+celery.conf.timezone = 'Asia/Kolkata'
 
 from application.controllers import *
 
@@ -140,20 +136,19 @@ def monthly_report_to_customers():
     print('monthly report to users executed')
     return {"status": "success",'message': "Monthly report to users executed"}
 
-
 # ------- To schedule the tasks --------#
 celery.conf.beat_schedule = {
     'my_daily_task': {
         'task': "main.daily_reminder_to_professional",
         'schedule': crontab(hour=21, minute=0),
     },
-    'my_quick_check_task': {
+    'my_monthly_task': {
         'task': "main.monthly_report_to_customers",
         'schedule': crontab(day_of_month='1',hour=9, minute=0),
     }
 }
 
-@celery.task()
+@celery.task(name='Application.user_triggered_async_job')
 def user_triggered_async_job(prof_email):
     header = ["Service request id", "Professional email", "Customer email", "Service id", "Date of request", "Date of completion", "Status", "Rating", "Remarks"]
     content = []   
@@ -191,10 +186,19 @@ def user_triggered_async_job(prof_email):
     print(f'Export job for {prof_email} completed.')
     return {'header': header, 'content': content, 'message': "User triggered async job executed"}
 
+#async trigger job
+@app.route('/api/export-professional/<prof_email>', methods=['POST'])
+@jwt_required()
+def export_professional(prof_email):
+    if not prof_email:
+        return jsonify({'error': 'Professional email is required'}), 400
+    var=user_triggered_async_job.delay(prof_email)
+    print("triggered job",var)
+    return jsonify({'message': 'Export job started successfully, you will be notified when it completes.'}), 202
 
 with app.app_context():
     db.create_all()
-
+    
 if __name__=='__main__':
     app.run(host="0.0.0.0", port=8080)
 

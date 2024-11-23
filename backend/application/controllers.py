@@ -30,7 +30,7 @@ def protected():
     except Exception as e:
         logging.error(f"Token validation error: {str(e)}")
         return jsonify({"error": "Token validation failed"}), 500
-    
+
 def role_required(allowed_roles):
     def decorator(f):
         @wraps(f)
@@ -217,17 +217,6 @@ def get_reports(filename):
         return send_from_directory(app.config['REPORT_FOLDER'], filename)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-#async trigger job
-@app.route('/api/export-professional/<prof_email>', methods=['POST'])
-@jwt_required()
-def export_professional(prof_email):
-    from main import user_triggered_async_job  
-    if not prof_email:
-        return jsonify({'error': 'Professional email is required'}), 400
-    var=user_triggered_async_job.delay(prof_email)
-    print("triggered job",var)
-    return jsonify({'message': 'Export job started successfully, you will be notified when it completes.'}), 202
 
 @app.route('/api/reg_servicenames', methods=['GET'])
 def reg_servicenames():
@@ -553,6 +542,8 @@ def api_admin_summary():
     })
     
 @app.route("/api/admin_search", methods=["POST"])
+@jwt_required()
+@role_required(['admin','cust'])
 def admin_search():
     data = request.get_json() 
     query = data.get("query", "").strip()

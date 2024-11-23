@@ -137,7 +137,7 @@
 
               <div class="mb-3">
                 <label class="form-label">Service Name:</label>
-                <input v-model="editedService.sev_name" type="text" class="form-control" required />
+                <input v-model="editedService.sev_name" type="text" class="form-control" required minlength="3"/>
               </div>
 
               <div class="mb-3">
@@ -196,7 +196,7 @@
             <form @submit.prevent="addNewService">
               <div class="mb-3">
                 <label class="form-label">Service Name:</label>
-                <input v-model="newService.sev_name" type="text" class="form-control" required />
+                <input v-model="newService.sev_name" type="text" class="form-control" required minlength="3"/>
               </div>
 
               <div class="mb-3">

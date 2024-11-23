@@ -13,7 +13,7 @@
       </div>
       <div class="mb-3">
         <label for="pwd" class="form-label">Enter Password:</label>
-        <input type="password" class="form-control" placeholder="Enter password" required v-model="pwd" />
+        <input type="password" class="form-control" placeholder="Enter password" required v-model="pwd" minlength="3" />
       </div>      
       <div class="mb-3">
         <label for="address" class="form-label">Enter address:</label>

@@ -14,6 +14,7 @@
         style="width: 18rem;">
         <div class="card-body">
           <h5 class="card-title">{{ result.prof_email }}</h5>
+          <img :src="'http://127.0.0.1:8080/api/view-image/' + result.prof_email" alt="Profile Picture" class="pic" />
           <p class="card-text">Service:{{ result.service_type }}</p>
           <p class="card-text">Experience:{{ result.experience }}</p>
           <p class="card-text">Description:{{ result.description }}</p>
@@ -88,6 +89,12 @@ viewDocument(prof_email) {
 </script>
 
 <style scoped>
+.pic {
+    border-radius: 100%;
+    margin-bottom: 12px;
+    width: 100px;
+    height: 100px;
+  }
 .card-deck {
   display: flex;
   flex-wrap: wrap;
