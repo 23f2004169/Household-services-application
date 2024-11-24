@@ -67,16 +67,15 @@ def daily_reminder_to_professional():
             with mail.connect() as conn:
                 subject= " HomeWhiz Household services Reminder"
                 message = """
-                        <div style="max-width: 600px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
-                            <h1 style="color: rgb(63, 35, 18);">Reminder: Visit HomeWhiz Household services app</h1>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <a href="http://localhost:5173/" style="padding: 10px 20px; background-color: rgb(63, 35, 18); color: #fff; text-decoration: none; border-radius: 5px;">Visit HomeWhiz </a>
+                        <div style="max-width: 600px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); font-family: Arial, sans-serif;">
+                            <h1 style="color: #3F2312; font-size: 24px;">Reminder: Visit HomeWhiz Household Services App</h1>
+                            <div style="display: flex; align-items: center; justify-content: start; gap: 10px; margin-top: 10px;">
+                                <a href="http://localhost:5173/" style="padding: 10px 20px; background-color: #3F2312; color: #fff; text-decoration: none; border-radius: 5px; font-weight: bold;">Visit HomeWhiz</a>
                             </div>
-                            <p>This is a friendly reminder to visit HomeWhiz Household services app and accept or reject the service requests.</p>
-                            <p>Don't miss out on the latest service requests. Click the link above to accept or reject them.</p>
-                            <p>If you have any questions or need assistance, feel free to reach out to our support team.</p>
-                            <p>Best regards,<br>Homewhiz Team</p>
-
+                            <p style="color: #333; margin-top: 20px;">This is a friendly reminder to visit HomeWhiz Household Services App and accept or reject the service requests.</p>
+                            <p style="color: #333;">Don't miss out on the latest service requests. Click the link above to access them.</p>
+                            <p style="color: #333;">If you have any questions or need assistance, feel free to reach out to our support team.</p>
+                            <p style="margin-top: 20px; color: #555;">Best regards,<br><strong>HomeWhiz Team</strong></p>
                         </div>
                         """
                 msg = Message(recipients=[req.prof_email],html=message, subject=subject)
@@ -92,40 +91,39 @@ def monthly_report_to_customers():
             with mail.connect() as conn:
                 subject= "Homewhiz household services app Monthly Report"
                 template =Template( """
-                        <div style="max-width: 600px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
-                            <h1 style="color:  rgb(63, 35, 18);">Order Report</h1>
-                            <p>Dear {{ name }},</p>
-                            <p>Here is the order report for the last month.</p>
-                            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                        <div style="max-width: 600px; margin: 20px auto; padding: 25px; background-color: #f9f9f9; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); font-family: Arial, sans-serif; line-height: 1.6;">
+                            <h1 style="color: #3F2312; text-align: center; margin-bottom: 20px;">Order Report</h1>
+                            <p style="color: #333;">Dear {{ name }},</p>
+                            <p style="color: #333;">Here is the order report for the last month.</p>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; background-color: #fff; border: 1px solid #ddd;">
                                 <thead>
-                                    <tr style="background-color: rgb(63, 35, 18); color: #fff;">
-                                        <th style="padding: 10px; text-align: left;"> Service request id</th>
-                                        <th style="padding: 10px; text-align: left;">Professional email</th>
-                                        <th style="padding: 10px; text-align: left;">Date of request</th>
-                                        <th style="padding: 10px; text-align: left;">Date of completion</th>
-                                        <th style="padding: 10px; text-align: left;">Status</th>
-                                        <th style="padding: 10px; text-align: left;">Rating</th>
-                                        <th style="padding: 10px; text-align: left;">Remarks</th>
+                                    <tr style="background-color: #3F2312; color: #fff;">
+                                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Service Request ID</th>
+                                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Professional Email</th>
+                                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Date of Request</th>
+                                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Date of Completion</th>
+                                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Status</th>
+                                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Rating</th>
+                                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Remarks</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for req in requests %}
-                                    <tr>
-                                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{req.sevreq_id  }}</td>
-                                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ req.prof_email }}</td>
-                                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ req.date_of_request }}</td>
-                                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ req.date_of_completion }}</td>
-                                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ req.sev_status }}</td>
-                                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ req.rating }}</td>
-                                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ req.remarks }}</td>
-                                       </tr>
+                                    <tr style="background-color: {% if loop.index % 2 == 0 %}#f2f2f2{% else %}#fff{% endif %};">
+                                        <td style="padding: 10px; border: 1px solid #ddd;">{{ req.sevreq_id }}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">{{ req.prof_email }}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">{{ req.date_of_request }}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">{{ req.date_of_completion }}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">{{ req.sev_status }}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">{{ req.rating }}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">{{ req.remarks }}</td>
+                                    </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
-                    
-                            <p>If you have any questions or need further details, please don't hesitate to contact us.</p>
-                            <p>Thank you for your attention!</p>
-                            <p>Best regards,<br>Homewhiz Team</p>
+                            <p style="color: #333; margin-top: 20px;">If you have any questions or need further details, please don't hesitate to contact us.</p>
+                            <p style="color: #333;">Thank you for your attention!</p>
+                            <p style="margin-top: 20px; color: #555;">Best regards,<br><strong>HomeWhiz Team</strong></p>
                         </div>
                         """)
                 message = template.render(name=cust.cust_email.split("@")[0], requests = cust.cust_req )
