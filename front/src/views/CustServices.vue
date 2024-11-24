@@ -175,7 +175,7 @@ data() {
     }
   } catch (error) {
     console.error('Error creating service request:', error);
-    this.errorMessage = 'Make sure you entered the correct details while creating the service request.';
+    this.errorMessage = 'Make sure the dates are today or in the future while creating the service request.';
   }
 },
 

@@ -103,15 +103,27 @@
                           <label class="form-label">Service Request ID:</label>
                           <input v-model="editedService.sevreq_id" type="text" class="form-control" required readonly/>
                         </div>
-                        <div class="mb-3"> 
+                        <div class="mb-3">
+
+                          <label for="service" class="form-label">Service:</label>
+                          <select v-model="editedService.sev_id" name="service" id="service" class="form-control" required readonly>
+                            <option value="">Select a Service</option>
+                            <option v-for="service in services" :key="service.sev_id" :value="service.sev_id" >
+                              {{ service.sev_name }}
+                            </option>
+                          </select>
+                        </div>
+
+                        <div class="mb-3">
                         <label class="form-label">Professional Email:</label>
                         <select v-model="editedService.prof_email" name="professional" id="prof_email" class="form-control" required >
                           <option value="" disabled>Select a Professional</option>
-                          <option v-for="professional in professionals" :key="professional.prof_email" :value="professional.prof_email">
+                          <option v-for="professional in filteredProfessionals.filter(prof => prof.approval === 'approved')" :key="professional.prof_email" :value="professional.prof_email">
                             {{ professional.prof_email }}
                           </option>
                         </select>
                         </div>
+
                         <div class="mb-3">
                             <label class="form-label">Status:</label>
                             <select v-model="editedService.sev_status" class="form-control" required >
@@ -251,6 +263,7 @@ data() {
         phone: '',
         pincode: ''
       },
+      services: [],
       service_requests: [],
       professionals: [],
       showEditServiceForm: false, 
@@ -260,6 +273,7 @@ data() {
         date_of_request: '',
         date_of_completion: '',
         sev_status:'',
+        sev_id : '',
         remarks: '', } ,     
       showRateServiceForm: false,
       rateService: {
@@ -277,6 +291,7 @@ created() {
     this.fetchServiceRequests();
     this.fetchCust();
     this.fetchProfessionals();
+    this.fetchServices();
 },    
 methods: {  
   navigateToCategory(category) {
@@ -412,6 +427,7 @@ methods: {
             date_of_request: '',
             date_of_completion: '',
             sev_status:'',
+            sev_id: '',
             remarks: '', 
            };
         } else {
@@ -538,7 +554,46 @@ methods: {
       console.error("Error fetching professionals:", error);
     }
   },
-  }
+  async fetchServices() {
+    try {
+      let your_jwt_token = localStorage.getItem('jwt');
+      if (!your_jwt_token) {
+        throw new Error('JWT token is missing');
+      }
+      const response = await axios.get(`http://127.0.0.1:8080/api/servicesforcust`, {
+      params: {
+        email: this.email 
+      },
+      headers: {
+        'Authorization': `Bearer ${your_jwt_token}`
+      },
+      withCredentials: true
+    });
+      this.services = response.data;
+    } catch (error) {
+      console.error("Error fetching services:", error);
+    }
+  },
+  },
+computed: {
+    filteredProfessionals() {
+      if (!this.editedService.sev_id) {
+        return []; 
+      }
+      const selectedService = this.services.find(
+        service => service.sev_id === this.editedService.sev_id
+      );
+
+      if (!selectedService) return [];
+      const filtered = this.professionals.filter(
+      professional => professional.service_type == selectedService.sev_name
+    );
+    return filtered;
+      
+    }
+  },
+  
+
 }
 </script>
 

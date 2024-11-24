@@ -698,6 +698,7 @@ def update_service_request(sevreq_id,cust_email):
                 "date_of_request": service_request.date_of_request,
                 "date_of_completion": service_request.date_of_completion,
                 "sev_status": service_request.sev_status,
+                "sev_id": service_request.sev_id,
                 "remarks": service_request.remarks}            
             return jsonify(service_data), 200
         else:
@@ -711,6 +712,7 @@ def update_service_request(sevreq_id,cust_email):
                 sev_to_update.date_of_request = data.get("date_of_request", sev_to_update.date_of_request)
                 sev_to_update.date_of_completion = data.get("date_of_completion", sev_to_update.date_of_completion)
                 sev_to_update.sev_status = data.get("sev_status", sev_to_update.sev_status)
+                sev_to_update.sev_id = data.get("sev_id", sev_to_update.sev_id)
                 sev_to_update.remarks = data.get("remarks", sev_to_update.remarks)
                 db.session.commit()
                 cache.delete_memoized(cust_service_requests, cust_email)
