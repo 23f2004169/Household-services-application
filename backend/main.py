@@ -49,7 +49,7 @@ celery.conf.timezone = 'Asia/Kolkata'
 
 from application.controllers import *
 
-# Flask sse( server sent events)which is registered as a blueprint: For real-time communication between the server and the client
+# ---- Flask sse: To publish events ------ #
 app.register_blueprint(sse, url_prefix='/stream')     
 
 mail = init_mail() 
@@ -70,7 +70,7 @@ def daily_reminder_to_professional():
                         <div style="max-width: 600px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
                             <h1 style="color: rgb(63, 35, 18);">Reminder: Visit HomeWhiz Household services app</h1>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <a href="http://127.0.0.1:8080/" style="padding: 10px 20px; background-color: rgb(63, 35, 18); color: #fff; text-decoration: none; border-radius: 5px;">HomeWhiz Reminder</a>
+                                <a href="http://localhost:5173/" style="padding: 10px 20px; background-color: rgb(63, 35, 18); color: #fff; text-decoration: none; border-radius: 5px;">Visit HomeWhiz </a>
                             </div>
                             <p>This is a friendly reminder to visit HomeWhiz Household services app and accept or reject the service requests.</p>
                             <p>Don't miss out on the latest service requests. Click the link above to accept or reject them.</p>
@@ -95,9 +95,7 @@ def monthly_report_to_customers():
                         <div style="max-width: 600px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
                             <h1 style="color:  rgb(63, 35, 18);">Order Report</h1>
                             <p>Dear {{ name }},</p>
-                            <p>Here is the order report for the specified date range.</p>
-                    
-                            <!-- Add your report content here -->
+                            <p>Here is the order report for the last month.</p>
                             <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
                                 <thead>
                                     <tr style="background-color: rgb(63, 35, 18); color: #fff;">
@@ -133,6 +131,7 @@ def monthly_report_to_customers():
                 message = template.render(name=cust.cust_email.split("@")[0], requests = cust.cust_req )
                 msg = Message(recipients=[cust.cust_email],html=message, subject=subject)
                 conn.send(msg)
+            sse.publish({"message": "Monthly report to users executed","color":"alert alert-primary" },type=cust.cust_email)
     print('monthly report to users executed')
     return {"status": "success",'message': "Monthly report to users executed"}
 
@@ -195,6 +194,7 @@ def export_professional(prof_email):
     var=user_triggered_async_job.delay(prof_email)
     print("triggered job",var)
     return jsonify({'message': 'Export job started successfully, you will be notified when it completes.'}), 202
+
 
 with app.app_context():
     db.create_all()

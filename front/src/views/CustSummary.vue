@@ -21,7 +21,7 @@
   Chart.register(BarController, BarElement, CategoryScale, LinearScale);
   
   export default {
-    name: "CustomerSummary",
+    name: "CustSummary",
     components: { CustBar },
     props: {
       email: {type: String, required: true,},

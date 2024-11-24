@@ -21,7 +21,7 @@
   Chart.register(BarController, BarElement, CategoryScale, LinearScale);
   
   export default {
-    name: "ProfessionalSummary",
+    name: "ProfSummary",
     components: { ProfBar },
     
     props: {

@@ -810,7 +810,7 @@ def close_service_request(sevreq_id):
     sevreq.sev_status = "closed"
     db.session.commit()
     cache.delete_memoized(cust_service_requests, sevreq.cust_email)
-    return jsonify({"message": "Service request closed successfully"}), 200
+    return jsonify({"message": "Service request closed successfully by customer"}), 200
 
 @app.route("/api/cust_search", methods=["POST"])
 @jwt_required()
@@ -1043,7 +1043,7 @@ def prof_close_sev(sevreq_id):
         cache.delete_memoized(prof_closed_sevs, sevreq.prof_email)
         cache.delete_memoized(prof_pending_sevs, sevreq.prof_email)
         cache.delete_memoized(prof_sevs_today, sevreq.prof_email)
-        return jsonify({"message": "Service request closed"}), 200  
+        return jsonify({"message": "Service request closed by professional"}), 200  
     except Exception as e:
         return jsonify({"error": str(e)}), 500  
     
