@@ -343,12 +343,7 @@ methods: {
             console.log("Customer profile updated successfully:", response.data);
             this.fetchCust();
             this.showEditCustForm = false;
-            const updatedCust = response.data.customer;
-            const index = this.cust_data.findIndex(cust => cust.cust_email === this.email);
-            if (index !== -1) {
-                this.cust_data[index] = { ...updatedCust };
-            }
-            this.showEditCustForm = false;
+            
             this.updatecust = { 
                 cust_email: '',
                 address: '',
