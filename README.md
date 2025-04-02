@@ -1,4 +1,4 @@
-# MAD2-Project
+# Modern Appilcation Development Project 2
 HouseHold Services Application:
 Full stack application using Flask and VueJS to develop a multi-user platform that provides comprehensive home servicing and solutions,
 facilitating easy interactions between customers, service professionals, and admins.
