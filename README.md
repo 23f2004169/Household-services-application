@@ -3,8 +3,7 @@ HouseHold Services Application:
 Full stack application using Flask and VueJS to develop a multi-user platform that provides comprehensive home servicing and solutions,
 facilitating easy interactions between customers, service professionals, and admins.
 
-Demonstration of the app:
-https://drive.google.com/file/d/1Ug5dNAdhFcqXdLoGtnnd6B9MaVFBaeOw/view?usp=sharing 
+Demonstration of the app: https://youtu.be/yxiEn_BB2KA
 
 Frameworks and Libraries Used:
 
